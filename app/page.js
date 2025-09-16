@@ -1,16 +1,19 @@
+import ThreeScene from "@/components/ThreeScene";
 import Image from "next/image";
 
 export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center h-screen p-8 gap-8 font-[family-name:var(--font-geist-sans)]">
-      <Image
+      <ThreeScene></ThreeScene>
+      
+      {/* <Image
           className="dark:invert"
           src="/LogoSVG.svg"
           alt="N logo"
           width={150}
           height={150}
           priority
-        />
+        /> */}
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
           <a

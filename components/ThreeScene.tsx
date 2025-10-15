@@ -28,12 +28,29 @@ const ThreeScene: React.FC = () => {
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
       scene.add(ambientLight);
 
-      // Material
-      const whiteGlossyMaterial = new THREE.MeshStandardMaterial({
+      // Material (color set based on theme)
+      const logoMaterial = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         metalness: 0.8,
         roughness: 0.2,
       });
+
+      // Theme-aware color: white in dark mode, dark gray in light mode
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+      const getIsDark = () =>
+        document.documentElement.classList.contains('dark') || prefersDark.matches;
+      const applyThemeToMaterial = (isDark: boolean) => {
+        logoMaterial.color.set(isDark ? 0xffffff : 0xededed); // really light grey for light mode
+      };
+      applyThemeToMaterial(getIsDark());
+
+      // React to system theme changes
+      const onMediaChange = (e: MediaQueryListEvent) => applyThemeToMaterial(e.matches);
+      prefersDark.addEventListener('change', onMediaChange);
+
+      // React to toggling of the 'dark' class on <html>
+      const htmlObserver = new MutationObserver(() => applyThemeToMaterial(getIsDark()));
+      htmlObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
       let model: THREE.Object3D | null = null;
 
@@ -46,7 +63,7 @@ const ThreeScene: React.FC = () => {
 
           model.traverse((child: any) => {
             if (child.isMesh) {
-              child.material = whiteGlossyMaterial;
+              child.material = logoMaterial;
               child.castShadow = true;
               child.receiveShadow = true;
             }
@@ -116,6 +133,8 @@ const ThreeScene: React.FC = () => {
       return () => {
         window.removeEventListener("resize", handleResize);
         controls.dispose();
+        prefersDark.removeEventListener('change', onMediaChange);
+        htmlObserver.disconnect();
       };
     }
   }, []);

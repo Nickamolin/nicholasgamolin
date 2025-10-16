@@ -15,7 +15,7 @@ export default function Home() {
           priority
         /> */}
 
-        <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-1.5">
+        <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-2">
           <span className="text-4xl font-bold text-center w-full sm:w-auto">Nicholas Gamolin</span>
           <a
             href="https://www.linkedin.com/in/nicholas-gamolin/"

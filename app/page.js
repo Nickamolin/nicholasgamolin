@@ -15,18 +15,21 @@ export default function Home() {
           priority
         /> */}
 
-        <div className="flex items-center gap-1">
-          <span className="text-4xl font-bold">Nicholas Gamolin</span>
+        <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-1.5">
+          <span className="text-4xl font-bold text-center w-full sm:w-auto">Nicholas Gamolin</span>
           <a
             href="https://www.linkedin.com/in/nicholas-gamolin/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center"
             aria-label="LinkedIn Profile"
           >
-          </a>
-          <a href="https://www.linkedin.com/in/nicholas-gamolin/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn Profile">
-            <img src="https://www.svgrepo.com/show/157006/linkedin.svg" width="34" height="34" alt="LinkedIn" />
+            <img
+              src="/linkedinBlack.svg"
+              width="34"
+              height="34"
+              alt="LinkedIn"
+              className="dark:invert transition-opacity hover:opacity-75"
+            />
           </a>
         </div>
 

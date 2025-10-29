@@ -26,28 +26,49 @@ export default function Home() {
 
       <div className="flex gap-4 items-center flex-col sm:flex-row">
         <a
-          className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
+          className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto gap-2"
           href="https://github.com/Nickamolin"
           target="_blank"
           rel="noopener noreferrer"
         >
-          see my code
+          GitHub
+          <img
+            src="/github.svg"
+            width="23"
+            height="23"
+            alt="GitHub"
+            className="invert dark:invert-0 w-[23px] h-[23px] sm:w-[28px] sm:h-[28px]"
+          />
         </a>
         <a
-          className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center bg-gray-200 hover:bg-gray-300 dark:bg-gray-900 dark:hover:bg-gray-800 hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto"
+          className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center bg-gray-200 hover:bg-gray-300 dark:bg-gray-900 dark:hover:bg-gray-800 hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto gap-2"
           href="https://www.youtube.com/@Drakonic/videos"
           target="_blank"
           rel="noopener noreferrer"
         >
-          see my videos
+          YouTube
+          <img
+            src="/youtube.svg"
+            width="23"
+            height="23"
+            alt="YouTube"
+            className="dark:invert w-[23px] h-[23px] sm:w-[28px] sm:h-[28px]"
+          />
         </a>
         <a
-          className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto"
+          className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto gap-2" 
           href="https://negativedomain.com/"
           target="_blank"
           rel="noopener noreferrer"
         >
-          see my art
+          Digital Art
+          <img
+            src="/art.svg"
+            width="23"
+            height="23"
+            alt="YouTube"
+            className="dark:invert w-[23px] h-[23px] sm:w-[28px] sm:h-[28px]"
+          />
         </a>
       </div>
     </div>

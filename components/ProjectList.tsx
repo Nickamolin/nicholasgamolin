@@ -21,8 +21,7 @@ export default async function ProjectList() {
                 {projects?.map((project: any) => (
                     <li key={project.id} className="flex flex-col items-center justify-end px-4">
                         <Image src={project.thumbnail_url} alt={project.name} width={200} height={200} />
-                        {/* <p className="text-xl font-bold">{project.id}. <code>{project.name}</code></p> */}
-                        <p className="text-xl font-bold">{project.name}</p>
+                        <p className="text-xl font-bold">{project.id}. <code>{project.name}</code></p>
                     </li>
                 ))}
             </ul>

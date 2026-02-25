@@ -1,10 +1,14 @@
-import ThreeScene from "@/components/ThreeScene";
+import Logo3D from "@/components/Logo3D";
+import ProjectList from "@/components/ProjectList";
 import Image from "next/image";
 
-export default function Home() {
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export default async function Home() {
+
   return (
     <div className="flex flex-col items-center justify-center h-screen p-8 gap-4 sm:gap-8 font-[family-name:var(--font-geist-sans)]">
-      <ThreeScene></ThreeScene>
+      <Logo3D></Logo3D>
 
       <div className="w-full flex flex-row justify-center items-center gap-2">
         <span className="text-3xl sm:text-4xl font-bold text-center w-auto">Nicholas Gamolin</span>
@@ -72,6 +76,9 @@ export default function Home() {
           />
         </a>
       </div>
+
+      <ProjectList />
+
     </div>
   );
 }

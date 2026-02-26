@@ -7,8 +7,8 @@ export default async function ProjectList() {
 
     const { data: projects, error } = await supabase
         .from("projects")
-        .select("id, name, thumbnail_url")
-        .order("id", { ascending: true });
+        .select("id, name, thumbnail_url, date_published, info_url")
+        .order("date_published", { ascending: false });
 
     if (error) {
         return <pre>Failed to load projects: {error.message}</pre>
@@ -17,11 +17,14 @@ export default async function ProjectList() {
     return (
         <div className="flex flex-col items-center justify-center w-full">
             <h1 className="p-6 text-3xl font-bold">Projects:</h1>
-            <ul className="flex flex-row items-end justify-center gap-4">
+            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-end justify-center gap-4">
                 {projects?.map((project: any) => (
-                    <li key={project.id} className="flex flex-col items-center justify-end px-4">
-                        <Image src={project.thumbnail_url} alt={project.name} width={200} height={200} />
-                        <p className="text-xl font-bold">{project.id}. <code>{project.name}</code></p>
+                    <li key={project.id}>
+                        <a className="flex flex-col items-center justify-end px-4" href={project.info_url} target="_blank" rel="noopener noreferrer">
+                            <Image src={project.thumbnail_url} alt={project.name} width={200} height={200} />
+                            <p className="text-xl font-bold">{project.name}</p>
+                            <code>({project.date_published})</code>
+                        </a>
                     </li>
                 ))}
             </ul>

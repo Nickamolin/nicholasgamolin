@@ -7,7 +7,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export default async function Home() {
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen p-8 gap-4 sm:gap-8 font-[family-name:var(--font-geist-sans)]">
+    <div className="flex flex-col items-center justify-center min-h-screen p-8 gap-4 sm:gap-8 font-[family-name:var(--font-geist-sans)]">
       <Logo3D></Logo3D>
 
       <div className="w-full flex flex-row justify-center items-center gap-2">

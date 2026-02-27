@@ -16,7 +16,7 @@ export default async function Home() {
         </div>
       </div>
 
-      <div className="flex gap-16 items-center flex-col sm:flex-row">
+      <div className="flex gap-16 items-center flex-row">
         <a
           href="https://www.linkedin.com/in/nicholas-gamolin/"
           target="_blank"

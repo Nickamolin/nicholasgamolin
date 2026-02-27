@@ -9,6 +9,15 @@ type ProjectCardProps = {
 
 export default function ProjectCard({ project }: ProjectCardProps) {
     return (
-        <Image src={project.thumbnail_url} alt={project.name} width={300} height={300} />
+        <div className="relative w-full aspect-square overflow-hidden">
+            <a href={project.info_url} target="_blank" rel="noopener noreferrer">
+                <Image
+                    src={project.thumbnail_url}
+                    alt={project.name}
+                    fill
+                    className="object-cover saturate-0 hover:saturate-100 hover:scale-105 transition-all duration-500 "
+                />
+            </a>
+        </div>
     )
 }

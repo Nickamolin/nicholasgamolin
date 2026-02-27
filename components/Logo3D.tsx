@@ -139,7 +139,7 @@ const Logo3D: React.FC = () => {
     }
   }, []);
 
-  return <div ref={containerRef} />;
+  return <div className="opacity-50" ref={containerRef} />;
 };
 
 export default Logo3D;

@@ -1,5 +1,5 @@
 import Logo3D from "@/components/Logo3D";
-import ProjectList from "@/components/ProjectList";
+import ProjectList from "@/components/projects/ProjectList";
 import Image from "next/image";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";

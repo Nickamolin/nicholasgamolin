@@ -25,7 +25,7 @@ export default async function Home() {
                 width="50"
                 height="50"
                 alt="LinkedIn"
-                className="dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] sm:w-[24px] sm:h-[24px]"
+                className="invert dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] sm:w-[24px] sm:h-[24px]"
               />
             </a>
             <a
@@ -38,7 +38,7 @@ export default async function Home() {
                 width="50"
                 height="50"
                 alt="GitHub"
-                className="dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] sm:w-[24px] sm:h-[24px]"
+                className="invert dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] sm:w-[24px] sm:h-[24px]"
               />
             </a>
             <a
@@ -51,7 +51,7 @@ export default async function Home() {
                 width="50"
                 height="50"
                 alt="YouTube"
-                className="dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] sm:w-[24px] sm:h-[24px]"
+                className="invert dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] sm:w-[24px] sm:h-[24px]"
               />
             </a>
           </div>

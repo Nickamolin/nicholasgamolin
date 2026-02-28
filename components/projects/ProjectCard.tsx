@@ -15,16 +15,16 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                     src={project.thumbnail_url}
                     alt={project.title}
                     fill
-                    className="object-cover saturate-0 group-hover:saturate-100 group-hover:scale-105 transition-all duration-500"
+                    className="object-cover saturate-100 md:saturate-0 md:group-hover:saturate-100 md:group-hover:scale-105 transition-all duration-500"
                 />
 
                 {/* Title Overlay */}
                 <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end">
-                    <h3 className="text-white font-bold text-xl sm:text-2xl text-shadow-md translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                    <h3 className="text-white font-bold text-xl sm:text-2xl text-shadow-md opacity-100 translate-y-0 md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500">
                         {project.title}
                     </h3>
                     {project.subtitle && (
-                        <p className="text-gray-200 text-sm sm:text-base translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-75">
+                        <p className="text-gray-200 text-sm sm:text-base opacity-100 md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 delay-75">
                             {project.subtitle}
                         </p>
                     )}

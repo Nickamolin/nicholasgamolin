@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Nicholas Gamolin",
-  description: "personal portfolio",
+  description: "Personal Portfolio",
 };
 
 export default function RootLayout({ children }) {

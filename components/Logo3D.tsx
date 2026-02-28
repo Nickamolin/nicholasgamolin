@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-const ThreeScene: React.FC = () => {
+const Logo3D: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -139,7 +139,7 @@ const ThreeScene: React.FC = () => {
     }
   }, []);
 
-  return <div ref={containerRef} />;
+  return <div className="opacity-30" ref={containerRef} />;
 };
 
-export default ThreeScene;
+export default Logo3D;

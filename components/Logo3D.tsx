@@ -72,6 +72,8 @@ const Logo3D: React.FC = () => {
           model.scale.set(1, 1, 1);
           model.position.set(0, 0, 0);
           scene.add(model);
+
+          window.dispatchEvent(new Event('logo-loaded'));
         },
         undefined,
         (error) => console.error("Error loading GLB:", error)

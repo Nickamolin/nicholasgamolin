@@ -4,7 +4,7 @@ import Projects from "@/components/projects/Projects";
 export default async function Home() {
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8 gap-4 sm:gap-8 font-[family-name:var(--font-geist-sans)]">
+    <div className="flex flex-col items-center justify-start min-h-screen p-8 gap-4 sm:gap-8 font-[family-name:var(--font-geist-sans)]">
       <div className="relative flex justify-center items-center w-full">
         <Logo3D></Logo3D>
 

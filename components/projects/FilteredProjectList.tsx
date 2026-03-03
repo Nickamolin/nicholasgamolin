@@ -22,13 +22,13 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
         <div className="w-full max-w-[2000px] flex flex-col items-center">
             {/* Filter Menu */}
             <div className="w-full max-w-[2000px] flex justify-center items-center gap-4 md:gap-8 mb-6">
-                <span className="text-xs md:text-lg text-white font-bold whitespace-nowrap">Sort By:</span>
-                <div className="flex flex-row gap-2 md:gap-8">
+                <span className="text-sm md:text-lg text-white font-bold whitespace-nowrap">Sort By:</span>
+                <div className="flex flex-row gap-4 md:gap-8">
                     {filterOptions.map(type => (
                         <button
                             key={type}
                             onClick={() => setFilter(type)}
-                            className={`text-xs md:text-lg transition-all whitespace-nowrap ${filter === type
+                            className={`text-sm md:text-lg transition-all whitespace-nowrap ${filter === type
                                 ? "font-bold text-blue-500 shadow-md"
                                 : "font-medium text-gray-400 hover:text-gray-300"
                                 }`}

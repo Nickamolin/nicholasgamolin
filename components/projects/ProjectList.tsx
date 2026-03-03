@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import ProjectCard from './ProjectCard';
+import FilteredProjectList from './FilteredProjectList';
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Project } from "./types";
 
@@ -9,7 +10,7 @@ export default async function ProjectList() {
 
     const { data: projects, error } = await supabase
         .from("projects")
-        .select("id, title, subtitle, thumbnail_url, date_published, info_url, visible")
+        .select("id, title, subtitle, thumbnail_url, date_published, info_url, visible, type")
         .eq("visible", true)
         .order("date_published", { ascending: false });
 
@@ -18,10 +19,6 @@ export default async function ProjectList() {
     }
 
     return (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 w-full gap-4 max-w-500">
-            {projects?.map((project: any) => (
-                <ProjectCard key={project.id} project={project} />
-            ))}
-        </ul>
+        <FilteredProjectList initialProjects={projects || []} />
     );
 }

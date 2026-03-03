@@ -6,4 +6,5 @@ export type Project = {
     date_published: string;
     info_url: string;
     visible: boolean;
+    type: string;
 };

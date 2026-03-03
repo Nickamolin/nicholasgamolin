@@ -9,7 +9,7 @@ type ProjectCardProps = {
 
 export default function ProjectCard({ project }: ProjectCardProps) {
     return (
-        <div className="relative w-full aspect-square overflow-hidden group rounded-3xl">
+        <div className="relative w-full aspect-square overflow-hidden group rounded-3xl shadow-2xl">
             <a href={project.info_url} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative">
                 <Image
                     src={project.thumbnail_url}

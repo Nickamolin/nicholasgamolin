@@ -18,7 +18,7 @@ export default async function ProjectList() {
     }
 
     return (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 w-full gap-4">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 w-full gap-4 max-w-500">
             {projects?.map((project: any) => (
                 <ProjectCard key={project.id} project={project} />
             ))}

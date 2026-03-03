@@ -23,11 +23,18 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                     <h3 className="text-white font-bold text-xl sm:text-2xl text-shadow-md opacity-100 translate-y-0 md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500">
                         {project.title}
                     </h3>
-                    {project.subtitle && (
-                        <p className="text-gray-200 text-sm sm:text-base opacity-100 md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 delay-75">
-                            {project.subtitle}
-                        </p>
-                    )}
+                    <div className="flex justify-between items-center w-full mt-1 opacity-100 md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 transition-all duration-500 delay-75">
+                        {project.subtitle && (
+                            <p className="text-gray-200 text-sm sm:text-base pr-4">
+                                {project.subtitle}
+                            </p>
+                        )}
+                        {project.date_published && (
+                            <span className="text-gray-300 text-sm sm:text-base font-medium whitespace-nowrap">
+                                {new Date(project.date_published).getFullYear()}
+                            </span>
+                        )}
+                    </div>
                 </div>
             </a>
         </div>

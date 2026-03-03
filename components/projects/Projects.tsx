@@ -1,11 +1,8 @@
 import React from 'react';
-import Image from 'next/image';
-import ProjectCard from './ProjectCard';
 import FilteredProjectList from './FilteredProjectList';
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { Project } from "./types";
 
-export default async function ProjectList() {
+export default async function Projects() {
     const supabase = createSupabaseServerClient();
 
     const { data: projects, error } = await supabase

@@ -7,4 +7,5 @@ export type Project = {
     info_url: string;
     visible: boolean;
     type: string;
+    embed_url: string;
 };

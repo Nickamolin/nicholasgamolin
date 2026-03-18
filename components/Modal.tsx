@@ -13,11 +13,13 @@ type ModalProps = {
 export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType }: ModalProps) {
     if (!isOpen) return null;
 
+    const cleanUrl = embedUrl.replace(/&amp;/g, '&');
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Background overlay */}
             <div
-                className="absolute inset-0 bg-black/80 cursor-pointer"
+                className="absolute inset-0 bg-black/90 cursor-pointer"
                 onClick={onClose}
             />
 
@@ -32,30 +34,27 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType }:
             {/* Iframe */}
             {embedType === "youtube" && (
                 <iframe
-                    className="relative z-10 w-[90vw] max-w-5xl aspect-video bg-black rounded-lg shadow-2xl"
-                    src={embedUrl}
+                    className="relative z-10 w-full max-w-[95vw] aspect-video rounded-lg shadow-2xl"
+                    src={cleanUrl}
                     title="YouTube video player"
-                    frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen>
                 </iframe>
             )}
 
             {embedType === "itchio" && (
                 <iframe
-                    className="relative z-10 w-[90vw] max-w-5xl aspect-video bg-black rounded-lg shadow-2xl"
-                    frameBorder="0"
+                    className="relative z-10 w-full max-w-[95vw] aspect-video rounded-lg shadow-2xl"
                     src={embedUrl}
-                    allowFullScreen
-                    width="1920"
-                    height="1100">
+                    allowFullScreen>
                     <a href={infoUrl}>Play Game on itch.io</a>
                 </iframe>
             )}
 
             {embedType === "pico8" && (
                 <iframe
-                    className="relative z-10 w-[90vw] max-w-4xl h-[80vh] bg-white rounded-lg border-none overflow-hidden shadow-2xl"
+                    className="relative z-10 w-[680px] max-w-[95vw] aspect-square rounded-lg border-none overflow-hidden shadow-2xl"
                     src={embedUrl}
                     allowFullScreen>
                 </iframe>

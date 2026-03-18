@@ -8,4 +8,5 @@ export type Project = {
     visible: boolean;
     type: string;
     embed_url: string;
+    embed_type: string;
 };

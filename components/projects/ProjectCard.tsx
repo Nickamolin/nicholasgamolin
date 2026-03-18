@@ -12,17 +12,21 @@ type ProjectCardProps = {
 export default function ProjectCard({ project }: ProjectCardProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const isInteractive = Boolean(project.embed_url || project.info_url);
+
     return (
         <>
             <a
-                href={project.embed_url ? undefined : project.info_url}
-                target={project.embed_url ? undefined : "_blank"}
-                rel={project.embed_url ? undefined : "noopener noreferrer"}
-                className="relative w-full aspect-square overflow-hidden group rounded-3xl shadow-2xl cursor-pointer block"
+                href={project.embed_url ? undefined : (project.info_url || undefined)}
+                target={project.embed_url ? undefined : (project.info_url ? "_blank" : undefined)}
+                rel={project.embed_url ? undefined : (project.info_url ? "noopener noreferrer" : undefined)}
+                className={`relative w-full aspect-square overflow-hidden group rounded-3xl shadow-2xl block ${isInteractive ? "cursor-pointer" : "cursor-default"}`}
                 onClick={(e) => {
                     if (project.embed_url) {
                         e.preventDefault();
                         setIsModalOpen(true);
+                    } else if (!isInteractive) {
+                        e.preventDefault();
                     }
                 }}
             >
@@ -58,7 +62,9 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                url={project.embed_url || project.info_url}
+                infoUrl={project.info_url}
+                embedUrl={project.embed_url}
+                embedType={project.embed_type}
             />
         </>
     )

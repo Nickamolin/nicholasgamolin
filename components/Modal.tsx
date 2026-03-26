@@ -53,14 +53,11 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType }:
             )}
 
             {embedType === "pico8" && (
-                <div className="relative z-10 w-[600px] max-w-[95vw] aspect-square rounded-lg overflow-hidden shadow-2xl flex items-center justify-center">
-                    <iframe
-                        className="absolute w-full h-full border-none scale-[1.05]"
-                        src={embedUrl}
-                        scrolling="no"
-                        allowFullScreen>
-                    </iframe>
-                </div>
+                <iframe
+                    className="relative z-10 w-[740px] h-[640px] rounded-lg shadow-2xl"
+                    src={embedUrl}
+                    allowFullScreen>
+                </iframe>
             )}
 
 

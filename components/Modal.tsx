@@ -44,20 +44,24 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType }:
             )}
 
             {embedType === "itchio" && (
-                <iframe
-                    className="relative z-10 w-full max-w-[95vw] aspect-video rounded-lg shadow-2xl"
-                    src={embedUrl}
-                    allowFullScreen>
-                    <a href={infoUrl}>Play Game on itch.io</a>
-                </iframe>
+                <div className="relative z-10 w-full max-w-[95vw] overflow-hidden shadow-2xl rounded-lg">
+                    <iframe
+                        className="w-full aspect-video -mb-[21px]"
+                        src={embedUrl}
+                        allowFullScreen>
+                        <a href={infoUrl}>Play Game on itch.io</a>
+                    </iframe>
+                </div>
             )}
 
             {embedType === "pico8" && (
-                <iframe
-                    className="relative z-10 w-[740px] h-[640px] rounded-lg shadow-2xl"
-                    src={embedUrl}
-                    allowFullScreen>
-                </iframe>
+                <div className="relative z-10 w-[740px] max-w-[95vw] overflow-hidden shadow-2xl rounded-lg">
+                    <iframe
+                        className="w-full aspect-[128/105] -mb-[21px]"
+                        src={embedUrl}
+                        allowFullScreen>
+                    </iframe>
+                </div>
             )}
 
 

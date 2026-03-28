@@ -9,4 +9,5 @@ export type Project = {
     type: string;
     embed_url: string;
     embed_type: string;
+    embed_aspect_ratio: string;
 };

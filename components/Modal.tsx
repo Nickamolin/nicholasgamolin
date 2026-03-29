@@ -35,7 +35,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             {/* Iframe */}
             {embedType === "youtube" && (
                 <iframe
-                    className="relative z-10 max-w-[85vw] max-h-[85vh] rounded-lg shadow-2xl"
+                    className="relative z-10 w-full md:max-w-[85vw] md:max-h-[85vh] rounded-lg shadow-2xl"
                     style={{ aspectRatio: embedAspectRatio || '16 / 9' }}
                     src={cleanUrl}
                     title="YouTube video player"
@@ -46,7 +46,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             )}
 
             {embedType === "itchio" && (
-                <div className="relative z-10 w-full max-w-[85vw] max-h-[85vh] overflow-hidden shadow-2xl rounded-lg">
+                <div className="relative z-10 w-full md:max-w-[85vw] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg">
                     <iframe
                         className="w-full"
                         style={{ aspectRatio: embedAspectRatio || '16 / 9' }}
@@ -58,9 +58,9 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             )}
 
             {embedType === "pico8" && (
-                <div className="relative z-10 w-[740px] max-w-[85vw] max-h-[85vh] overflow-hidden shadow-2xl rounded-lg">
+                <div className="relative z-10 w-full md:max-w-[65vw] md:max-h-[65vh] overflow-hidden shadow-2xl rounded-lg">
                     <iframe
-                        className="w-full -mb-[21px]"
+                        className="w-full -mb-[21px] max-md:min-h-[90vh]"
                         style={{ aspectRatio: embedAspectRatio || '128 / 105' }}
                         src={embedUrl}
                         allowFullScreen>

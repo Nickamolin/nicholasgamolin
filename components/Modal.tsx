@@ -20,7 +20,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Background overlay */}
             <div
-                className="absolute inset-0 bg-black/90 cursor-pointer"
+                className="absolute -inset-full bg-black/90 cursor-pointer"
                 onClick={onClose}
             />
 

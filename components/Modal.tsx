@@ -26,7 +26,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
 
             {/* Close button */}
             <button
-                className="absolute top-4 left-4 text-white hover:text-gray-300 text-4xl font-bold z-50"
+                className="absolute top-4 left-4 text-white hover:text-gray-300 text-4xl font-bold z-50 cursor-pointer"
                 onClick={onClose}
             >
                 &times;
@@ -48,7 +48,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             {embedType === "itchio" && (
                 <div className="relative z-10 w-full max-w-[85vw] max-h-[85vh] overflow-hidden shadow-2xl rounded-lg">
                     <iframe
-                        className="w-full -mb-[21px]"
+                        className="w-full"
                         style={{ aspectRatio: embedAspectRatio || '16 / 9' }}
                         src={embedUrl}
                         allowFullScreen>

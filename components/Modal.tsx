@@ -67,6 +67,15 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                     </iframe>
                 </div>
             )}
+
+            {embedType === "website" && (
+                <iframe
+                    className="relative z-10 md:max-w-[85vw] md:max-h-[85vh] rounded-lg shadow-2xl"
+                    style={{ aspectRatio: embedAspectRatio || '1 / 1' }}
+                    src={embedUrl}
+                    allowFullScreen>
+                </iframe>
+            )}
         </div>
     );
 }

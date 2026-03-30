@@ -26,7 +26,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
 
             {/* Close button */}
             <button
-                className="absolute top-4 right-4 text-white hover:text-gray-300 text-4xl font-bold z-50 cursor-pointer"
+                className="absolute top-4 right-4 w-5 h-5 flex items-center justify-center text-white hover:text-gray-300 text-4xl font-bold z-50 cursor-pointer"
                 onClick={onClose}
             >
                 &times;

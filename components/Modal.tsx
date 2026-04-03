@@ -9,9 +9,11 @@ type ModalProps = {
     embedUrl: string;
     embedType: string;
     embedAspectRatio: string;
+    hoverText: string;
+    renderTitle: boolean;
 };
 
-export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, embedAspectRatio }: ModalProps) {
+export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, embedAspectRatio, hoverText, renderTitle }: ModalProps) {
     if (!isOpen) return null;
 
     const cleanUrl = embedUrl.replace(/&amp;/g, '&');

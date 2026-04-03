@@ -11,7 +11,10 @@ type ProjectCardProps = {
 
 export default function ProjectCard({ project }: ProjectCardProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const [isHovered, setIsHovered] = useState(false);
 
+    const hasHoverText = Boolean(project.hover_text);
     const isInteractive = Boolean(project.embed_url || project.info_url);
 
     return (
@@ -20,7 +23,19 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 href={project.embed_url ? undefined : (project.info_url || undefined)}
                 target={project.embed_url ? undefined : (project.info_url ? "_blank" : undefined)}
                 rel={project.embed_url ? undefined : (project.info_url ? "noopener noreferrer" : undefined)}
-                className={`relative w-full aspect-square overflow-hidden group rounded-3xl shadow-2xl block ${isInteractive ? "cursor-pointer" : "cursor-default"}`}
+                className={`relative w-full aspect-square overflow-hidden group rounded-3xl shadow-2xl block ${hasHoverText && isHovered ? "cursor-none" : "cursor-default"}`}
+                onMouseEnter={(e) => {
+                    if (hasHoverText) {
+                        setMousePos({ x: e.clientX, y: e.clientY });
+                        setIsHovered(true);
+                    }
+                }}
+                onMouseLeave={() => hasHoverText && setIsHovered(false)}
+                onMouseMove={(e) => {
+                    if (hasHoverText) {
+                        setMousePos({ x: e.clientX, y: e.clientY });
+                    }
+                }}
                 onClick={(e) => {
                     if (project.embed_url) {
                         e.preventDefault();
@@ -61,6 +76,22 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                     </div>
                 </div>
             </a>
+
+            {/* Hover Tooltip */}
+            {hasHoverText && (
+                <div
+                    className={`fixed z-[100] pointer-events-none transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                    style={{
+                        left: mousePos.x,
+                        top: mousePos.y,
+                        transform: 'translate(-50%, -50%)'
+                    }}
+                >
+                    <span className="bg-black/50 text-white px-3 py-1.5 rounded-lg text-sm sm:text-base font-medium shadow-xl whitespace-nowrap">
+                        {project.hover_text}
+                    </span>
+                </div>
+            )}
 
             <Modal
                 isOpen={isModalOpen}

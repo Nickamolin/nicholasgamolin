@@ -32,6 +32,16 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                 &times;
             </button>
 
+            {/* About button */}
+            {infoUrl && (
+                <button
+                    className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 px-4 py-2 border border-white bg-transparent text-white font-medium hover:bg-white hover:text-black transition-colors z-50 cursor-pointer rounded-md"
+                    onClick={() => window.open(infoUrl, '_blank', 'noopener,noreferrer')}
+                >
+                    About ↗
+                </button>
+            )}
+
             {/* Iframe */}
             {embedType === "youtube" && (
                 <iframe

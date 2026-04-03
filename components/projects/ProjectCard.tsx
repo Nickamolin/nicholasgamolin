@@ -40,24 +40,22 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                     />
 
                     {/* Title Overlay */}
-                    <div className="absolute inset-x-0 top-0 p-4 sm:p-6 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex flex-col justify-start opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500">
-                        <div className="flex justify-between items-start w-full translate-y-0 md:-translate-y-2 md:group-hover:translate-y-0 transition-transform duration-500">
-                            <h3 className="text-white font-bold text-xl sm:text-2xl text-shadow-md pr-4">
-                                {project.title}
-                            </h3>
+                    <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500">
+                        <h3 className="text-white font-bold text-xl sm:text-2xl text-shadow-md translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 transition-transform duration-500">
+                            {project.title}
+                        </h3>
+                        <div className="flex justify-between items-center w-full mt-1 translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 transition-transform duration-500 delay-75">
+                            {project.subtitle && (
+                                <p className="text-gray-200 text-sm sm:text-base pr-4">
+                                    {project.subtitle}
+                                </p>
+                            )}
                             {project.date_published && (
-                                <span className="text-gray-300 text-sm sm:text-base font-medium whitespace-nowrap mt-1">
+                                <span className="text-gray-300 text-sm sm:text-base font-medium whitespace-nowrap">
                                     {new Date(project.date_published).getFullYear()}
                                 </span>
                             )}
                         </div>
-                        {project.subtitle && (
-                            <div className="w-full mt-1 translate-y-0 md:-translate-y-2 md:group-hover:translate-y-0 transition-transform duration-500 delay-75">
-                                <p className="text-gray-200 text-sm sm:text-base">
-                                    {project.subtitle}
-                                </p>
-                            </div>
-                        )}
                     </div>
                 </div>
             </a>

@@ -36,10 +36,10 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             {/* About button */}
             {infoUrl && (
                 <button
-                    className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 px-4 py-2 border border-white bg-transparent text-white font-medium hover:bg-white hover:text-black transition-colors z-50 cursor-pointer rounded-md"
+                    className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 px-4 py-2 bg-white text-black font-medium hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md"
                     onClick={() => window.open(infoUrl, '_blank', 'noopener,noreferrer')}
                 >
-                    About ↗
+                    About ↗&#xFE0E;
                 </button>
             )}
 
@@ -71,8 +71,8 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             {embedType === "pico8" && (
                 <div
                     className={`relative z-10 overflow-hidden shadow-2xl rounded-lg ${isTouchScreen
-                            ? "w-full h-[80vh]"
-                            : "w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(65vw,calc(65vh*(var(--ratio))))] max-h-[100vh] md:max-h-[65vh]"
+                        ? "w-full h-[80vh]"
+                        : "w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(65vw,calc(65vh*(var(--ratio))))] max-h-[100vh] md:max-h-[65vh]"
                         }`}
                     style={{
                         '--ratio': embedAspectRatio || '128 / 105',

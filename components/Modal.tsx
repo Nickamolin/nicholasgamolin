@@ -9,14 +9,13 @@ type ModalProps = {
     embedUrl: string;
     embedType: string;
     embedAspectRatio: string;
-    hoverText: string;
-    renderTitle: boolean;
 };
 
-export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, embedAspectRatio, hoverText, renderTitle }: ModalProps) {
+export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, embedAspectRatio }: ModalProps) {
     if (!isOpen) return null;
 
     const cleanUrl = embedUrl.replace(/&amp;/g, '&');
+    const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -46,22 +45,22 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
 
             {/* Iframe */}
             {embedType === "youtube" && (
-                <iframe
-                    className="relative z-10 md:max-w-[85vw] md:max-h-[85vh] rounded-lg shadow-2xl"
-                    style={{ aspectRatio: embedAspectRatio || '16 / 9' }}
-                    src={cleanUrl}
-                    title="YouTube video player"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen>
-                </iframe>
+                <div className="relative z-10 w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(85vw,calc(85vh*(var(--ratio))))] max-h-[100vh] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg" style={{ aspectRatio: embedAspectRatio || '16 / 9', '--ratio': embedAspectRatio || '16 / 9' } as React.CSSProperties}>
+                    <iframe
+                        className="w-full h-full"
+                        src={cleanUrl}
+                        title="YouTube video player"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen>
+                    </iframe>
+                </div>
             )}
 
             {embedType === "itchio" && (
-                <div className="relative z-10 w-full md:max-w-[85vw] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg">
+                <div className="relative z-10 w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(85vw,calc(85vh*(var(--ratio))))] max-h-[100vh] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg" style={{ aspectRatio: embedAspectRatio || '16 / 9', '--ratio': embedAspectRatio || '16 / 9' } as React.CSSProperties}>
                     <iframe
-                        className="w-full"
-                        style={{ aspectRatio: embedAspectRatio || '16 / 9' }}
+                        className="w-full h-full"
                         src={embedUrl}
                         allowFullScreen>
                         <a href={infoUrl}>Play Game on itch.io</a>
@@ -70,10 +69,18 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             )}
 
             {embedType === "pico8" && (
-                <div className="relative z-10 w-full md:max-w-[65vw] md:max-h-[65vh] overflow-hidden shadow-2xl rounded-lg">
+                <div
+                    className={`relative z-10 overflow-hidden shadow-2xl rounded-lg ${isTouchScreen
+                            ? "w-full h-[80vh]"
+                            : "w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(65vw,calc(65vh*(var(--ratio))))] max-h-[100vh] md:max-h-[65vh]"
+                        }`}
+                    style={{
+                        '--ratio': embedAspectRatio || '128 / 105',
+                        aspectRatio: isTouchScreen ? 'auto' : 'var(--ratio)'
+                    } as React.CSSProperties}
+                >
                     <iframe
-                        className="w-full -mb-[21px] max-md:min-h-[90vh]"
-                        style={{ aspectRatio: embedAspectRatio || '128 / 105' }}
+                        className="w-full h-full"
                         src={embedUrl}
                         allowFullScreen>
                     </iframe>
@@ -81,12 +88,13 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             )}
 
             {embedType === "website" && (
-                <iframe
-                    className="relative z-10 md:max-w-[85vw] md:max-h-[85vh] rounded-lg shadow-2xl"
-                    style={{ aspectRatio: embedAspectRatio || '1 / 1' }}
-                    src={embedUrl}
-                    allowFullScreen>
-                </iframe>
+                <div className="relative z-10 w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(85vw,calc(85vh*(var(--ratio))))] max-h-[100vh] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg" style={{ aspectRatio: embedAspectRatio || '1 / 1', '--ratio': embedAspectRatio || '1 / 1' } as React.CSSProperties}>
+                    <iframe
+                        className="w-full h-full"
+                        src={embedUrl}
+                        allowFullScreen>
+                    </iframe>
+                </div>
             )}
         </div>
     );

@@ -27,10 +27,10 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
 
             {/* Close button */}
             <button
-                className="absolute top-4 right-4 w-5 h-5 flex items-center justify-center text-white hover:text-gray-300 text-4xl font-bold z-50 cursor-pointer"
+                className="absolute top-4 right-4 sm:top-6 sm:right-6 px-4 py-2 bg-white text-black font-medium hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md"
                 onClick={onClose}
             >
-                &times;
+                Close &times;
             </button>
 
             {/* About button */}

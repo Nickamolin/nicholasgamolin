@@ -51,17 +51,17 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         alt={project.title}
                         fill
                         style={project.embed_type === 'pico8' ? { imageRendering: "pixelated" } : undefined}
-                        className="object-cover saturate-100 md:saturate-0 md:group-hover:saturate-100 md:group-hover:scale-105 transition-all duration-500"
+                        className="object-cover saturate-0 group-hover:saturate-100 [@media(hover:none)]:saturate-100 group-hover:scale-105 transition-all duration-500"
                     />
 
                     {/* Title Overlay */}
-                    <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500">
+                    <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-all duration-500">
                         {project.render_title && (
-                            <h3 className="text-white font-bold text-xl sm:text-2xl text-shadow-md translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 transition-transform duration-500">
+                            <h3 className="text-white font-bold text-xl sm:text-2xl text-shadow-md translate-y-2 group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500">
                                 {project.title}
                             </h3>
                         )}
-                        <div className="flex justify-between items-center w-full mt-1 translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 transition-transform duration-500 delay-75">
+                        <div className="flex justify-between items-center w-full mt-1 translate-y-2 group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500 delay-75">
                             {project.subtitle && (
                                 <p className="text-gray-200 text-sm sm:text-base pr-4">
                                     {project.subtitle}

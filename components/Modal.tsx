@@ -27,7 +27,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
 
             {/* Close button */}
             <button
-                className="absolute top-4 right-4 sm:top-6 sm:right-6 px-4 py-2 bg-white text-black font-medium hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md"
+                className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 px-4 py-2 bg-white text-black font-medium hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md"
                 onClick={onClose}
             >
                 Close &times;
@@ -36,7 +36,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             {/* About button */}
             {infoUrl && (
                 <button
-                    className="absolute top-4 left-4 sm:top-6 sm:left-6 px-4 py-2 bg-white text-black font-medium hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md"
+                    className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 px-4 py-2 bg-white text-black font-medium hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md"
                     onClick={() => window.open(infoUrl, '_blank', 'noopener,noreferrer')}
                 >
                     About ↗&#xFE0E;

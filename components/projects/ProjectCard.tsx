@@ -80,7 +80,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             {/* Hover Tooltip */}
             {hasHoverText && (
                 <div
-                    className={`fixed z-[100] pointer-events-none transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                    className={`fixed z-[100] pointer-events-none transition-opacity duration-300 [@media(hover:none)]:hidden ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                     style={{
                         left: mousePos.x,
                         top: mousePos.y,

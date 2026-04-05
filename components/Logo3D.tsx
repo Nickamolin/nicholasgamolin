@@ -14,9 +14,17 @@ const Logo3D: React.FC = () => {
 
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(300, 300);
+      const getDimensions = () => window.innerWidth >= 768 ? { width: 400, height: 400 } : { width: 300, height: 300 };
+      const { width, height } = getDimensions();
+      renderer.setSize(width, height);
       renderer.setClearColor(0x000000, 0); // transparent background
-      containerRef.current?.appendChild(renderer.domElement);
+      const currentContainer = containerRef.current;
+
+      // Ensure no dangling canvases from dev StrictMode double-invocations
+      if (currentContainer) {
+        currentContainer.innerHTML = '';
+        currentContainer.appendChild(renderer.domElement);
+      }
 
       camera.position.z = 4;
 
@@ -121,10 +129,9 @@ const Logo3D: React.FC = () => {
       };
       animate();
 
-      // HANDLE RESIZE (always 300x300 + Retina)
+      // HANDLE RESIZE (Responsive)
       const handleResize = () => {
-        const width = 300;
-        const height = 300;
+        const { width, height } = getDimensions();
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
         renderer.setPixelRatio(window.devicePixelRatio);
@@ -137,6 +144,10 @@ const Logo3D: React.FC = () => {
         controls.dispose();
         prefersDark.removeEventListener('change', onMediaChange);
         htmlObserver.disconnect();
+        if (currentContainer && renderer.domElement && currentContainer.contains(renderer.domElement)) {
+          currentContainer.removeChild(renderer.domElement);
+        }
+        renderer.dispose();
       };
     }
   }, []);

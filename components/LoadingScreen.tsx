@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export default function LoadingScreen() {
+    const pathname = usePathname();
     const [isLogoLoaded, setIsLogoLoaded] = useState(false);
     const [isWindowLoaded, setIsWindowLoaded] = useState(false);
     const [isFadingOut, setIsFadingOut] = useState(false);
@@ -21,11 +23,16 @@ export default function LoadingScreen() {
     }, []);
 
     useEffect(() => {
+        if (pathname !== "/") {
+            setIsLogoLoaded(true);
+            return;
+        }
+
         // Listen for the custom event from Logo3D.tsx
         const handleLogoLoaded = () => setIsLogoLoaded(true);
         window.addEventListener("logo-loaded", handleLogoLoaded);
         return () => window.removeEventListener("logo-loaded", handleLogoLoaded);
-    }, []);
+    }, [pathname]);
 
     useEffect(() => {
         // When both conditions are met, trigger fade out

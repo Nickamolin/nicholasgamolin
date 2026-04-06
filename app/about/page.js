@@ -1,8 +1,17 @@
 export default function AboutPage() {
     return (
-        <div className="min-h-[90vh] w-full p-8 flex flex-col items-center justify-center">
+        <div className="min-h-screen w-full p-8 flex flex-col items-center justify-center bg-black">
 
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-center w-auto pointer-events-auto text-shadow-lg">:)</h1>
+            <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-48 h-48 md:w-64 md:h-64 object-contain"
+            >
+                <source src="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/animations/draft.mkv" type="video/x-matroska" />
+                Loading...
+            </video>
 
         </div>
     );

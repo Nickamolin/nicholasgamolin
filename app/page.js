@@ -21,7 +21,7 @@ export default async function Home() {
               rel="noopener noreferrer"
             >
               <Image
-                src="/linkedinBlack.svg"
+                src="/icons/linkedinBlack.svg"
                 width={50}
                 height={50}
                 alt="LinkedIn"
@@ -34,7 +34,7 @@ export default async function Home() {
               rel="noopener noreferrer"
             >
               <Image
-                src="/github.svg"
+                src="/icons/github.svg"
                 width={50}
                 height={50}
                 alt="GitHub"
@@ -47,7 +47,7 @@ export default async function Home() {
               rel="noopener noreferrer"
             >
               <Image
-                src="/YouTubeIconBW.svg"
+                src="/icons/YouTubeIconBW.svg"
                 width={50}
                 height={50}
                 alt="YouTube"

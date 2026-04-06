@@ -18,7 +18,7 @@ export default function Navbar() {
       {/* Left side: Logo and Name */}
       <Link href="/" onClick={(e) => handleNav(e, "/")} className="flex items-center gap-4">
         <Image
-          src="/LogoSVG.svg"
+          src="/icons/LogoSVG.svg"
           alt="Logo"
           width={16}
           height={16}

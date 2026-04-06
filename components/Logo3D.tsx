@@ -65,7 +65,7 @@ const Logo3D: React.FC = () => {
       // LOAD GLB MODEL
       const loader = new GLTFLoader();
       loader.load(
-        "/Logo.glb", // put your model inside `public/`
+        "/models/Logo.glb", // put your model inside `public/`
         (gltf) => {
           model = gltf.scene;
 

@@ -6,33 +6,62 @@ import { useRouter } from "next/navigation";
 interface LoadingContextType {
   isTransitioning: boolean;
   navigateWithTransition: (href: string) => void;
+  registerLoadingItem: (id: string) => void;
+  resolveLoadingItem: (id: string) => void;
 }
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 export function LoadingProvider({ children }: { children: React.ReactNode }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set());
   const router = useRouter();
 
-  const navigateWithTransition = (href: string) => {
-    // 1. Trigger the fade-in (the loading screen will see this and show up)
-    setIsTransitioning(true);
+  const registerLoadingItem = (id: string) => {
+    setLoadingItems((prev) => new Set(prev).add(id));
+  };
 
-    // 2. Wait for the fade-in animation to complete (500ms match with CSS transition)
+  const resolveLoadingItem = (id: string) => {
+    setLoadingItems((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
+  // Safety timeout: If stuff takes too long, just force the loading screen to clear
+  React.useEffect(() => {
+    if (isTransitioning) {
+      const timer = setTimeout(() => {
+        setIsTransitioning(false);
+        setLoadingItems(new Set());
+      }, 5000); // 5s safety limit
+      return () => clearTimeout(timer);
+    }
+  }, [isTransitioning]);
+
+  // Only consider the transition "complete" when the route has changed AND all items are resolved
+  const isActuallyTransitioning = isTransitioning || loadingItems.size > 0;
+
+  const navigateWithTransition = (href: string) => {
+    setIsTransitioning(true);
+    setLoadingItems(new Set()); // Reset for the new page
+
     setTimeout(() => {
-      // 3. Navigation
       router.push(href);
-      
-      // 4. We will rely on the LoadingScreen's own logic to fade out 
-      // once it detects the pathname has changed, or we can manually set it.
-      // For now, let's just keep it on until the next page is ready.
-      // The LoadingScreen component will reset its internal state on pathname change.
-      setIsTransitioning(false);
-    }, 600); // Slightly longer than the transition to be safe
+      // We don't set isTransitioning(false) here because we want to wait for the new page's assets!
+      // But we will set a flag that the "routing" is done.
+      setIsTransitioning(false); 
+    }, 600);
   };
 
   return (
-    <LoadingContext.Provider value={{ isTransitioning, navigateWithTransition }}>
+    <LoadingContext.Provider value={{ 
+      isTransitioning: isActuallyTransitioning, 
+      navigateWithTransition,
+      registerLoadingItem,
+      resolveLoadingItem
+    }}>
       {children}
     </LoadingContext.Provider>
   );

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { useLoading } from "../LoadingProvider";
 import type { Project } from "./types";
 import Modal from "../Modal";
 
@@ -14,8 +15,15 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [isHovered, setIsHovered] = useState(false);
 
+    const { registerLoadingItem, resolveLoadingItem } = useLoading();
+
     const hasHoverText = Boolean(project.hover_text);
     const isInteractive = Boolean(project.embed_url || project.info_url);
+
+    // Register this card as a "loading item" so the loading screen waits for us
+    useEffect(() => {
+        registerLoadingItem(project.id.toString());
+    }, []);
 
     return (
         <>
@@ -52,6 +60,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         fill
                         style={project.embed_type === 'pico8' ? { imageRendering: "pixelated" } : undefined}
                         className="object-cover saturate-0 group-hover:saturate-100 [@media(hover:none)]:saturate-100 group-hover:scale-105 transition-all duration-500"
+                        onLoad={() => resolveLoadingItem(project.id.toString())}
+                        onError={() => resolveLoadingItem(project.id.toString())} // Resolve even on error so we don't hang
                     />
 
                     {/* Title Overlay */}

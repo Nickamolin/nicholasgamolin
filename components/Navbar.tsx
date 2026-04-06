@@ -14,7 +14,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex justify-between items-center p-6 text-white w-full bg-black">
+    <nav className="sticky top-0 z-[100] flex justify-between items-center p-6 text-white w-full bg-black/80 backdrop-blur-md">
       {/* Left side: Logo and Name */}
       <Link href="/" onClick={(e) => handleNav(e, "/")} className="flex items-center gap-4">
         <Image

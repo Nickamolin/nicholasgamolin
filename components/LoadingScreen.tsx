@@ -82,21 +82,20 @@ export default function LoadingScreen() {
 
     return (
         <div
-            className={`fixed inset-0 z-[9999] flex items-center justify-center bg-background transition-opacity duration-500 ${isOpaque ? "opacity-100" : "opacity-0 pointer-events-none"
+            className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black transition-opacity duration-500 ${isOpaque ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}
         >
             <div className="relative flex flex-col items-center justify-center">
-                {/* Pulsing SVG Logo */}
-                <div className="animate-pulse">
-                    <Image
-                        src="/LogoSVG.svg"
-                        alt="Loading..."
-                        width={100}
-                        height={100}
-                        className="invert opacity-80"
-                        priority
-                    />
-                </div>
+                <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-48 h-48 md:w-64 md:h-64 object-contain"
+                >
+                    <source src="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/animations/draft.mkv" type="video/x-matroska" />
+                    Loading...
+                </video>
             </div>
         </div>
     );

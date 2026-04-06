@@ -9,7 +9,7 @@ export default function AboutPage() {
                 playsInline
                 className="w-48 h-48 md:w-64 md:h-64 object-contain"
             >
-                <source src="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/animations/draft.mkv" type="video/x-matroska" />
+                <source src="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/animations/draft2.mkv" type="video/x-matroska" />
                 Loading...
             </video>
 

@@ -44,7 +44,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
 
             {/* Close button */}
             <button
-                className={`absolute ${isTouchScreen ? 'bottom-4 sm:bottom-6' : 'top-20 sm:top-24'} right-4 sm:right-6 px-4 py-2 bg-white text-black font-medium opacity-75 hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md`}
+                className={`absolute ${isTouchScreen ? 'bottom-4 sm:bottom-6' : 'top-20 sm:top-24'} right-4 sm:right-6 px-4 py-2 bg-white text-black font-bold opacity-100 hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md`}
                 onClick={onClose}
             >
                 Close &times;
@@ -53,7 +53,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             {/* About button */}
             {infoUrl && (
                 <button
-                    className={`absolute ${isTouchScreen ? 'bottom-4 sm:bottom-6' : 'top-20 sm:top-24'} left-4 sm:left-6 px-4 py-2 bg-white text-black font-medium opacity-75 hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md`}
+                    className={`absolute ${isTouchScreen ? 'bottom-4 sm:bottom-6' : 'top-20 sm:top-24'} left-4 sm:left-6 px-4 py-2 bg-white text-black font-bold opacity-100 hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md`}
                     onClick={() => window.open(infoUrl, '_blank', 'noopener,noreferrer')}
                 >
                     About ↗&#xFE0E;

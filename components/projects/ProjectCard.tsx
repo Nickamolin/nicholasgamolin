@@ -22,8 +22,14 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
     // Register this card as a "loading item" so the loading screen waits for us
     useEffect(() => {
-        registerLoadingItem(project.id.toString());
-    }, []);
+        const id = project.id.toString();
+        registerLoadingItem(id);
+        
+        return () => {
+            // Cleanup: if the card unmounts, resolve the item so we don't block the screen
+            resolveLoadingItem(id);
+        };
+    }, [project.id]);
 
     return (
         <>

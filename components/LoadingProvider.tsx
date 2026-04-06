@@ -29,19 +29,19 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  // Only consider the transition "complete" when the route has changed AND all items are resolved
+  const isActuallyTransitioning = isTransitioning || loadingItems.size > 0;
+
   // Safety timeout: If stuff takes too long, just force the loading screen to clear
   React.useEffect(() => {
-    if (isTransitioning) {
+    if (isActuallyTransitioning) {
       const timer = setTimeout(() => {
         setIsTransitioning(false);
         setLoadingItems(new Set());
       }, 5000); // 5s safety limit
       return () => clearTimeout(timer);
     }
-  }, [isTransitioning]);
-
-  // Only consider the transition "complete" when the route has changed AND all items are resolved
-  const isActuallyTransitioning = isTransitioning || loadingItems.size > 0;
+  }, [isActuallyTransitioning]);
 
   const navigateWithTransition = (href: string) => {
     setIsTransitioning(true);

@@ -24,7 +24,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     useEffect(() => {
         const id = project.id.toString();
         registerLoadingItem(id);
-        
+
         return () => {
             // Cleanup: if the card unmounts, resolve the item so we don't block the screen
             resolveLoadingItem(id);

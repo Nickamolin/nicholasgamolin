@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 type ModalProps = {
     isOpen: boolean;
@@ -12,10 +12,33 @@ type ModalProps = {
 };
 
 export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, embedAspectRatio }: ModalProps) {
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (isOpen) {
+            setIsLoading(true);
+        }
+    }, [isOpen, embedUrl]);
+
     if (!isOpen) return null;
 
     const cleanUrl = embedUrl.replace(/&amp;/g, '&');
     const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+    const LoadingPlaceholder = () => (
+        <div className={`absolute inset-0 z-20 flex items-center justify-center bg-black transition-opacity duration-500 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-32 h-32 md:w-48 md:h-48 object-contain"
+            >
+                <source src="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/animations/draft2.mkv" type="video/x-matroska" />
+                Loading...
+            </video>
+        </div>
+    );
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -46,12 +69,14 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
             {/* Iframe */}
             {embedType === "youtube" && (
                 <div className="relative z-10 w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(85vw,calc(85vh*(var(--ratio))))] max-h-[100vh] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg" style={{ aspectRatio: embedAspectRatio || '16 / 9', '--ratio': embedAspectRatio || '16 / 9' } as React.CSSProperties}>
+                    <LoadingPlaceholder />
                     <iframe
                         className="w-full h-full"
                         src={cleanUrl}
                         title="YouTube video player"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         referrerPolicy="strict-origin-when-cross-origin"
+                        onLoad={() => setIsLoading(false)}
                         allowFullScreen>
                     </iframe>
                 </div>
@@ -59,9 +84,11 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
 
             {embedType === "itchio" && (
                 <div className="relative z-10 w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(85vw,calc(85vh*(var(--ratio))))] max-h-[100vh] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg" style={{ aspectRatio: embedAspectRatio || '16 / 9', '--ratio': embedAspectRatio || '16 / 9' } as React.CSSProperties}>
+                    <LoadingPlaceholder />
                     <iframe
                         className="w-full h-full"
                         src={embedUrl}
+                        onLoad={() => setIsLoading(false)}
                         allowFullScreen>
                         <a href={infoUrl}>Play Game on itch.io</a>
                     </iframe>
@@ -79,9 +106,11 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                         aspectRatio: isTouchScreen ? 'auto' : 'var(--ratio)'
                     } as React.CSSProperties}
                 >
+                    <LoadingPlaceholder />
                     <iframe
                         className="w-full h-full"
                         src={embedUrl}
+                        onLoad={() => setIsLoading(false)}
                         allowFullScreen>
                     </iframe>
                 </div>
@@ -89,9 +118,11 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
 
             {embedType === "website" && (
                 <div className="relative z-10 w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(85vw,calc(85vh*(var(--ratio))))] max-h-[100vh] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg" style={{ aspectRatio: embedAspectRatio || '1 / 1', '--ratio': embedAspectRatio || '1 / 1' } as React.CSSProperties}>
+                    <LoadingPlaceholder />
                     <iframe
                         className="w-full h-full"
                         src={embedUrl}
+                        onLoad={() => setIsLoading(false)}
                         allowFullScreen>
                     </iframe>
                 </div>
@@ -99,3 +130,4 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
         </div>
     );
 }
+

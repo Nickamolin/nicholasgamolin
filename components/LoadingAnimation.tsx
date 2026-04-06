@@ -10,7 +10,7 @@ type LoadingAnimationProps = {
 
 export default function LoadingAnimation({
     isVisible = true,
-    className = "w-48 h-48 md:w-[256px] md:h-[256px]",
+    className = "w-[256px] h-[256px]",
     wrapperClassName = ""
 }: LoadingAnimationProps) {
     return (

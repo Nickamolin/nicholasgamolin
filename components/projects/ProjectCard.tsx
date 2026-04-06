@@ -23,7 +23,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 href={project.embed_url ? undefined : (project.info_url || undefined)}
                 target={project.embed_url ? undefined : (project.info_url ? "_blank" : undefined)}
                 rel={project.embed_url ? undefined : (project.info_url ? "noopener noreferrer" : undefined)}
-                className={`relative w-full aspect-square overflow-hidden group rounded-3xl shadow-2xl block ${hasHoverText && isHovered ? "cursor-none" : "cursor-default"}`}
+                className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && isHovered ? "cursor-none" : "cursor-default"}`}
                 onMouseEnter={(e) => {
                     if (hasHoverText) {
                         setMousePos({ x: e.clientX, y: e.clientY });

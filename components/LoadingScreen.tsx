@@ -3,12 +3,16 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useLoading } from "@/components/LoadingProvider";
 
 export default function LoadingScreen() {
     const pathname = usePathname();
+    const { isTransitioning } = useLoading();
+
     const [isLogoLoaded, setIsLogoLoaded] = useState(false);
     const [isWindowLoaded, setIsWindowLoaded] = useState(false);
-    const [isFadingOut, setIsFadingOut] = useState(false);
+    const [isAppLoaded, setIsAppLoaded] = useState(false);
+    const [isOpaque, setIsOpaque] = useState(true);
     const [isHidden, setIsHidden] = useState(false);
 
     useEffect(() => {
@@ -34,44 +38,51 @@ export default function LoadingScreen() {
         return () => window.removeEventListener("logo-loaded", handleLogoLoaded);
     }, [pathname]);
 
+    // Check for initial load completion
     useEffect(() => {
-        // When both conditions are met, trigger fade out
         if (isLogoLoaded && isWindowLoaded) {
-            // Add a tiny delay to ensure a smooth transition and no flickering
-            const fadeTimeout = setTimeout(() => {
-                setIsFadingOut(true);
-
-                // Wait for the fade out transition to complete before hiding
-                // The duration here should match the CSS transition duration
-                setTimeout(() => {
-                    setIsHidden(true);
-                }, 500); // 500ms fade transition
-            }, 500);
-
-            return () => clearTimeout(fadeTimeout);
+            setIsAppLoaded(true);
         }
     }, [isLogoLoaded, isWindowLoaded]);
 
+    // Handle visibility and opacity transitions
     useEffect(() => {
-        if (!isHidden) {
-            // Force scroll to top and lock body scrolling
+        if (isTransitioning) {
+            // When a navigation transition starts:
+            setIsHidden(false); // Make it present in the DOM
+            // Use a tiny timeout to allow the DOM node to exist before triggering opacity
+            const timeout = setTimeout(() => setIsOpaque(true), 10);
+            return () => clearTimeout(timeout);
+        } else if (isAppLoaded) {
+            // When everything is loaded and NOT transitioning:
+            const fadeTimeout = setTimeout(() => {
+                setIsOpaque(false); // Start the fading animation
+
+                const hideTimeout = setTimeout(() => {
+                    setIsHidden(true); // Completely remove from DOM after fade finishes
+                }, 500); // Duration match with CSS transition
+
+                return () => clearTimeout(hideTimeout);
+            }, 400); // Buffer before starting fade out
+
+            return () => clearTimeout(fadeTimeout);
+        }
+    }, [isTransitioning, isAppLoaded, pathname]);
+
+    useEffect(() => {
+        if (!isHidden || isTransitioning) {
             window.scrollTo(0, 0);
             document.body.style.overflow = "hidden";
         } else {
-            // Unlock scrolling once hidden
             document.body.style.overflow = "";
         }
-
-        return () => {
-            document.body.style.overflow = "";
-        };
-    }, [isHidden]);
+    }, [isHidden, isTransitioning]);
 
     if (isHidden) return null;
 
     return (
         <div
-            className={`fixed inset-0 z-[9999] flex items-center justify-center bg-background transition-opacity duration-500 ${isFadingOut ? "opacity-0 pointer-events-none" : "opacity-100"
+            className={`fixed inset-0 z-[9999] flex items-center justify-center bg-background transition-opacity duration-500 ${isOpaque ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}
         >
             <div className="relative flex flex-col items-center justify-center">

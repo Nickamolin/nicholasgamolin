@@ -1,5 +1,5 @@
 import Logo3D from "@/components/Logo3D";
-import Projects from "@/components/projects/Projects";
+import Highlights from "@/components/projects/Highlights";
 import Image from "next/image";
 
 export default async function Home() {
@@ -60,7 +60,7 @@ export default async function Home() {
 
 
 
-      <Projects />
+      <Highlights />
 
     </div>
   );

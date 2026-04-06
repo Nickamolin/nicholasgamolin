@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import LoadingScreen from "@/components/LoadingScreen";
+import { LoadingProvider } from "@/components/LoadingProvider";
 import Navbar from "@/components/Navbar";
 import { Analytics } from "@vercel/analytics/next"
 
@@ -33,9 +34,11 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <LoadingScreen />
-        <Navbar />
-        {children}
+        <LoadingProvider>
+          <LoadingScreen />
+          <Navbar />
+          {children}
+        </LoadingProvider>
         <Analytics />
       </body>
     </html>

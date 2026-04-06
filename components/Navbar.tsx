@@ -1,12 +1,22 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useLoading } from "@/components/LoadingProvider";
 
 export default function Navbar() {
+  const { navigateWithTransition } = useLoading();
+
+  const handleNav = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    navigateWithTransition(href);
+  };
+
   return (
-    <nav className="flex justify-between items-start p-6 text-white w-full">
+    <nav className="flex justify-between items-center p-6 text-white w-full bg-black">
       {/* Left side: Logo and Name */}
-      <Link href="/" className="flex items-center gap-4">
+      <Link href="/" onClick={(e) => handleNav(e, "/")} className="flex items-center gap-4">
         <Image
           src="/LogoSVG.svg"
           alt="Logo"
@@ -14,23 +24,23 @@ export default function Navbar() {
           height={16}
           className="invert"
         />
-        <span className="font-bold text-lg">Nicholas Gamolin</span>
+        <span className="font-bold text-xl">Nicholas Gamolin</span>
       </Link>
 
       {/* Right side: Navigation Links */}
-      <div className="flex items-center gap-6 text-sm font-medium">
-        <Link href="/projects" className="hover:underline underline-offset-4">
+      <div className="flex items-center gap-12 text-xl font-bold">
+        <Link href="/projects" onClick={(e) => handleNav(e, "/projects")} className="hover:underline underline-offset-4">
           Projects
         </Link>
-        <Link href="/about" className="hover:underline underline-offset-4">
+        <Link href="/about" onClick={(e) => handleNav(e, "/about")} className="hover:underline underline-offset-4">
           About
         </Link>
-        {/* <Link href="/resume" className="hover:underline underline-offset-4">
+        <div className="hover:underline underline-offset-4 opacity-50">
           Resume
-        </Link>
-        <Link href="/contact" className="hover:underline underline-offset-4">
+        </div>
+        <div className="hover:underline underline-offset-4 opacity-50">
           Contact
-        </Link> */}
+        </div>
       </div>
     </nav>
   );

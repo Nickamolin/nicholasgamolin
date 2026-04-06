@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import LoadingAnimation from "./LoadingAnimation";
 
 type ModalProps = {
     isOpen: boolean;
@@ -26,18 +27,11 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
     const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
     const LoadingPlaceholder = () => (
-        <div className={`absolute inset-0 z-20 flex items-center justify-center bg-black transition-opacity duration-500 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-32 h-32 md:w-48 md:h-48 object-contain"
-            >
-                <source src="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/animations/draft2.mkv" type="video/x-matroska" />
-                Loading...
-            </video>
-        </div>
+        <LoadingAnimation
+            isVisible={isLoading}
+            wrapperClassName="absolute inset-0 z-20 bg-black"
+            className="w-32 h-32 md:w-48 md:h-48"
+        />
     );
 
     return (

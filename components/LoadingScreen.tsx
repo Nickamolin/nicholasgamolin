@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLoading } from "@/components/LoadingProvider";
+import LoadingAnimation from "./LoadingAnimation";
 
 export default function LoadingScreen() {
     const pathname = usePathname();
@@ -86,16 +87,10 @@ export default function LoadingScreen() {
                 }`}
         >
             <div className="relative flex flex-col items-center justify-center">
-                <video
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-48 h-48 md:w-64 md:h-64 object-contain"
-                >
-                    <source src="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/animations/draft2.mkv" type="video/x-matroska" />
-                    Loading...
-                </video>
+                <LoadingAnimation 
+                    isVisible={isOpaque} 
+                    className="w-48 h-48 md:w-64 md:h-64" 
+                />
             </div>
         </div>
     );

@@ -7,27 +7,29 @@ import LoadingAnimation from "./LoadingAnimation";
 
 export default function LoadingScreen() {
     const pathname = usePathname();
-    const { isTransitioning } = useLoading();
+    const { isTransitioning, isInitialLoad } = useLoading();
 
     const [isLogoLoaded, setIsLogoLoaded] = useState(false);
     const [isAppLoaded, setIsAppLoaded] = useState(false);
     const [isOpaque, setIsOpaque] = useState(true);
     const [isHidden, setIsHidden] = useState(false);
 
-    // Store ALL timeout IDs in refs so they can be cancelled at any point,
-    // even if they're nested inside other setTimeout callbacks.
-    const fadeInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Store ALL timer/frame IDs in refs so they can be cancelled at any point.
+    const fadeInFrame1Ref = useRef<number | null>(null);
+    const fadeInFrame2Ref = useRef<number | null>(null);
     const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const fadeOutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hasScrolledRef = useRef(false);
 
     const clearAllTimers = () => {
-        if (fadeInTimerRef.current) clearTimeout(fadeInTimerRef.current);
+        if (fadeInFrame1Ref.current) cancelAnimationFrame(fadeInFrame1Ref.current);
+        if (fadeInFrame2Ref.current) cancelAnimationFrame(fadeInFrame2Ref.current);
         if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
         if (fadeOutTimerRef.current) clearTimeout(fadeOutTimerRef.current);
         if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-        fadeInTimerRef.current = null;
+        fadeInFrame1Ref.current = null;
+        fadeInFrame2Ref.current = null;
         scrollTimerRef.current = null;
         fadeOutTimerRef.current = null;
         hideTimerRef.current = null;
@@ -62,20 +64,25 @@ export default function LoadingScreen() {
         if (isTransitioning) {
             hasScrolledRef.current = false;
             setIsHidden(false);
+            setIsOpaque(false); // ensure we start from opacity-0
             document.body.style.overflow = "hidden";
 
-            // Tiny delay to allow the DOM node to exist before triggering opacity
-            fadeInTimerRef.current = setTimeout(() => {
-                setIsOpaque(true);
+            // Double rAF: first frame guarantees React has committed the DOM node,
+            // second frame guarantees the browser has painted it at opacity-0.
+            // This ensures the CSS transition always has a starting value to animate from.
+            fadeInFrame1Ref.current = requestAnimationFrame(() => {
+                fadeInFrame2Ref.current = requestAnimationFrame(() => {
+                    setIsOpaque(true);
 
-                // Scroll to top only after the overlay is fully opaque (duration-500)
-                scrollTimerRef.current = setTimeout(() => {
-                    if (!hasScrolledRef.current) {
-                        window.scrollTo(0, 0);
-                        hasScrolledRef.current = true;
-                    }
-                }, 500);
-            }, 10);
+                    // Scroll to top only after the overlay is fully opaque (duration-500)
+                    scrollTimerRef.current = setTimeout(() => {
+                        if (!hasScrolledRef.current) {
+                            window.scrollTo(0, 0);
+                            hasScrolledRef.current = true;
+                        }
+                    }, 500);
+                });
+            });
 
         } else if (isAppLoaded) {
             // Not transitioning and page is ready — start fade-out sequence
@@ -96,7 +103,8 @@ export default function LoadingScreen() {
 
     return (
         <div
-            className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black transition-opacity duration-500 ${isOpaque ? "opacity-100" : "opacity-0 pointer-events-none"
+            className={`fixed inset-0 flex items-center justify-center bg-black transition-opacity duration-500 ${isInitialLoad ? "z-[9999]" : "z-[90]"
+                } ${isOpaque ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}
         >
             <div className="relative flex flex-col items-center justify-center">

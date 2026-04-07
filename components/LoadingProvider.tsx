@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 
 interface LoadingContextType {
   isTransitioning: boolean;
+  isInitialLoad: boolean;
   navigateWithTransition: (href: string) => void;
   registerLoadingItem: (id: string) => void;
   resolveLoadingItem: (id: string) => void;
@@ -15,6 +16,7 @@ const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 export function LoadingProvider({ children }: { children: React.ReactNode }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set());
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -63,6 +65,8 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     // If we're already navigating to this target, ignore
     if (navigationTarget.current === href) return;
 
+    // First navigation clears the initial load state
+    setIsInitialLoad(false);
     setIsTransitioning(true);
     setLoadingItems(new Set()); // Reset for the new page
     navigationTarget.current = href;
@@ -77,8 +81,9 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   return (
-    <LoadingContext.Provider value={{ 
-      isTransitioning: isActuallyTransitioning, 
+    <LoadingContext.Provider value={{
+      isTransitioning: isActuallyTransitioning,
+      isInitialLoad,
       navigateWithTransition,
       registerLoadingItem,
       resolveLoadingItem

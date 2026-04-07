@@ -1,14 +1,17 @@
 import Logo3D from "@/components/Logo3D";
 import Highlights from "@/components/projects/Highlights";
 import Image from "next/image";
+import Link from "next/link";
 
 export default async function Home() {
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen p-8 gap-4 sm:gap-8 font-text">
+    <div className="flex flex-col items-center justify-start min-h-screen p-8 gap-8">
 
       {/* Hero Section */}
+
       <div className="flex flex-row justify-center items-center">
+
         <Logo3D></Logo3D>
 
         <div className="flex flex-col justify-center items-center gap-2">
@@ -59,8 +62,16 @@ export default async function Home() {
       </div>
 
 
+      {/* Project Highlights Section */}
 
-      <Highlights />
+      <div className="flex flex-col items-center gap-2 w-full">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Featured Projects</h1>
+        <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase mb-8">A curated selection of some of my work</span>
+        <Highlights />
+        <Link href="/projects" className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase hover:underline underline-offset-4">
+          View All Projects
+        </Link>
+      </div>
 
     </div>
   );

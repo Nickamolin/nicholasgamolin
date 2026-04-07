@@ -8,7 +8,7 @@ export default async function Home() {
     <div className="flex flex-col items-center justify-start min-h-screen p-8 gap-4 sm:gap-8 font-text">
 
       {/* Hero Section */}
-      <div className="flex flex-col justify-center items-center w-full">
+      <div className="flex flex-row justify-center items-center">
         <Logo3D></Logo3D>
 
         <div className="flex flex-col justify-center items-center gap-2">

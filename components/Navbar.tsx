@@ -16,7 +16,7 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-[100] flex flex-row items-center justify-center p-6 text-white bg-black/80 backdrop-blur-md border-b border-white/10">
 
-      <div className="flex flex-row gap-8 text-sm md:text-lg font-bold">
+      <div className="flex flex-row gap-8 text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase">
         <Link href="/" onClick={(e) => handleNav(e, "/")} className="hover:underline underline-offset-4">
           Home
         </Link>

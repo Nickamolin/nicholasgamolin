@@ -73,18 +73,18 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                     {/* Title Overlay */}
                     <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-all duration-500">
                         {project.render_title && (
-                            <h3 className="text-white font-bold text-xl sm:text-2xl text-shadow-md translate-y-2 group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500">
+                            <h3 className="text-white font-title font-bold text-xl sm:text-2xl text-shadow-md translate-y-2 group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500">
                                 {project.title}
                             </h3>
                         )}
                         <div className="flex justify-between items-center w-full mt-1 translate-y-2 group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500 delay-75">
                             {project.subtitle && (
-                                <p className="text-gray-200 text-sm sm:text-base pr-4">
+                                <p className="text-gray-200 font-subtitle text-xs sm:text-sm pr-4 uppercase tracking-wider">
                                     {project.subtitle}
                                 </p>
                             )}
                             {project.date_published && (
-                                <span className="text-gray-300 text-sm sm:text-base font-medium whitespace-nowrap">
+                                <span className="text-gray-300 font-subtitle text-xs sm:text-sm font-medium whitespace-nowrap">
                                     {new Date(project.date_published).getFullYear()}
                                 </span>
                             )}
@@ -103,7 +103,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         transform: 'translate(-50%, -50%)'
                     }}
                 >
-                    <span className="bg-black/50 text-white px-3 py-1.5 rounded-lg text-sm sm:text-base font-medium shadow-xl whitespace-nowrap">
+                    <span className="bg-black/50 text-white px-3 py-1.5 rounded-lg text-sm sm:text-base font-body font-medium shadow-xl whitespace-nowrap">
                         {project.hover_text}
                     </span>
                 </div>

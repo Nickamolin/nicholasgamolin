@@ -14,8 +14,24 @@ export default function LoadingScreen() {
     const [isOpaque, setIsOpaque] = useState(true);
     const [isHidden, setIsHidden] = useState(false);
 
-    // Track whether we've already scrolled for this transition to avoid double-scrolling
+    // Store ALL timeout IDs in refs so they can be cancelled at any point,
+    // even if they're nested inside other setTimeout callbacks.
+    const fadeInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const fadeOutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const hasScrolledRef = useRef(false);
+
+    const clearAllTimers = () => {
+        if (fadeInTimerRef.current) clearTimeout(fadeInTimerRef.current);
+        if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+        if (fadeOutTimerRef.current) clearTimeout(fadeOutTimerRef.current);
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+        fadeInTimerRef.current = null;
+        scrollTimerRef.current = null;
+        fadeOutTimerRef.current = null;
+        hideTimerRef.current = null;
+    };
 
     useEffect(() => {
         if (pathname !== "/") {
@@ -39,43 +55,41 @@ export default function LoadingScreen() {
 
     // Handle visibility and opacity transitions
     useEffect(() => {
-        if (isTransitioning) {
-            // When a navigation transition starts:
-            hasScrolledRef.current = false;
-            setIsHidden(false); // Make it present in the DOM
-            document.body.style.overflow = "hidden"; // Lock scroll immediately
+        // Always cancel any in-flight timers before setting up new ones.
+        // This prevents a stale hideTimeout from killing the overlay mid-transition.
+        clearAllTimers();
 
-            // Use a tiny timeout to allow the DOM node to exist before triggering opacity
-            const fadeInTimeout = setTimeout(() => {
+        if (isTransitioning) {
+            hasScrolledRef.current = false;
+            setIsHidden(false);
+            document.body.style.overflow = "hidden";
+
+            // Tiny delay to allow the DOM node to exist before triggering opacity
+            fadeInTimerRef.current = setTimeout(() => {
                 setIsOpaque(true);
 
-                // Once the fade-in CSS transition completes, scroll to top behind the opaque overlay
-                const scrollTimeout = setTimeout(() => {
+                // Scroll to top only after the overlay is fully opaque (duration-500)
+                scrollTimerRef.current = setTimeout(() => {
                     if (!hasScrolledRef.current) {
                         window.scrollTo(0, 0);
                         hasScrolledRef.current = true;
                     }
-                }, 500); // matches the CSS transition duration (duration-500)
-
-                return () => clearTimeout(scrollTimeout);
+                }, 500);
             }, 10);
 
-            return () => clearTimeout(fadeInTimeout);
         } else if (isAppLoaded) {
-            // When everything is loaded and NOT transitioning — start fade-out
-            const fadeTimeout = setTimeout(() => {
-                setIsOpaque(false); // Start the fading animation
+            // Not transitioning and page is ready — start fade-out sequence
+            fadeOutTimerRef.current = setTimeout(() => {
+                setIsOpaque(false);
 
-                const hideTimeout = setTimeout(() => {
-                    setIsHidden(true); // Completely remove from DOM after fade finishes
-                    document.body.style.overflow = ""; // Restore scrolling
-                }, 500); // Duration matches CSS transition
-
-                return () => clearTimeout(hideTimeout);
-            }, 400); // Buffer before starting fade out
-
-            return () => clearTimeout(fadeTimeout);
+                hideTimerRef.current = setTimeout(() => {
+                    setIsHidden(true);
+                    document.body.style.overflow = "";
+                }, 500); // matches CSS duration-500
+            }, 400); // brief buffer before fading
         }
+
+        return clearAllTimers;
     }, [isTransitioning, isAppLoaded]);
 
     if (isHidden) return null;

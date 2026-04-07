@@ -21,7 +21,7 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
     return (
         <div className="w-full max-w-[2000px] flex flex-col items-center">
             {/* Filter Menu */}
-            <div className="w-full max-w-[2000px] flex items-center gap-4 md:gap-8 mb-6">
+            <div className="w-full max-w-[2000px] flex items-center justify-center gap-4 md:gap-8 mb-6">
                 <span className="text-sm md:text-lg text-white font-bold whitespace-nowrap">Sort By:</span>
                 <div className="flex flex-row gap-4 md:gap-8">
                     {filterOptions.map(type => (

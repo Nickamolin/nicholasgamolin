@@ -14,34 +14,30 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-[100] flex justify-between items-center p-6 text-white w-full bg-black/80 backdrop-blur-md">
-      {/* Left side: Logo and Name */}
-      <Link href="/" onClick={(e) => handleNav(e, "/")} className="flex items-center gap-4">
-        <Image
-          src="/icons/LogoSVG.svg"
-          alt="Logo"
-          width={16}
-          height={16}
-          className="invert"
-        />
-        <span className="font-bold text-xl">Nicholas Gamolin</span>
-      </Link>
+    <nav className="sticky top-0 z-[100] flex flex-row items-center justify-center p-6 text-white bg-black/80 backdrop-blur-md border-b border-white/10">
 
-      {/* Right side: Navigation Links */}
-      <div className="flex items-center gap-12 text-xl font-bold">
+      <div className="flex flex-row gap-8 text-sm md:text-lg font-bold">
+        <Link href="/" onClick={(e) => handleNav(e, "/")} className="hover:underline underline-offset-4">
+          Home
+        </Link>
+
         <Link href="/projects" onClick={(e) => handleNav(e, "/projects")} className="hover:underline underline-offset-4">
           Projects
         </Link>
+
         <Link href="/about" onClick={(e) => handleNav(e, "/about")} className="hover:underline underline-offset-4">
           About
         </Link>
+
         <div className="hover:underline underline-offset-4 opacity-50">
           Resume
         </div>
+
         <div className="hover:underline underline-offset-4 opacity-50">
           Contact
         </div>
       </div>
+
     </nav>
   );
 }

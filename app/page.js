@@ -8,10 +8,10 @@ export default async function Home() {
     <div className="flex flex-col items-center justify-start min-h-screen p-8 gap-4 sm:gap-8 font-[family-name:var(--font-geist-sans)]">
 
       {/* Hero Section */}
-      <div className="relative flex justify-center items-center w-full">
+      <div className="flex flex-col justify-center items-center w-full">
         <Logo3D></Logo3D>
 
-        <div className="absolute inset-0 flex flex-col justify-center items-center gap-2">
+        <div className="flex flex-col justify-center items-center gap-2">
           <span className="text-4xl sm:text-5xl md:text-7xl font-bold text-center w-auto pointer-events-auto text-shadow-lg">Nicholas Gamolin</span>
 
           <div className="flex gap-8 items-center flex-row opacity-75">

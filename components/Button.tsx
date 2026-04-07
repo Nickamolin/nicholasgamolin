@@ -2,7 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { motion, type MotionProps } from "motion/react";
+import { useLoading } from "@/components/LoadingProvider";
 
 interface ButtonProps {
   href?: string;
@@ -10,6 +11,7 @@ interface ButtonProps {
   children: React.ReactNode;
   variant?: "primary" | "secondary" | "ghost";
   className?: string;
+  useTransition?: boolean;
 }
 
 /**
@@ -22,7 +24,9 @@ export default function Button({
   children,
   variant = "primary",
   className = "",
+  useTransition = false,
 }: ButtonProps) {
+  const { navigateWithTransition } = useLoading();
   const baseStyles =
     "inline-flex items-center justify-center transition-all duration-300 font-subtitle tracking-[0.2em] uppercase text-xs md:text-sm whitespace-nowrap";
 
@@ -46,10 +50,20 @@ export default function Button({
     transition: { type: "tween" as const, duration: 0.5, ease: "easeInOut" as const },
   };
 
+  const handleLinkClick = (e: React.MouseEvent) => {
+    if (useTransition && href) {
+      e.preventDefault();
+      if (onClick) onClick(e);
+      navigateWithTransition(href);
+    } else if (onClick) {
+      onClick(e);
+    }
+  };
+
   if (href) {
     return (
       <motion.div {...motionProps} className="inline-block">
-        <Link href={href} className={combinedClasses} onClick={onClick}>
+        <Link href={href} className={combinedClasses} onClick={handleLinkClick}>
           {children}
         </Link>
       </motion.div>

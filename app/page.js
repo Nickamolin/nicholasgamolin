@@ -69,7 +69,7 @@ export default async function Home() {
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Featured Projects</h1>
         <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase mb-8">A curated selection of some of my work</span>
         <Highlights />
-        <Button href="/projects" variant="secondary" className="mt-8">
+        <Button href="/projects" variant="secondary" className="mt-8" useTransition>
           View All Projects
         </Button>
       </div>

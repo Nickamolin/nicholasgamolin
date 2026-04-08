@@ -6,6 +6,8 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
 
 interface Head3DProps {
   className?: string;
@@ -40,6 +42,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
 
     container.appendChild(renderer.domElement);
 
+    // Post Processing
     const renderPass = new RenderPass(scene, camera);
     const composer = new EffectComposer(renderer);
     composer.addPass(renderPass);
@@ -51,6 +54,12 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
       0.95 // threshold
     );
     composer.addPass(bloomPass);
+
+    // Controls
+    // const controls = new OrbitControls(camera, renderer.domElement);
+    const controls = new TrackballControls(camera, renderer.domElement);
+    controls.noZoom = true;
+    controls.noPan = true;
 
     // Load Model
     const loader = new GLTFLoader();
@@ -68,7 +77,6 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
               wireframe: true,
               emissive: 0xffffff,
               emissiveIntensity: 1,
-              side: THREE.FrontSide
             });
             const mesh = new THREE.Mesh(geometry, material);
 
@@ -131,7 +139,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
         modelRef.current.rotation.y += 0.003;
       }
 
-      // 
+      controls.update();
       composer.render();
     };
 

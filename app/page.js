@@ -18,24 +18,13 @@ export default async function Home() {
         </div>
 
         <div className="flex flex-col justify-center items-center md:items-center gap-4 z-10">
-          <h1 className="text-5xl sm:text-6xl md:text-8xl font-title font-bold text-center md:text-center pointer-events-none text-shadow-xl tracking-tight">
+          <h1 className="text-5xl sm:text-6xl md:text-8xl font-title font-bold text-center md:text-center text-shadow-xl tracking-tight">
             Nicholas Gamolin
           </h1>
 
+          <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-gray-400">Design Engineer / Creative Technologist</span>
+
           <div className="flex gap-8 items-center flex-row opacity-75">
-            <a
-              href="https://www.linkedin.com/in/nicholas-gamolin/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Image
-                src="/icons/linkedinBlack.svg"
-                width={50}
-                height={50}
-                alt="LinkedIn"
-                className="dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] md:w-[36px] md:h-[36px]"
-              />
-            </a>
             <a
               href="https://github.com/Nickamolin"
               target="_blank"
@@ -62,6 +51,19 @@ export default async function Home() {
                 className="dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] md:w-[36px] md:h-[36px]"
               />
             </a>
+            <a
+              href="https://www.linkedin.com/in/nicholas-gamolin/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Image
+                src="/icons/linkedinBlack.svg"
+                width={50}
+                height={50}
+                alt="LinkedIn"
+                className="dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] md:w-[36px] md:h-[36px]"
+              />
+            </a>
           </div>
         </div>
       </div>
@@ -69,9 +71,9 @@ export default async function Home() {
 
       {/* Project Highlights Section */}
 
-      <div className="flex flex-col items-center gap-2 w-full">
+      <div className="flex flex-col items-center gap-4 w-full">
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Featured Projects</h1>
-        <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase mb-8">A curated selection of some of my work</span>
+        <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase mb-8">A curated selection of some of my work</span>
         <Highlights />
         <Button href="/projects" variant="secondary" className="mt-8" useTransition>
           View All Projects

@@ -22,7 +22,7 @@ export default async function Home() {
             Nicholas Gamolin
           </h1>
 
-          <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-gray-400">Design Engineer / Creative Technologist</span>
+          <span className="text-xs md:text-sm text-center font-subtitle font-medium tracking-[0.2em] uppercase text-gray-400">Design Engineer / Creative Technologist</span>
 
           <div className="flex gap-8 items-center flex-row opacity-75">
             <a

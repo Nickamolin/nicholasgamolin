@@ -1,4 +1,5 @@
 import Logo3D from "@/components/Logo3D";
+import Head3D from "@/components/Head3D";
 import Highlights from "@/components/projects/Highlights";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,12 +12,15 @@ export default async function Home() {
 
       {/* Hero Section */}
 
-      <div className="flex flex-row justify-center items-center min-h-[50vh] w-full">
+      <div className="flex flex-col md:flex-row items-center justify-evenly min-h-[60vh] md:min-h-[80vh] w-full pt-4 md:pt-0 gap-8 md:gap-0">
+        <div className="w-full max-w-[400px] md:max-w-[600px] aspect-square flex items-center justify-center">
+          <Head3D />
+        </div>
 
-        <Logo3D></Logo3D>
-
-        <div className="flex flex-col justify-center items-center gap-2">
-          <span className="text-4xl sm:text-5xl md:text-7xl font-title font-bold text-center w-auto pointer-events-auto text-shadow-lg">Nicholas Gamolin</span>
+        <div className="flex flex-col justify-center items-center md:items-center gap-4 z-10">
+          <h1 className="text-5xl sm:text-6xl md:text-8xl font-title font-bold text-center md:text-center pointer-events-none text-shadow-xl tracking-tight">
+            Nicholas Gamolin
+          </h1>
 
           <div className="flex gap-8 items-center flex-row opacity-75">
             <a

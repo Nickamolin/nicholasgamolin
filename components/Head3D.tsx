@@ -3,6 +3,9 @@
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 interface Head3DProps {
   className?: string;
@@ -24,6 +27,8 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
+    scene.fog = new THREE.Fog(0x000000, 11, 13.7);
+
     const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.01, 1000);
     camera.position.set(0, 0, 4);
     cameraRef.current = camera;
@@ -35,6 +40,18 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
 
     container.appendChild(renderer.domElement);
 
+    const renderPass = new RenderPass(scene, camera);
+    const composer = new EffectComposer(renderer);
+    composer.addPass(renderPass);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      1.5, // strength
+      0.05, // radius
+      0.95 // threshold
+    );
+    composer.addPass(bloomPass);
+
     // Load Model
     const loader = new GLTFLoader();
     loader.load(
@@ -45,20 +62,21 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
         gltf.scene.traverse((child: any) => {
           if (child.isMesh) {
             const geometry = child.geometry;
-            const material = new THREE.PointsMaterial({
+            const material = new THREE.MeshStandardMaterial({
               color: 0xffffff,
-              size: 0.1,
-              sizeAttenuation: true,
-              transparent: true,
-              opacity: 0.6
+              transparent: false,
+              wireframe: true,
+              emissive: 0xffffff,
+              emissiveIntensity: 1,
+              side: THREE.FrontSide
             });
-            const points = new THREE.Points(geometry, material);
+            const mesh = new THREE.Mesh(geometry, material);
 
-            points.position.copy(child.position);
-            points.rotation.copy(child.rotation);
-            points.scale.copy(child.scale);
+            mesh.position.copy(child.position);
+            mesh.rotation.copy(child.rotation);
+            mesh.scale.copy(child.scale);
 
-            pointsGroup.add(points);
+            pointsGroup.add(mesh);
           }
         });
 
@@ -76,7 +94,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
         pointsGroup.updateMatrixWorld(true);
 
         const fov = THREE.MathUtils.degToRad(camera.fov);
-        let cameraZ = Math.abs((maxDim / 2) / Math.tan(fov / 2));
+        let cameraZ = Math.abs((maxDim / 1.5) / Math.tan(fov / 2));
         cameraZ *= 1.1; // Tighten the fit
 
         camera.position.set(0, 0, cameraZ);
@@ -113,10 +131,14 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
         modelRef.current.rotation.y += 0.003;
       }
 
-      renderer.render(scene, camera);
+      // 
+      composer.render();
     };
 
     animate();
+
+    // Add bloom effect
+
 
     return () => {
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);

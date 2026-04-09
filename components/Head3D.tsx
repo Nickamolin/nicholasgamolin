@@ -5,9 +5,13 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
+// import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+// import { AfterimagePass } from 'three/examples/jsm/postprocessing/AfterimagePass.js';
+// import { DotScreenPass } from 'three/examples/jsm/postprocessing/DotScreenPass.js';
+// import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
+// import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass.js';
+// import { HalftonePass } from 'three/examples/jsm/postprocessing/HalftonePass.js';
 
 interface Head3DProps {
   className?: string;
@@ -29,7 +33,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    scene.fog = new THREE.Fog(0x000000, 11, 13.7);
+    scene.fog = new THREE.Fog(0x000000, 11, 12);
 
     const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.01, 1000);
     camera.position.set(0, 0, 4);
@@ -42,18 +46,51 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
 
     container.appendChild(renderer.domElement);
 
-    // Post Processing
+    {/* POST PROCESSING */ }
     const renderPass = new RenderPass(scene, camera);
     const composer = new EffectComposer(renderer);
     composer.addPass(renderPass);
 
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      1.5, // strength
-      0.05, // radius
-      0.95 // threshold
-    );
-    composer.addPass(bloomPass);
+    // BLOOM
+    // const bloomPass = new UnrealBloomPass(
+    //   new THREE.Vector2(window.innerWidth, window.innerHeight),
+    //   1, // strength
+    //   0.05, // radius
+    //   0.25 // threshold
+    // );
+    //composer.addPass(bloomPass);
+
+    // AFTERIMAGE
+    // const afterimagePass = new AfterimagePass(0.9);
+    // composer.addPass(afterimagePass);
+
+    // DOT SCREEN
+    // const dotScreenPass = new DotScreenPass();
+    // composer.addPass(dotScreenPass);
+
+    // FILM
+    // const filmPass = new FilmPass();
+    // composer.addPass(filmPass);
+
+    // GLITCH
+    // const glitchPass = new GlitchPass();
+    // composer.addPass(glitchPass);
+
+    // HALFTONE
+    // const params = {
+    //   shape: 1,
+    //   radius: 8,
+    //   rotateR: Math.PI / 12,
+    //   rotateB: Math.PI / 12 * 2,
+    //   rotateG: Math.PI / 12 * 3,
+    //   scatter: 0,
+    //   blending: 1,
+    //   blendingMode: 1,
+    //   greyscale: false,
+    //   disable: false
+    // };
+    // const halftonePass = new HalftonePass(params);
+    // composer.addPass(halftonePass);
 
     // Controls
     // const controls = new OrbitControls(camera, renderer.domElement);
@@ -61,7 +98,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     controls.noZoom = true;
     controls.noPan = true;
 
-    // Load Model
+    // Load Model (wireframe)
     const loader = new GLTFLoader();
     loader.load(
       "/models/Head.glb",
@@ -158,7 +195,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     };
   }, []);
 
-  return <div ref={containerRef} className={`w-full h-full min-h-[300px] ${className}`} />;
+  return <div ref={containerRef} className={`w-full h-full min-h-[300px] shadow-inner-5xl ${className}`} />;
 };
 
 export default Head3D;

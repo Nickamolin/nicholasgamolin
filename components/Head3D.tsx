@@ -6,12 +6,13 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
-// import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 // import { AfterimagePass } from 'three/examples/jsm/postprocessing/AfterimagePass.js';
 // import { DotScreenPass } from 'three/examples/jsm/postprocessing/DotScreenPass.js';
-// import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
+import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
 // import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass.js';
 // import { HalftonePass } from 'three/examples/jsm/postprocessing/HalftonePass.js';
+import { RenderPixelatedPass } from 'three/examples/jsm/postprocessing/RenderPixelatedPass.js';
 
 interface Head3DProps {
   className?: string;
@@ -33,7 +34,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    scene.fog = new THREE.Fog(0x000000, 11, 12);
+    scene.fog = new THREE.Fog(0x000000, 14, 18.5);
 
     const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.01, 1000);
     camera.position.set(0, 0, 4);
@@ -41,7 +42,16 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap pixel ratio for performance
-    renderer.setSize(container.clientWidth, container.clientHeight);
+
+    // Extend the canvas by a specific factor
+    const canvasScaleFactor = 1.6;
+
+    // Add absolute positioning to center the larger canvas within the smaller container
+    renderer.domElement.style.position = 'absolute';
+    renderer.domElement.style.top = '50%';
+    renderer.domElement.style.left = '50%';
+    renderer.domElement.style.transform = 'translate(-50%, -50%)';
+    // Let resize handler take care of sizing
     rendererRef.current = renderer;
 
     container.appendChild(renderer.domElement);
@@ -51,35 +61,14 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     const composer = new EffectComposer(renderer);
     composer.addPass(renderPass);
 
-    // BLOOM
-    // const bloomPass = new UnrealBloomPass(
-    //   new THREE.Vector2(window.innerWidth, window.innerHeight),
-    //   1, // strength
-    //   0.05, // radius
-    //   0.25 // threshold
-    // );
-    //composer.addPass(bloomPass);
-
-    // AFTERIMAGE
-    // const afterimagePass = new AfterimagePass(0.9);
-    // composer.addPass(afterimagePass);
-
-    // DOT SCREEN
-    // const dotScreenPass = new DotScreenPass();
-    // composer.addPass(dotScreenPass);
-
-    // FILM
-    // const filmPass = new FilmPass();
-    // composer.addPass(filmPass);
-
-    // GLITCH
-    // const glitchPass = new GlitchPass();
-    // composer.addPass(glitchPass);
+    // PIXELATED
+    const pixelatedPass = new RenderPixelatedPass(2, scene, camera);
+    composer.addPass(pixelatedPass);
 
     // HALFTONE
     // const params = {
     //   shape: 1,
-    //   radius: 8,
+    //   radius: 4,
     //   rotateR: Math.PI / 12,
     //   rotateB: Math.PI / 12 * 2,
     //   rotateG: Math.PI / 12 * 3,
@@ -91,6 +80,31 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     // };
     // const halftonePass = new HalftonePass(params);
     // composer.addPass(halftonePass);
+
+    // BLOOM
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      0.5, // strength
+      0.5, // radius
+      0.01 // threshold
+    );
+    composer.addPass(bloomPass);
+
+    // AFTERIMAGE
+    // const afterimagePass = new AfterimagePass(0.9);
+    // composer.addPass(afterimagePass);
+
+    // DOT SCREEN
+    // const dotScreenPass = new DotScreenPass();
+    // composer.addPass(dotScreenPass);
+
+    // FILM
+    const filmPass = new FilmPass(5, false);
+    composer.addPass(filmPass);
+
+    // GLITCH
+    // const glitchPass = new GlitchPass(120);
+    // composer.addPass(glitchPass);
 
     // Controls
     // const controls = new OrbitControls(camera, renderer.domElement);
@@ -112,7 +126,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
               color: 0xffffff,
               transparent: false,
               wireframe: true,
-              emissive: 0xffffff,
+              emissive: 0x999999,
               emissiveIntensity: 1,
             });
             const mesh = new THREE.Mesh(geometry, material);
@@ -139,7 +153,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
         pointsGroup.updateMatrixWorld(true);
 
         const fov = THREE.MathUtils.degToRad(camera.fov);
-        let cameraZ = Math.abs((maxDim / 1.5) / Math.tan(fov / 2));
+        let cameraZ = Math.abs((maxDim / 1) / Math.tan(fov / 2));
         cameraZ *= 1.1; // Tighten the fit
 
         camera.position.set(0, 0, cameraZ);
@@ -156,13 +170,21 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     const handleResize = () => {
       if (!container || !rendererRef.current || !cameraRef.current) return;
 
-      const width = container.clientWidth;
-      const height = container.clientHeight;
+      const baseWidth = container.clientWidth;
+      const baseHeight = container.clientHeight;
 
-      cameraRef.current.aspect = width / height;
+      cameraRef.current.aspect = baseWidth / baseHeight;
       cameraRef.current.updateProjectionMatrix();
 
-      rendererRef.current.setSize(width, height);
+      const extendedWidth = baseWidth * canvasScaleFactor;
+      const extendedHeight = baseHeight * canvasScaleFactor;
+
+      rendererRef.current.setSize(extendedWidth, extendedHeight);
+      composer.setSize(extendedWidth, extendedHeight);
+
+      // Ensure the canvas CSS dimensions match the extended size
+      rendererRef.current.domElement.style.width = `${extendedWidth}px`;
+      rendererRef.current.domElement.style.height = `${extendedHeight}px`;
     };
 
     const resizeObserver = new ResizeObserver(handleResize);
@@ -195,7 +217,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     };
   }, []);
 
-  return <div ref={containerRef} className={`w-full h-full min-h-[300px] shadow-inner-5xl ${className}`} />;
+  return <div ref={containerRef} className={`relative overflow-visible w-full h-full min-h-[300px] shadow-inner-5xl opacity-90 ${className}`} />;
 };
 
 export default Head3D;

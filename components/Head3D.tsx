@@ -217,7 +217,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     };
   }, []);
 
-  return <div ref={containerRef} className={`relative overflow-visible w-full h-full min-h-[300px] shadow-inner-5xl opacity-90 ${className}`} />;
+  return <div ref={containerRef} className={`relative overflow-visible w-full h-full min-h-[300px] shadow-inner-5xl opacity-87 ${className}`} />;
 };
 
 export default Head3D;

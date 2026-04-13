@@ -4,6 +4,7 @@ import Highlights from "@/components/projects/Highlights";
 import Image from "next/image";
 import Link from "next/link";
 import Button from "@/components/UI/Button";
+import ContactCard from "@/components/UI/ContactCard";
 
 export default async function Home() {
 
@@ -78,6 +79,14 @@ export default async function Home() {
         <Button href="/projects" variant="secondary" className="mt-8" useTransition>
           View All Projects
         </Button>
+      </div>
+
+      {/* Contact Section */}
+
+      <div className="flex flex-col items-center justify-center w-full gap-4 p-8">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Contact Me</h1>
+        <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase mb-4">Have an idea or just want to say hi?</span>
+        <ContactCard />
       </div>
 
     </div>

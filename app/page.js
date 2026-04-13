@@ -12,13 +12,13 @@ export default async function Home() {
 
       {/* Hero Section */}
 
-      <div className="flex flex-col md:flex-row items-center justify-evenly min-h-[60vh] md:min-h-[80vh] w-full pt-4 md:pt-0 gap-8 md:gap-0">
-        <div className="w-full max-w-[400px] md:max-w-[700px] aspect-square flex items-center justify-center">
+      <div className="flex flex-col md:flex-row items-center justify-center min-h-[80vh] max-h-[90vh] w-full gap-8 md:gap-0">
+        <div className="w-full max-w-[400px] md:max-w-[500px] aspect-square flex items-center justify-center">
           <Head3D />
         </div>
 
-        <div className="flex flex-col justify-center items-center md:items-center gap-4 z-10">
-          <h1 className="text-5xl sm:text-6xl md:text-8xl font-title font-bold text-center md:text-center text-shadow-xl tracking-tight">
+        <div className="flex flex-col justify-center items-center gap-4 z-10">
+          <h1 className="text-5xl sm:text-6xl md:text-8xl font-title font-bold text-center">
             Nicholas Gamolin
           </h1>
 

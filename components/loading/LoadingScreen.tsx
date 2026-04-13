@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { useLoading } from "@/components/LoadingProvider";
+import { useLoading } from "./LoadingProvider";
 import LoadingAnimation from "./LoadingAnimation";
 
 export default function LoadingScreen() {

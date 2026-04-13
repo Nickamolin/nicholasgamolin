@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import type { Project } from "./types";
-import Modal from "../Modal";
+import Modal from "./Modal";
 
 type ProjectCardProps = {
     project: Project;

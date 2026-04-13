@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useLoading } from "@/components/LoadingProvider";
+import { useLoading } from "@/components/loading/LoadingProvider";
 
 export default function Navbar() {
   const { navigateWithTransition } = useLoading();

@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion, type MotionProps } from "motion/react";
-import { useLoading } from "@/components/LoadingProvider";
+import { useLoading } from "@/components/loading/LoadingProvider";
 
 interface ButtonProps {
   href?: string;

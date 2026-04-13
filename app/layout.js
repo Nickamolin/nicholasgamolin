@@ -1,8 +1,8 @@
 import { Outfit, Inter, Montserrat } from "next/font/google";
 import "./globals.css";
-import LoadingScreen from "@/components/LoadingScreen";
-import { LoadingProvider } from "@/components/LoadingProvider";
-import Navbar from "@/components/Navbar";
+import LoadingScreen from "@/components/loading/LoadingScreen";
+import { LoadingProvider } from "@/components/loading/LoadingProvider";
+import Navbar from "@/components/UI/Navbar";
 import { Analytics } from "@vercel/analytics/next"
 
 const outfit = Outfit({

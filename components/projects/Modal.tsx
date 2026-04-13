@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import LoadingAnimation from "./LoadingAnimation";
+import LoadingAnimation from "../loading/LoadingAnimation";
 
 type ModalProps = {
     isOpen: boolean;

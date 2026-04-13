@@ -1,9 +1,9 @@
-import Logo3D from "@/components/Logo3D";
-import Head3D from "@/components/Head3D";
+import Logo3D from "@/components/3D/Logo3D";
+import Head3D from "@/components/3D/Head3D";
 import Highlights from "@/components/projects/Highlights";
 import Image from "next/image";
 import Link from "next/link";
-import Button from "@/components/Button";
+import Button from "@/components/UI/Button";
 
 export default async function Home() {
 

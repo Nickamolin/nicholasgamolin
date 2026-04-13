@@ -47,13 +47,13 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     const composer = new EffectComposer(renderer);
     composer.addPass(renderPass);
 
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      1.5, // strength
-      0.05, // radius
-      0.95 // threshold
-    );
-    composer.addPass(bloomPass);
+    // const bloomPass = new UnrealBloomPass(
+    //   new THREE.Vector2(window.innerWidth, window.innerHeight),
+    //   1.5, // strength
+    //   0.05, // radius
+    //   0.95 // threshold
+    // );
+    // composer.addPass(bloomPass);
 
     // Controls
     // const controls = new OrbitControls(camera, renderer.domElement);
@@ -155,7 +155,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     };
   }, []);
 
-  return <div ref={containerRef} className={`w-full h-full min-h-[300px] ${className}`} />;
+  return <div ref={containerRef} className={`w-full h-full ${className}`} />;
 };
 
 export default Head3D;

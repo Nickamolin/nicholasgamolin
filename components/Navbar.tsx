@@ -28,14 +28,6 @@ export default function Navbar() {
           <Link href="/about" onClick={(e) => handleNav(e, "/about")} className="hover:underline underline-offset-4">
             About
           </Link>
-
-          <div className="hover:underline underline-offset-4 opacity-50 cursor-default">
-            Resume
-          </div>
-
-          <div className="hover:underline underline-offset-4 opacity-50 cursor-default">
-            Contact
-          </div>
         </div>
 
       </nav>

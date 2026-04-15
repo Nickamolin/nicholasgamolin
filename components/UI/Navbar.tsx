@@ -13,7 +13,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="sticky top-6 z-[100] w-full flex justify-center pointer-events-none">
+    <div className="fixed bottom-6 left-0 z-[100] w-full flex justify-center pointer-events-none md:sticky md:top-6 md:bottom-auto">
       <nav className="flex flex-row items-center justify-center p-4 px-8 text-white bg-black/80 backdrop-blur-md border border-white/10 rounded-full pointer-events-auto">
 
         <div className="flex flex-row gap-8 text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase">

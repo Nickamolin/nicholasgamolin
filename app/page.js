@@ -81,6 +81,17 @@ export default async function Home() {
         </Button>
       </div>
 
+      {/* Tech Section */}
+
+      <div className="flex flex-col items-center justify-center w-full gap-4 p-8">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Tech</h1>
+        <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase mb-4">Some of the tools I use to build</span>
+
+        <Button href="/about" variant="secondary" className="mt-8" useTransition>
+          About Me
+        </Button>
+      </div>
+
       {/* Contact Section */}
 
       <div className="flex flex-col items-center justify-center w-full gap-4 p-8">

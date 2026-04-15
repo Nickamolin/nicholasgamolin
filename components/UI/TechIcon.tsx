@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function TechIcon({ src, alt }: { src: string, alt: string }) {
     return (
-        <div className="relative group flex items-center justify-center transition-transform duration-300 hover:scale-110 cursor-pointer w-24 h-24">
+        <div className="relative group flex items-center justify-center transition-transform duration-300 hover:scale-110 w-24 h-24">
 
             {/* Monochrome Base Image */}
             <Image

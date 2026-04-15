@@ -10,7 +10,7 @@ export default function AboutPage() {
                 <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-gray-400">A little bit about me</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 max-w-5xl w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8 max-w-5xl w-full min-h-[60vh]">
                 <div className="relative w-full min-h-[300px] md:min-h-0">
                     <Image
                         src="/photos/TimesSquare.jpeg"

@@ -1,4 +1,5 @@
 import Projects from "@/components/projects/Projects";
+import ContactCard from "@/components/UI/ContactCard";
 
 export default function ProjectsPage() {
     return (
@@ -7,6 +8,8 @@ export default function ProjectsPage() {
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold mt-8">Projects</h1>
 
             <Projects />
+
+            <ContactCard />
 
         </div>
     );

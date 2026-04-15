@@ -11,16 +11,51 @@ export default async function Home() {
 
   const tech = [
     {
-      src: "/icons/github.svg",
-      alt: "Github"
+      src: "/icons/TechSection/Nextjs.svg",
+      alt: "Next.js"
     },
     {
-      src: "/icons/YouTubeIconBW.svg",
-      alt: "Youtube"
+      src: "/icons/TechSection/React.svg",
+      alt: "React"
     },
     {
-      src: "/icons/linkedinBlack.svg",
-      alt: "LinkedIn"
+      src: "/icons/TechSection/TailwindCSS.svg",
+      alt: "Tailwind CSS"
+    },
+    {
+      src: "/icons/TechSection/Typescript.svg",
+      alt: "Typescript"
+    },
+    {
+      src: "/icons/TechSection/Supabase.svg",
+      alt: "Supabase"
+    },
+    {
+      src: "/icons/TechSection/GitHub.svg",
+      alt: "GitHub"
+    }
+  ]
+
+  const tools = [
+    {
+      src: "/icons/TechSection/Antigravity.svg",
+      alt: "Antigravity"
+    },
+    {
+      src: "/icons/TechSection/Figma.svg",
+      alt: "Figma"
+    },
+    {
+      src: "/icons/TechSection/Blender.svg",
+      alt: "Blender"
+    },
+    {
+      src: "/icons/TechSection/Unity.svg",
+      alt: "Unity"
+    },
+    {
+      src: "/icons/TechSection/Davinci-Resolve.svg",
+      alt: "Davinci Resolve"
     }
   ]
 
@@ -99,7 +134,7 @@ export default async function Home() {
 
       {/* Tech Section */}
 
-      <div className="flex flex-col items-center justify-center w-full gap-4 p-8">
+      <div className="flex flex-col items-center justify-center w-full gap-4 p-8 ">
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Tech</h1>
         <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase mb-4">Some of the tools I use to build</span>
 
@@ -113,8 +148,14 @@ export default async function Home() {
           ))}
         </div>
 
-        <div className="flex flex-row items-center justify-center w-full gap-4">
-
+        <div className="flex flex-row items-center justify-center w-full gap-16 my-8">
+          {tools.map((t) => (
+            <TechIcon
+              key={t.alt}
+              src={t.src}
+              alt={t.alt}
+            />
+          ))}
         </div>
 
         <Button href="/about" variant="secondary" className="mt-8" useTransition>

@@ -5,13 +5,23 @@ import Image from "next/image";
 import Link from "next/link";
 import Button from "@/components/UI/Button";
 import ContactCard from "@/components/UI/ContactCard";
+import TechIcon from "@/components/TechIcon";
 
 export default async function Home() {
 
   const tech = [
-    "/icons/github.svg",
-    "/icons/YouTubeIconBW.svg",
-    "/icons/linkedinBlack.svg",
+    {
+      src: "/icons/github.svg",
+      alt: "Github"
+    },
+    {
+      src: "/icons/YouTubeIconBW.svg",
+      alt: "Youtube"
+    },
+    {
+      src: "/icons/linkedinBlack.svg",
+      alt: "LinkedIn"
+    }
   ]
 
   return (
@@ -95,13 +105,10 @@ export default async function Home() {
 
         <div className="flex flex-row items-center justify-center w-full gap-16">
           {tech.map((t) => (
-            <Image
-              key={t}
-              src={t}
-              width={100}
-              height={100}
-              alt="Tech"
-              className="dark:invert opacity-75 hover:opacity-50 transition-all duration-500 w-[48px] h-[48px] md:w-[72px] md:h-[72px]"
+            <TechIcon
+              key={t.alt}
+              src={t.src}
+              alt={t.alt}
             />
           ))}
         </div>

@@ -9,7 +9,7 @@ import Button from "./Button";
  */
 export default function ContactCard() {
     return (
-        <div className="w-full max-w-lg p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl">
+        <div className="w-full max-w-lg p-8 rounded-3xl border border-white/10 bg-black/5 backdrop-blur-xl">
             <div className="flex flex-col gap-2 mb-8 text-center">
                 <h2 className="text-3xl md:text-4xl font-title font-bold text-white">
                     Let's Get in Touch
@@ -46,7 +46,7 @@ export default function ContactCard() {
 
                 <div className="flex justify-center mt-4">
                     <Button variant="secondary" className="py-4 text-sm transition-transform active:scale-95">
-                        Send Message
+                        Submit
                     </Button>
                 </div>
             </form>

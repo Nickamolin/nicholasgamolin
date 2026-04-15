@@ -8,6 +8,12 @@ import ContactCard from "@/components/UI/ContactCard";
 
 export default async function Home() {
 
+  const tech = [
+    "/icons/github.svg",
+    "/icons/YouTubeIconBW.svg",
+    "/icons/linkedinBlack.svg",
+  ]
+
   return (
     <div className="flex flex-col items-center justify-start min-h-screen p-8 gap-8">
 
@@ -87,6 +93,23 @@ export default async function Home() {
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Tech</h1>
         <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase mb-4">Some of the tools I use to build</span>
 
+        <div className="flex flex-row items-center justify-center w-full gap-16">
+          {tech.map((t) => (
+            <Image
+              key={t}
+              src={t}
+              width={100}
+              height={100}
+              alt="Tech"
+              className="dark:invert opacity-75 hover:opacity-50 transition-all duration-500 w-[48px] h-[48px] md:w-[72px] md:h-[72px]"
+            />
+          ))}
+        </div>
+
+        <div className="flex flex-row items-center justify-center w-full gap-4">
+
+        </div>
+
         <Button href="/about" variant="secondary" className="mt-8" useTransition>
           About Me
         </Button>
@@ -94,11 +117,7 @@ export default async function Home() {
 
       {/* Contact Section */}
 
-      <div className="flex flex-col items-center justify-center w-full gap-4 p-8">
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Contact Me</h1>
-        <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase mb-4">Have an idea or just want to say hi?</span>
-        <ContactCard />
-      </div>
+      <ContactCard />
 
     </div>
   );

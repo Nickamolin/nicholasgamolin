@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Button from "@/components/UI/Button";
 import ContactCard from "@/components/UI/ContactCard";
-import TechIcon from "@/components/TechIcon";
+import TechIcon from "@/components/UI/TechIcon";
 
 export default async function Home() {
 

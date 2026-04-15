@@ -16,7 +16,7 @@ export default function ContactCard() {
             <div className="w-full max-w-lg p-8 rounded-3xl border border-white/10 bg-black/5 backdrop-blur-xl">
                 <div className="flex flex-col gap-2 mb-8 text-center">
                     <h2 className="text-3xl md:text-4xl font-title font-bold text-white">
-                        Let's Get in Touch
+                        Let&apos;s Get in Touch
                     </h2>
                 </div>
 

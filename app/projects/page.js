@@ -1,5 +1,5 @@
 import Projects from "@/components/projects/Projects";
-import ContactCard from "@/components/UI/ContactCard";
+import ContactCard from "@/components/sections/ContactCard";
 
 export default function ProjectsPage() {
     return (

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import ContactCard from "@/components/UI/ContactCard";
+import ContactCard from "@/components/sections/ContactCard";
 
 export default function AboutPage() {
     return (
@@ -24,6 +24,11 @@ export default function AboutPage() {
                     <p>I’m heavily inspired by film, music, and games, and I approach my work with the same mindset - focusing on aesthetic, detail, and how something feels as much as how it functions.</p>
                     <p>I’m currently looking for opportunities to build interactive products and experiences that blend strong visual design with thoughtful engineering.</p>
                 </div>
+            </div>
+
+            <div className="flex flex-col items-center gap-4 w-full">
+                <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold mt-8">Professional Experience</h1>
+                <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-gray-400 mb-8">A little bit about my work</span>
             </div>
 
             <ContactCard />

@@ -4,8 +4,8 @@ import Highlights from "@/components/projects/Highlights";
 import Image from "next/image";
 import Link from "next/link";
 import Button from "@/components/UI/Button";
-import ContactCard from "@/components/UI/ContactCard";
-import TechIcon from "@/components/UI/TechIcon";
+import ContactCard from "@/components/sections/ContactCard";
+import TechIcon from "@/components/sections/TechIcon";
 import { tech, tools } from "@/lib/constants";
 
 export default async function Home() {

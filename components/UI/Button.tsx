@@ -12,6 +12,8 @@ interface ButtonProps {
   variant?: "primary" | "secondary" | "ghost";
   className?: string;
   useTransition?: boolean;
+  target?: string;
+  download?: boolean | string;
 }
 
 /**
@@ -25,6 +27,8 @@ export default function Button({
   variant = "primary",
   className = "",
   useTransition = false,
+  target,
+  download,
 }: ButtonProps) {
   const { navigateWithTransition } = useLoading();
   const baseStyles =
@@ -63,7 +67,13 @@ export default function Button({
   if (href) {
     return (
       <motion.div {...motionProps} className="inline-block">
-        <Link href={href} className={combinedClasses} onClick={handleLinkClick}>
+        <Link 
+          href={href} 
+          className={combinedClasses} 
+          onClick={handleLinkClick}
+          target={target}
+          download={download}
+        >
           {children}
         </Link>
       </motion.div>

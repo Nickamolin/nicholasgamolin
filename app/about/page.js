@@ -32,7 +32,13 @@ export default function AboutPage() {
                 <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold mt-8">Professional Experience</h1>
                 <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-gray-400 mb-8">A little bit about my work</span>
                 <WorkExperience />
-                <Button href="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/documents/resume.pdf" variant="secondary" className="mt-8">
+                <Button 
+                    href="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/documents/resume.pdf?download=" 
+                    variant="secondary" 
+                    className="mt-8"
+                    target="_blank"
+                    download
+                >
                     Download Resume
                 </Button>
             </div>

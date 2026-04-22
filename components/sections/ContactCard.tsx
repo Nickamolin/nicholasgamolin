@@ -56,20 +56,39 @@ export default function ContactCard() {
                     </h2>
                 </div>
 
-                {status === "success" ? (
-                    <div className="flex flex-col items-center gap-4 py-8 text-center">
-                        <span className="text-2xl">✓</span>
-                        <p className="text-lg font-body font-medium text-white">Message sent!</p>
-                        <p className="text-sm font-body text-gray-400">Thanks for reaching out. I&apos;ll get back to you soon.</p>
+                <div className="grid">
+                    {/* Success Message */}
+                    <div 
+                        className={`col-start-1 row-start-1 flex flex-col items-center justify-center gap-4 py-8 text-center transition-all duration-500 ease-out ${
+                            status === "success" 
+                                ? "opacity-100 translate-y-0" 
+                                : "opacity-0 translate-y-8 pointer-events-none"
+                        }`}
+                    >
+                        <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-2">
+                            <span className="text-3xl text-white">✓</span>
+                        </div>
+                        <p className="text-2xl font-title font-bold text-white">Message sent!</p>
+                        <p className="text-base font-body text-gray-400 max-w-xs">
+                            Thanks for reaching out. I&apos;ll get back to you soon.
+                        </p>
                         <button
                             onClick={() => setStatus("idle")}
-                            className="text-xs font-subtitle font-medium tracking-[0.15em] uppercase text-gray-400 hover:text-white transition-colors duration-300 mt-4 cursor-pointer"
+                            className="text-xs font-subtitle font-medium tracking-[0.15em] uppercase text-gray-400 hover:text-white transition-colors duration-300 mt-6 cursor-pointer border-b border-transparent hover:border-white/20 pb-1"
                         >
                             Send another message
                         </button>
                     </div>
-                ) : (
-                    <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
+
+                    {/* Form */}
+                    <form 
+                        className={`col-start-1 row-start-1 flex flex-col gap-8 transition-all duration-500 ease-out ${
+                            status !== "success" 
+                                ? "opacity-100 translate-y-0" 
+                                : "opacity-0 -translate-y-8 pointer-events-none"
+                        }`} 
+                        onSubmit={handleSubmit}
+                    >
                         {/* Name Field */}
                         <div className="flex flex-col gap-4">
                             <input
@@ -108,7 +127,7 @@ export default function ContactCard() {
 
                         {/* Error message */}
                         {status === "error" && (
-                            <p className="text-sm font-body text-red-400 text-center">
+                            <p className="text-sm font-body text-red-400 text-center -mt-4">
                                 {errorMessage}
                             </p>
                         )}
@@ -116,14 +135,14 @@ export default function ContactCard() {
                         <div className="flex justify-center mt-4">
                             <Button
                                 variant="secondary"
-                                className="py-4 text-sm transition-transform active:scale-95"
+                                className="py-4 px-12 text-sm transition-transform active:scale-95"
                                 onClick={status === "submitting" ? undefined : undefined}
                             >
                                 {status === "submitting" ? "Sending..." : "Submit"}
                             </Button>
                         </div>
                     </form>
-                )}
+                </div>
             </div>
 
         </div>

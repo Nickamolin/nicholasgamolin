@@ -67,9 +67,9 @@ export default function Button({
   if (href) {
     return (
       <motion.div {...motionProps} className="inline-block">
-        <Link 
-          href={href} 
-          className={combinedClasses} 
+        <Link
+          href={href}
+          className={combinedClasses}
           onClick={handleLinkClick}
           target={target}
           download={download}

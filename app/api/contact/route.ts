@@ -24,7 +24,7 @@ export async function POST(request: Request) {
             );
         }
 
-        await resend.emails.send({
+        const { data, error } = await resend.emails.send({
             from: "Portfolio Contact Form <onboarding@resend.dev>",
             to: contactEmail,
             subject: `New message from ${name}`,
@@ -43,6 +43,15 @@ export async function POST(request: Request) {
             `,
         });
 
+        if (error) {
+            console.error("Resend API Error:", error);
+            return NextResponse.json(
+                { error: error.message || "Failed to send email." },
+                { status: 500 }
+            );
+        }
+
+        console.log("Email sent successfully:", data);
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Failed to send email:", error);

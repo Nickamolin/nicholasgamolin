@@ -1,5 +1,6 @@
 import Image from "next/image";
 import ContactCard from "@/components/sections/ContactCard";
+import WorkExperience from "@/components/sections/WorkExperience";
 
 export default function AboutPage() {
     return (
@@ -29,6 +30,7 @@ export default function AboutPage() {
             <div className="flex flex-col items-center gap-4 w-full">
                 <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold mt-8">Professional Experience</h1>
                 <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-gray-400 mb-8">A little bit about my work</span>
+                <WorkExperience />
             </div>
 
             <ContactCard />

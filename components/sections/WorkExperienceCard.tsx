@@ -38,12 +38,14 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
             <div className="group flex flex-col md:flex-row items-start md:items-center w-full gap-4 md:gap-8 py-8 border-b border-white/10 last:border-b-0 transition-all duration-300">
 
                 {/* Date range */}
-                <span className="text-sm font-subtitle font-medium text-gray-500 tracking-wider uppercase whitespace-nowrap md:min-w-[160px]">
-                    {dateRange}
-                </span>
+                <div className="md:w-[200px] md:shrink-0">
+                    <span className="text-sm font-subtitle font-medium text-gray-500 tracking-wider uppercase whitespace-nowrap">
+                        {dateRange}
+                    </span>
+                </div>
 
                 {/* Title & Company */}
-                <div className="flex flex-col gap-1 md:min-w-[240px]">
+                <div className="flex flex-col gap-1 md:w-[280px] md:shrink-0">
                     <h3 className="text-lg md:text-xl font-title font-bold text-white">
                         {work.title}
                     </h3>
@@ -64,19 +66,23 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
                 </div>
 
                 {/* Responsibilities */}
-                <p className="flex-1 text-sm md:text-base font-body text-gray-400 leading-relaxed">
-                    {work.responsibilities}
-                </p>
+                <div className="flex-1">
+                    <p className="text-sm md:text-base font-body text-gray-400 leading-relaxed">
+                        {work.responsibilities}
+                    </p>
+                </div>
 
                 {/* View Project button */}
-                {project && (
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="text-xs font-subtitle font-bold tracking-[0.15em] uppercase text-white border border-white/20 rounded-lg px-4 py-2 hover:bg-white/10 transition-all duration-300 whitespace-nowrap cursor-pointer"
-                    >
-                        View Project
-                    </button>
-                )}
+                <div className="md:w-[140px] md:shrink-0 flex justify-start md:justify-end">
+                    {project && (
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="text-xs font-subtitle font-bold tracking-[0.15em] uppercase text-white border border-white/20 rounded-lg px-4 py-2 hover:bg-white/10 transition-all duration-300 whitespace-nowrap cursor-pointer"
+                        >
+                            View
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Project Modal */}

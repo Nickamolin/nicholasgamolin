@@ -6,58 +6,9 @@ import Link from "next/link";
 import Button from "@/components/UI/Button";
 import ContactCard from "@/components/UI/ContactCard";
 import TechIcon from "@/components/UI/TechIcon";
+import { tech, tools } from "@/lib/constants";
 
 export default async function Home() {
-
-  const tech = [
-    {
-      src: "/icons/TechSection/Nextjs.svg",
-      alt: "Next.js"
-    },
-    {
-      src: "/icons/TechSection/React.svg",
-      alt: "React"
-    },
-    {
-      src: "/icons/TechSection/TailwindCSS.svg",
-      alt: "Tailwind CSS"
-    },
-    {
-      src: "/icons/TechSection/Typescript.svg",
-      alt: "Typescript"
-    },
-    {
-      src: "/icons/TechSection/Supabase.svg",
-      alt: "Supabase"
-    },
-    {
-      src: "/icons/TechSection/GitHub.svg",
-      alt: "GitHub"
-    }
-  ]
-
-  const tools = [
-    {
-      src: "/icons/TechSection/Antigravity.svg",
-      alt: "Antigravity"
-    },
-    {
-      src: "/icons/TechSection/Figma.svg",
-      alt: "Figma"
-    },
-    {
-      src: "/icons/TechSection/Blender.svg",
-      alt: "Blender"
-    },
-    {
-      src: "/icons/TechSection/Unity.svg",
-      alt: "Unity"
-    },
-    {
-      src: "/icons/TechSection/Davinci-Resolve.svg",
-      alt: "Davinci Resolve"
-    }
-  ]
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen p-8 gap-8">

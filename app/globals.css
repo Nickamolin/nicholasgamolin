@@ -15,6 +15,14 @@
   --font-text: var(--font-inter);
   --font-subtitle: var(--font-montserrat);
   --font-sans: var(--font-inter);
+
+  /* Spacing System */
+  --spacing-section: 6rem;       /* 96px — gap between top-level sections */
+  --spacing-header-gap: 1rem;    /* 16px — gap between h1 and subtitle */
+  --spacing-header-mb: 2.5rem;   /* 40px — bottom margin from header block to content */
+  --spacing-page-x: 2rem;        /* 32px — horizontal page padding */
+  --spacing-page-top: 2rem;      /* 32px — top page padding */
+  --spacing-page-bottom: 2rem;   /* 32px — bottom page padding */
 }
 
 /* @media (prefers-color-scheme: dark) {

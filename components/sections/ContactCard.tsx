@@ -45,9 +45,11 @@ export default function ContactCard() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center w-full gap-4 p-2">
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Contact Me</h1>
-            <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase mb-4">Have an idea or just want to say hi?</span>
+        <div className="flex flex-col items-center justify-center w-full mb-[20vh]">
+            <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
+                <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Contact Me</h1>
+                <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase">Have an idea or just want to say hi?</span>
+            </div>
 
             <div className="w-full max-w-lg p-8 rounded-3xl border border-white/10 bg-black/5 backdrop-blur-xl">
                 <div className="flex flex-col gap-2 mb-8 text-center">
@@ -58,12 +60,11 @@ export default function ContactCard() {
 
                 <div className="grid">
                     {/* Success Message */}
-                    <div 
-                        className={`col-start-1 row-start-1 flex flex-col items-center justify-center gap-4 py-8 text-center transition-all duration-500 ease-out ${
-                            status === "success" 
-                                ? "opacity-100 translate-y-0" 
-                                : "opacity-0 translate-y-8 pointer-events-none"
-                        }`}
+                    <div
+                        className={`col-start-1 row-start-1 flex flex-col items-center justify-center gap-4 py-8 text-center transition-all duration-500 ease-out ${status === "success"
+                            ? "opacity-100 translate-y-0"
+                            : "opacity-0 translate-y-8 pointer-events-none"
+                            }`}
                     >
                         <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-2">
                             <span className="text-3xl text-white">✓</span>
@@ -81,12 +82,11 @@ export default function ContactCard() {
                     </div>
 
                     {/* Form */}
-                    <form 
-                        className={`col-start-1 row-start-1 flex flex-col gap-8 transition-all duration-500 ease-out ${
-                            status !== "success" 
-                                ? "opacity-100 translate-y-0" 
-                                : "opacity-0 -translate-y-8 pointer-events-none"
-                        }`} 
+                    <form
+                        className={`col-start-1 row-start-1 flex flex-col gap-8 transition-all duration-500 ease-out ${status !== "success"
+                            ? "opacity-100 translate-y-0"
+                            : "opacity-0 -translate-y-8 pointer-events-none"
+                            }`}
                         onSubmit={handleSubmit}
                     >
                         {/* Name Field */}

@@ -11,7 +11,7 @@ import { tech, tools } from "@/lib/constants";
 export default async function Home() {
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen p-8 gap-8">
+    <div className="flex flex-col items-center justify-start min-h-screen px-(--spacing-page-x) pt-(--spacing-page-top) pb-(--spacing-page-bottom) gap-(--spacing-section)">
 
       {/* Hero Section */}
 
@@ -74,20 +74,24 @@ export default async function Home() {
 
       {/* Project Highlights Section */}
 
-      <div className="flex flex-col items-center gap-4 w-full">
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Featured Projects</h1>
-        <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase mb-8">A curated selection of some of my work</span>
+      <div className="flex flex-col items-center w-full">
+        <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Featured Projects</h1>
+          <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase">A curated selection of some of my work</span>
+        </div>
         <Highlights />
-        <Button href="/projects" variant="secondary" className="mt-8" useTransition>
+        <Button href="/projects" variant="secondary" className="mt-(--spacing-header-mb)" useTransition>
           View All Projects
         </Button>
       </div>
 
       {/* Tech Section */}
 
-      <div className="flex flex-col items-center justify-center w-full gap-4 p-8 min-h-[80vh]">
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Tech</h1>
-        <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase mb-4">Some of the tools I use to build</span>
+      <div className="flex flex-col items-center justify-center w-full">
+        <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Tech</h1>
+          <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase">Some of the tools I use to build</span>
+        </div>
 
         <div className="flex flex-row items-center justify-center w-full gap-16">
           {tech.map((t) => (
@@ -99,7 +103,7 @@ export default async function Home() {
           ))}
         </div>
 
-        <div className="flex flex-row items-center justify-center w-full gap-16 my-8">
+        <div className="flex flex-row items-center justify-center w-full gap-16 mt-8">
           {tools.map((t) => (
             <TechIcon
               key={t.alt}
@@ -109,7 +113,7 @@ export default async function Home() {
           ))}
         </div>
 
-        <Button href="/about" variant="secondary" className="mt-8" useTransition>
+        <Button href="/about" variant="secondary" className="mt-(--spacing-header-mb)" useTransition>
           About Me
         </Button>
       </div>

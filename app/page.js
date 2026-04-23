@@ -93,7 +93,7 @@ export default async function Home() {
           <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">Some of the tools I use to build</span>
         </div>
 
-        <div className="flex flex-row flex-wrap items-center justify-center w-full gap-12 md:gap-24 my-20">
+        <div className="flex flex-row flex-wrap items-center justify-center w-full gap-12 md:gap-24 mb-20 md:my-20">
           {tech.map((t) => (
             <TechIcon
               key={t.alt}

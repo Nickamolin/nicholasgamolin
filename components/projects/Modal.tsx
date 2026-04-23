@@ -129,6 +129,39 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                         <div className={`w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                                             <RiveWrapper url={cleanUrl} onLoaded={() => setIsLoading(false)} />
                                         </div>
+                                    ) : embedType?.toLowerCase() === "video" ? (
+                                        <div className={`w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                                            <video
+                                                className="w-full h-full object-contain bg-black"
+                                                src={cleanUrl}
+                                                controls
+                                                autoPlay
+                                                muted
+                                                loop
+                                                onCanPlay={() => setIsLoading(false)}
+                                            />
+                                        </div>
+                                    ) : embedType?.toLowerCase() === "website" ? (
+                                        <div className={`relative w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                                            <iframe
+                                                className="w-full h-full border-none bg-black"
+                                                src={cleanUrl}
+                                                title="Project Preview"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                onLoad={() => setIsLoading(false)}
+                                                allowFullScreen
+                                            />
+                                            {!isLoading && (
+                                                <a
+                                                    href={cleanUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="absolute bottom-3 right-3 md:bottom-4 md:right-4 text-[10px] md:text-xs font-subtitle font-medium text-white/60 hover:text-white transition-all bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-1.5 hover:scale-105 active:scale-95"
+                                                >
+                                                    Visit Site ↗
+                                                </a>
+                                            )}
+                                        </div>
                                     ) : (
                                         <iframe
                                             className={`w-full h-full border-none transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}

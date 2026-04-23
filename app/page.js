@@ -77,7 +77,7 @@ export default async function Home() {
       <div className="flex flex-col items-center w-full">
         <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Featured Projects</h1>
-          <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase">A curated selection of some of my work</span>
+          <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">A curated selection of some of my work</span>
         </div>
         <Highlights />
         <Button href="/projects" variant="secondary" className="mt-(--spacing-header-mb)" useTransition>
@@ -90,7 +90,7 @@ export default async function Home() {
       <div className="flex flex-col items-center justify-center w-full">
         <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Tech</h1>
-          <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase">Some of the tools I use to build</span>
+          <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">Some of the tools I use to build</span>
         </div>
 
         <div className="flex flex-row flex-wrap items-center justify-center w-full gap-12 md:gap-24">

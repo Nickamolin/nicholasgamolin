@@ -33,14 +33,14 @@ export default function AboutPage() {
 
             {/* Professional Experience Section */}
             <div className="flex flex-col items-center w-full">
-                <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
+                <div className="flex flex-col items-center text-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
                     <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Professional Experience</h1>
                     <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-gray-400">A little bit about my work</span>
                 </div>
                 <WorkExperience />
-                <Button 
-                    href="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/documents/resume.pdf?download=" 
-                    variant="secondary" 
+                <Button
+                    href="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/documents/resume.pdf?download="
+                    variant="secondary"
                     className="mt-(--spacing-header-mb)"
                     target="_blank"
                     download

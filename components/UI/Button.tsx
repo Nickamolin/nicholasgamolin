@@ -14,6 +14,7 @@ interface ButtonProps {
   useTransition?: boolean;
   target?: string;
   download?: boolean | string;
+  animateEntrance?: boolean;
 }
 
 /**
@@ -29,6 +30,7 @@ export default function Button({
   useTransition = false,
   target,
   download,
+  animateEntrance = true,
 }: ButtonProps) {
   const { navigateWithTransition } = useLoading();
   const baseStyles =
@@ -49,8 +51,8 @@ export default function Button({
   const motionProps = {
     whileHover: { scale: 1.05, y: -2 },
     whileTap: { scale: 0.98, y: 0 },
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
+    initial: animateEntrance ? { opacity: 0, y: 10 } : false,
+    animate: animateEntrance ? { opacity: 1, y: 0 } : false,
     transition: { type: "tween" as const, duration: 0.5, ease: "easeInOut" as const },
   };
 

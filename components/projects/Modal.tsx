@@ -52,13 +52,14 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                         className="relative z-10 w-full max-w-6xl bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl rounded-none md:rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col"
                     >
                         {/* Header Bar */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 backdrop-blur-md">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/90 z-20">
                             <div className="flex gap-4">
                                 {infoUrl && (
                                     <Button
                                         onClick={() => window.open(infoUrl, '_blank', 'noopener,noreferrer')}
                                         variant="secondary"
-                                        className="!py-2 !px-4 !text-[10px] md:!text-xs border-white/10"
+                                        className="!py-2 !px-4 !text-[10px] md:!text-xs border-white/10 !backdrop-blur-none"
+                                        animateEntrance={false}
                                     >
                                         Project Info ↗
                                     </Button>
@@ -68,6 +69,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                 onClick={onClose}
                                 variant="primary"
                                 className="!py-2 !px-6 !text-[10px] md:!text-xs"
+                                animateEntrance={false}
                             >
                                 Close
                             </Button>

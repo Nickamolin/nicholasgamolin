@@ -112,7 +112,7 @@ export default async function Home() {
           {/* Design Stack */}
           <div className="flex flex-col items-center w-full">
             <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">
-              Some of the software I use to design
+              Some of the software I use to create
             </span>
             <div className="flex flex-row flex-wrap items-center justify-center gap-10 md:gap-16 mt-12 max-w-[300px] sm:max-w-[500px] lg:max-w-none">
               {tools.map((t) => (

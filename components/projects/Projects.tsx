@@ -7,7 +7,7 @@ export default async function Projects() {
 
     const { data: projects, error } = await supabase
         .from("projects")
-        .select("id, title, subtitle, thumbnail_url, date_published, info_url, visible, type, embed_url, embed_type, embed_aspect_ratio, hover_text, render_title")
+        .select("id, title, subtitle, thumbnail_url, date_published, info_url, visible, type, embed_url, embed_type, embed_aspect_ratio, hover_text, render_title, summary, role, tools_used, action_button_text")
         .eq("visible", true)
         .order("date_published", { ascending: false });
 

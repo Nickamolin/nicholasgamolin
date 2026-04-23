@@ -89,8 +89,8 @@ export default async function Home() {
 
       <div className="flex flex-col items-center justify-center w-full">
         <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Tech</h1>
-          <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">Some of the tools I use to build</span>
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">My Toolbox</h1>
+          <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">Some of the technology I use to build</span>
         </div>
 
         <div className="flex flex-row flex-wrap items-center justify-center w-full gap-12 md:gap-24 mb-20 md:my-20">

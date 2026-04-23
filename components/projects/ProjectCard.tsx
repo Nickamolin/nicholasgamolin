@@ -98,6 +98,10 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 embedUrl={project.embed_url}
                 embedType={project.embed_type}
                 embedAspectRatio={project.embed_aspect_ratio}
+                summary={project.summary}
+                role={project.role}
+                tools_used={project.tools_used}
+                action_button_text={project.action_button_text}
             />
         </>
     )

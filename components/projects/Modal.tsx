@@ -13,6 +13,10 @@ type ModalProps = {
     embedUrl: string;
     embedType: string;
     embedAspectRatio: string;
+    summary: string;
+    role: string;
+    tools_used: string;
+    action_button_text: string;
 };
 
 function RiveWrapper({ url, onLoaded }: { url: string; onLoaded: () => void }) {
@@ -28,7 +32,7 @@ function RiveWrapper({ url, onLoaded }: { url: string; onLoaded: () => void }) {
     return <RiveComponent className="w-full h-full" />;
 }
 
-export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, embedAspectRatio }: ModalProps) {
+export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, embedAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -76,14 +80,14 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                         {/* Header Bar */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/90 z-20">
                             <div className="flex gap-4">
-                                {infoUrl && (
+                                {infoUrl && action_button_text && (
                                     <Button
                                         onClick={() => window.open(infoUrl, '_blank', 'noopener,noreferrer')}
                                         variant="secondary"
                                         className="!py-2 !px-4 !text-[10px] md:!text-xs border-white/10 !backdrop-blur-none"
                                         animateEntrance={false}
                                     >
-                                        Project Info ↗
+                                        {action_button_text} ↗
                                     </Button>
                                 )}
                             </div>

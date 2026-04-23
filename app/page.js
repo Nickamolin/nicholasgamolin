@@ -16,7 +16,7 @@ export default async function Home() {
       {/* Hero Section */}
 
       <div className="flex flex-col md:flex-row items-center justify-center min-h-[80vh] max-h-[90vh] w-full gap-8 md:gap-0">
-        <div className="w-full max-w-[400px] md:max-w-[500px] aspect-square flex items-center justify-center">
+        <div className="w-full max-w-[300px] md:max-w-[500px] aspect-square flex items-center justify-center">
           <Head3D />
         </div>
 
@@ -93,7 +93,7 @@ export default async function Home() {
           <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase">Some of the tools I use to build</span>
         </div>
 
-        <div className="flex flex-row items-center justify-center w-full gap-16">
+        <div className="flex flex-row flex-wrap items-center justify-center w-full gap-12 md:gap-24">
           {tech.map((t) => (
             <TechIcon
               key={t.alt}
@@ -103,7 +103,7 @@ export default async function Home() {
           ))}
         </div>
 
-        <div className="flex flex-row items-center justify-center w-full gap-16 mt-8">
+        <div className="flex flex-row flex-wrap items-center justify-center w-full gap-12 md:gap-24 mt-20">
           {tools.map((t) => (
             <TechIcon
               key={t.alt}

@@ -23,7 +23,7 @@ export default function AboutPage() {
                             className="rounded-xl object-cover"
                         />
                     </div>
-                    <div className="text-lg md:text-xl font-body font-medium text-gray-400 flex flex-col justify-between gap-8">
+                    <div className="text-lg md:text-xl text-center md:text-left font-body font-medium text-gray-400 flex flex-col justify-between gap-8">
                         <p>I&apos;m a self-taught digital artist and full-stack engineer with a B.S. in Computer Science from the University of Virginia. My work sits at the intersection of design and engineering, spanning graphic design, animation, video editing, and interactive experiences.</p>
                         <p>I&apos;m heavily inspired by film, music, and games, and I approach my work with the same mindset - focusing on aesthetic, detail, and how something feels as much as how it functions.</p>
                         <p>I&apos;m currently looking for opportunities to build interactive products and experiences that blend strong visual design with thoughtful engineering.</p>

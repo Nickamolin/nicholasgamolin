@@ -35,10 +35,10 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
 
     return (
         <>
-            <div className="group flex flex-col md:flex-row items-start md:items-center w-full gap-4 md:gap-8 py-8 border-b border-white/10 last:border-b-0 transition-all duration-300">
+            <div className="group flex flex-col lg:flex-row items-start lg:items-center w-full gap-4 md:gap-8 py-8 border-b border-white/10 last:border-b-0 transition-all duration-300">
 
                 {/* Date range */}
-                <div className="md:w-[200px] md:shrink-0">
+                <div className="lg:w-[200px] lg:shrink-0">
                     <span className="text-sm font-subtitle font-medium text-gray-500 tracking-wider uppercase whitespace-nowrap">
                         {dateRange}
                     </span>
@@ -73,7 +73,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
                 </div>
 
                 {/* View Project button */}
-                <div className="w-full md:w-[140px] md:shrink-0 flex justify-center md:justify-end">
+                <div className="w-full lg:w-[140px] lg:shrink-0 flex justify-center lg:justify-end">
                     {project && (
                         <button
                             onClick={() => setIsModalOpen(true)}

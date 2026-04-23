@@ -7,7 +7,7 @@ export default async function Highlights() {
 
     const { data: projects, error } = await supabase
         .from("projects")
-        .select("id, title, subtitle, thumbnail_url, date_published, info_url, visible, type, embed_url, embed_type, embed_aspect_ratio, hover_text, render_title")
+        .select("id, title, subtitle, thumbnail_url, date_published, info_url, visible, type, embed_url, embed_type, embed_aspect_ratio, hover_text, render_title, summary, role, tools_used, action_button_text")
         .in("id", [1, 2, 3, 6]) // 1: Endangered Cake Museum, 2: Brick Digger, 3: UBlock, 6: Get to Know Flourish
         .order("date_published", { ascending: false });
 

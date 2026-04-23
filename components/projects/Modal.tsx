@@ -91,7 +91,6 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                         onClick={() => window.open(infoUrl, '_blank', 'noopener,noreferrer')}
                                         variant="secondary"
                                         className="!py-2 !px-4 !text-[10px] md:!text-xs border-white/10 !backdrop-blur-none"
-                                        animateEntrance={false}
                                     >
                                         {action_button_text} {"\u2197\uFE0E"}
                                     </Button>
@@ -101,7 +100,6 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                 onClick={onClose}
                                 variant="primary"
                                 className="!py-2 !px-6 !text-[10px] md:!text-xs"
-                                animateEntrance={false}
                             >
                                 Close
                             </Button>

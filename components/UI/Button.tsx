@@ -14,13 +14,14 @@ interface ButtonProps {
   useTransition?: boolean;
   target?: string;
   download?: boolean | string;
-  animateEntrance?: boolean;
 }
 
 /**
  * A premium, reusable Button component that supports both Next.js Link
  * and standard button functionality with motion-driven animations.
  */
+const MotionLink = motion.create(Link);
+
 export default function Button({
   href,
   onClick,
@@ -30,30 +31,26 @@ export default function Button({
   useTransition = false,
   target,
   download,
-  animateEntrance = true,
 }: ButtonProps) {
   const { navigateWithTransition } = useLoading();
   const baseStyles =
-    "inline-flex items-center justify-center transition-all duration-300 font-subtitle tracking-[0.2em] uppercase text-xs md:text-sm whitespace-nowrap";
+    "inline-flex items-center justify-center font-subtitle tracking-[0.2em] uppercase text-xs md:text-sm whitespace-nowrap overflow-hidden transition-colors duration-300";
 
   const variants = {
     primary:
-      "bg-white text-black px-8 py-3 rounded-full hover:bg-gray-100 shadow-lg hover:shadow-white/10",
+      "bg-white text-black px-8 py-3 rounded-full hover:bg-gray-100 shadow-lg",
     secondary:
-      "bg-transparent text-white px-8 py-3 rounded-full border border-white/20 backdrop-blur-md hover:bg-white/10",
+      "bg-transparent text-white px-8 py-3 rounded-full border border-white/20 backdrop-blur-md",
     ghost:
-      "text-white hover:underline underline-offset-8",
+      "text-white py-2",
   };
 
   const combinedClasses = `${baseStyles} ${variants[variant]} ${className}`;
 
-  // Framer Motion shared animation props
-  const motionProps = {
-    whileHover: { scale: 1.05, y: -2 },
-    whileTap: { scale: 0.98, y: 0 },
-    initial: animateEntrance ? { opacity: 0, y: 10 } : false,
-    animate: animateEntrance ? { opacity: 1, y: 0 } : false,
-    transition: { type: "tween" as const, duration: 0.5, ease: "easeInOut" as const },
+  const tapVariants = {
+    primary: { scale: 0.96, backgroundColor: "#f3f4f6" }, // slight grey-ish white
+    secondary: { scale: 0.96, backgroundColor: "rgba(255, 255, 255, 0.15)" },
+    ghost: { scale: 0.96, opacity: 0.8 },
   };
 
   const handleLinkClick = (e: React.MouseEvent) => {
@@ -66,29 +63,58 @@ export default function Button({
     }
   };
 
+  const content = (
+    <div className="relative overflow-hidden h-[1.2em]">
+      <motion.div
+        variants={{
+          initial: { y: 0 },
+          hover: { y: "-100%" },
+        }}
+        transition={{ duration: 0.4, ease: [0.33, 1, 0.68, 1] }}
+        className="h-full"
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-center h-full">
+            {children}
+          </div>
+          <div className="flex items-center justify-center h-full absolute top-full left-0 w-full">
+            {children}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+
   if (href) {
     return (
-      <motion.div {...motionProps} className="inline-block">
-        <Link
+      <motion.div
+        initial="initial"
+        whileHover="hover"
+        className="inline-block"
+      >
+        <MotionLink
           href={href}
           className={combinedClasses}
           onClick={handleLinkClick}
           target={target}
           download={download}
+          whileTap={tapVariants[variant]}
         >
-          {children}
-        </Link>
+          {content}
+        </MotionLink>
       </motion.div>
     );
   }
 
   return (
     <motion.button
-      {...motionProps}
+      initial="initial"
+      whileHover="hover"
+      whileTap={tapVariants[variant]}
       onClick={onClick}
       className={combinedClasses}
     >
-      {children}
+      {content}
     </motion.button>
   );
 }

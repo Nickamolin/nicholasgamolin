@@ -1,9 +1,27 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function TechIcon({ src, alt }: { src: string, alt: string }) {
+    const [isActive, setIsActive] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+
+    const handleTap = () => {
+        if (isActive) return;
+        setIsActive(true);
+        setTimeout(() => setIsActive(false), 1000);
+    };
+
     return (
-        <div className="relative group flex items-center justify-center transition-transform duration-300 hover:scale-110 w-24 h-24">
+        <motion.div
+            className="relative flex items-center justify-center w-24 h-24"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onClick={handleTap}
+            animate={{ scale: (isActive || isHovered) ? 1.1 : 1 }}
+            transition={{ duration: 0.3 }}
+        >
 
             {/* Monochrome Base Image */}
             <Image
@@ -28,15 +46,23 @@ export default function TechIcon({ src, alt }: { src: string, alt: string }) {
                 }}
             >
                 {/* The diagonal sheen sweeping right to left */}
-                <div
-                    className="absolute top-0 bottom-0 w-[150%] bg-gradient-to-r from-transparent via-white/80 to-transparent skew-x-[-25deg] translate-x-[150%] group-hover:-translate-x-[150%] transition-transform duration-700 ease-in-out"
+                <motion.div
+                    className="absolute top-0 bottom-0 w-[150%] bg-gradient-to-r from-transparent via-white/80 to-transparent"
+                    initial={{ x: "150%", skewX: -25 }}
+                    animate={{ x: (isActive || isHovered) ? "-150%" : "150%", skewX: -25 }}
+                    transition={{ duration: 0.7, ease: "easeInOut" }}
                 />
             </div>
 
             {/* Tooltip Name */}
-            <span className="absolute -bottom-8 text-xs font-subtitle font-medium text-white tracking-widest opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+            <motion.span
+                className="absolute -bottom-8 text-xs font-subtitle font-medium text-white tracking-widest whitespace-nowrap pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: (isActive || isHovered) ? 1 : 0 }}
+                transition={{ duration: 0.3 }}
+            >
                 {alt}
-            </span>
-        </div>
+            </motion.span>
+        </motion.div>
     );
 }

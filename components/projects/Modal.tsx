@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import LoadingAnimation from "../loading/LoadingAnimation";
+import Button from "../UI/Button";
 
 type ModalProps = {
     isOpen: boolean;
@@ -18,110 +20,86 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
     useEffect(() => {
         if (isOpen) {
             setIsLoading(true);
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
         }
+        return () => { document.body.style.overflow = 'unset'; };
     }, [isOpen, embedUrl]);
 
-    if (!isOpen) return null;
-
-    const cleanUrl = embedUrl.replace(/&amp;/g, '&');
+    const cleanUrl = embedUrl?.replace(/&amp;/g, '&') || "";
     const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-    const LoadingPlaceholder = () => (
-        <LoadingAnimation
-            isVisible={isLoading}
-            wrapperClassName="absolute inset-0 z-20 bg-black"
-            className="w-32 h-32 md:w-48 md:h-48"
-        />
-    );
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Background overlay */}
-            <div
-                className="fixed inset-0 bg-black/90 transform scale-[3]"
-                onClick={onClose}
-            />
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-8">
+                    {/* Background overlay */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/70 backdrop-blur-md"
+                        onClick={onClose}
+                    />
 
-            {/* Close button */}
-            <button
-                className={`absolute ${isTouchScreen ? 'bottom-4 sm:bottom-6' : 'top-20 sm:top-24'} right-4 sm:right-6 px-4 py-2 bg-white text-black font-bold opacity-100 hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md`}
-                onClick={onClose}
-            >
-                Close &times;
-            </button>
+                    {/* Modal Container */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="relative z-10 w-full max-w-6xl bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl rounded-none md:rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col"
+                    >
+                        {/* Header Bar */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 backdrop-blur-md">
+                            <div className="flex gap-4">
+                                {infoUrl && (
+                                    <Button
+                                        onClick={() => window.open(infoUrl, '_blank', 'noopener,noreferrer')}
+                                        variant="secondary"
+                                        className="!py-2 !px-4 !text-[10px] md:!text-xs border-white/10"
+                                    >
+                                        Project Info ↗
+                                    </Button>
+                                )}
+                            </div>
+                            <Button
+                                onClick={onClose}
+                                variant="primary"
+                                className="!py-2 !px-6 !text-[10px] md:!text-xs"
+                            >
+                                Close
+                            </Button>
+                        </div>
 
-            {/* About button */}
-            {infoUrl && (
-                <button
-                    className={`absolute ${isTouchScreen ? 'bottom-4 sm:bottom-6' : 'top-20 sm:top-24'} left-4 sm:left-6 px-4 py-2 bg-white text-black font-bold opacity-100 hover:bg-gray-300 hover:text-black transition-colors z-50 cursor-pointer rounded-md`}
-                    onClick={() => window.open(infoUrl, '_blank', 'noopener,noreferrer')}
-                >
-                    About ↗&#xFE0E;
-                </button>
-            )}
-
-            {/* Iframe */}
-            {embedType === "youtube" && (
-                <div className="relative z-10 w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(85vw,calc(85vh*(var(--ratio))))] max-h-[100vh] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg" style={{ aspectRatio: embedAspectRatio || '16 / 9', '--ratio': embedAspectRatio || '16 / 9' } as React.CSSProperties}>
-                    <LoadingPlaceholder />
-                    <iframe
-                        className="w-full h-full"
-                        src={cleanUrl}
-                        title="YouTube video player"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                        referrerPolicy="strict-origin-when-cross-origin"
-                        onLoad={() => setIsLoading(false)}
-                        allowFullScreen>
-                    </iframe>
+                        {/* Iframe Content Area */}
+                        <div
+                            className={`relative w-full overflow-hidden bg-black/20 ${embedType === "pico8" && isTouchScreen ? "h-[70vh]" : ""
+                                }`}
+                            style={{
+                                aspectRatio: (embedType === "pico8" && isTouchScreen) ? "auto" : (embedAspectRatio || '16 / 9')
+                            }}
+                        >
+                            <LoadingAnimation
+                                isVisible={isLoading}
+                                wrapperClassName="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm"
+                                className="w-24 h-24 md:w-32 md:h-32"
+                            />
+                            <iframe
+                                className="w-full h-full border-none"
+                                src={cleanUrl}
+                                title="Project Preview"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                referrerPolicy="strict-origin-when-cross-origin"
+                                onLoad={() => setIsLoading(false)}
+                                allowFullScreen
+                            />
+                        </div>
+                    </motion.div>
                 </div>
             )}
-
-            {embedType === "itchio" && (
-                <div className="relative z-10 w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(85vw,calc(85vh*(var(--ratio))))] max-h-[100vh] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg" style={{ aspectRatio: embedAspectRatio || '16 / 9', '--ratio': embedAspectRatio || '16 / 9' } as React.CSSProperties}>
-                    <LoadingPlaceholder />
-                    <iframe
-                        className="w-full h-full"
-                        src={embedUrl}
-                        onLoad={() => setIsLoading(false)}
-                        allowFullScreen>
-                        <a href={infoUrl}>Play Game on itch.io</a>
-                    </iframe>
-                </div>
-            )}
-
-            {embedType === "pico8" && (
-                <div
-                    className={`relative z-10 overflow-hidden shadow-2xl rounded-lg ${isTouchScreen
-                        ? "w-full h-[80vh]"
-                        : "w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(65vw,calc(65vh*(var(--ratio))))] max-h-[100vh] md:max-h-[65vh]"
-                        }`}
-                    style={{
-                        '--ratio': embedAspectRatio || '128 / 105',
-                        aspectRatio: isTouchScreen ? 'auto' : 'var(--ratio)'
-                    } as React.CSSProperties}
-                >
-                    <LoadingPlaceholder />
-                    <iframe
-                        className="w-full h-full"
-                        src={embedUrl}
-                        onLoad={() => setIsLoading(false)}
-                        allowFullScreen>
-                    </iframe>
-                </div>
-            )}
-
-            {embedType === "website" && (
-                <div className="relative z-10 w-[min(100vw,calc(100vh*(var(--ratio))))] md:w-[min(85vw,calc(85vh*(var(--ratio))))] max-h-[100vh] md:max-h-[85vh] overflow-hidden shadow-2xl rounded-lg" style={{ aspectRatio: embedAspectRatio || '1 / 1', '--ratio': embedAspectRatio || '1 / 1' } as React.CSSProperties}>
-                    <LoadingPlaceholder />
-                    <iframe
-                        className="w-full h-full"
-                        src={embedUrl}
-                        onLoad={() => setIsLoading(false)}
-                        allowFullScreen>
-                    </iframe>
-                </div>
-            )}
-        </div>
+        </AnimatePresence>
     );
 }
 

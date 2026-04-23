@@ -155,7 +155,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     };
   }, []);
 
-  return <div ref={containerRef} className={`w-full h-full ${className}`} />;
+  return <div ref={containerRef} className={`w-full h-full cursor-grab active:cursor-grabbing ${className}`} />;
 };
 
 export default Head3D;

@@ -23,7 +23,7 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
             {/* Filter Menu */}
             <div className="w-full max-w-[2000px] flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-6">
                 <span className="text-xs md:text-sm text-white font-subtitle font-bold tracking-[0.1em] uppercase whitespace-nowrap">Sort By:</span>
-                <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 items-center justify-center gap-4 md:gap-8">
                     {filterOptions.map(type => (
                         <button
                             key={type}

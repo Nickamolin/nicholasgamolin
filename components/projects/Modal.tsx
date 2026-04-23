@@ -93,7 +93,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                         className="!py-2 !px-4 !text-[10px] md:!text-xs border-white/10 !backdrop-blur-none"
                                         animateEntrance={false}
                                     >
-                                        {action_button_text} ↗︎
+                                        {action_button_text} {"\u2197\uFE0E"}
                                     </Button>
                                 )}
                             </div>
@@ -158,7 +158,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                                     rel="noopener noreferrer"
                                                     className="absolute bottom-3 right-3 md:bottom-4 md:right-4 text-[10px] md:text-xs font-subtitle font-medium text-white/60 hover:text-white transition-all bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-1.5 hover:scale-105 active:scale-95"
                                                 >
-                                                    Visit Site ↗
+                                                    Visit Site {"\u2197\uFE0E"}
                                                 </a>
                                             )}
                                         </div>

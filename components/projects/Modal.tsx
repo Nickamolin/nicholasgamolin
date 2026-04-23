@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import LoadingAnimation from "../loading/LoadingAnimation";
 import Button from "../UI/Button";
+import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 
 type ModalProps = {
     isOpen: boolean;
@@ -14,6 +15,19 @@ type ModalProps = {
     embedAspectRatio: string;
 };
 
+function RiveWrapper({ url, onLoaded }: { url: string; onLoaded: () => void }) {
+    const { RiveComponent } = useRive({
+        src: url,
+        autoplay: true,
+        layout: new Layout({
+            fit: Fit.Contain,
+            alignment: Alignment.Center,
+        }),
+        onLoad: onLoaded,
+    });
+    return <RiveComponent className="w-full h-full" />;
+}
+
 export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, embedAspectRatio }: ModalProps) {
     const [isLoading, setIsLoading] = useState(true);
 
@@ -21,13 +35,21 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
         if (isOpen) {
             setIsLoading(true);
             document.body.style.overflow = 'hidden';
+
+            // Safety fallback: ensure loading screen clears even if iframe onLoad fails
+            const timer = setTimeout(() => {
+                setIsLoading(false);
+            }, 10000);
+            return () => {
+                clearTimeout(timer);
+                document.body.style.overflow = 'unset';
+            };
         } else {
             document.body.style.overflow = 'unset';
         }
-        return () => { document.body.style.overflow = 'unset'; };
     }, [isOpen, embedUrl]);
 
-    const cleanUrl = embedUrl?.replace(/&amp;/g, '&') || "";
+    const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
     const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
     return (
@@ -75,28 +97,34 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                             </Button>
                         </div>
 
-                        {/* Iframe Content Area */}
+                        {/* Content Area */}
                         <div
-                            className={`relative w-full overflow-hidden bg-black/20 ${embedType === "pico8" && isTouchScreen ? "h-[70vh]" : ""
+                            className={`relative w-full overflow-hidden bg-black/20 ${embedType?.toLowerCase() === "pico8" && isTouchScreen ? "h-[70vh]" : ""
                                 }`}
                             style={{
-                                aspectRatio: (embedType === "pico8" && isTouchScreen) ? "auto" : (embedAspectRatio || '16 / 9')
+                                aspectRatio: (embedType?.toLowerCase() === "pico8" && isTouchScreen) ? "auto" : (embedAspectRatio || '16 / 9')
                             }}
                         >
                             <LoadingAnimation
                                 isVisible={isLoading}
-                                wrapperClassName="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm"
+                                wrapperClassName="absolute inset-0 z-20 bg-black"
                                 className="w-24 h-24 md:w-32 md:h-32"
                             />
-                            <iframe
-                                className="w-full h-full border-none"
-                                src={cleanUrl}
-                                title="Project Preview"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                referrerPolicy="strict-origin-when-cross-origin"
-                                onLoad={() => setIsLoading(false)}
-                                allowFullScreen
-                            />
+
+                            {embedType?.toLowerCase() === "riv" ? (
+                                <div className={`w-full h-full p-4 md:p-8 transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                                    <RiveWrapper url={cleanUrl} onLoaded={() => setIsLoading(false)} />
+                                </div>
+                            ) : (
+                                <iframe
+                                    className={`w-full h-full border-none transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                                    src={cleanUrl}
+                                    title="Project Preview"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    onLoad={() => setIsLoading(false)}
+                                    allowFullScreen
+                                />
+                            )}
                         </div>
                     </motion.div>
                 </div>

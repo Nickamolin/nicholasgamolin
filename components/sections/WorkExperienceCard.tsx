@@ -73,7 +73,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
                 </div>
 
                 {/* View Project button */}
-                <div className="md:w-[140px] md:shrink-0 flex justify-start md:justify-end">
+                <div className="w-full md:w-[140px] md:shrink-0 flex justify-center md:justify-end">
                     {project && (
                         <button
                             onClick={() => setIsModalOpen(true)}

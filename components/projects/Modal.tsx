@@ -75,7 +75,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="relative z-10 w-full bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl rounded-none md:rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col h-fit my-auto"
+                        className="relative z-10 w-full bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col h-fit my-auto"
                         style={{
                             maxWidth: isTouchScreen ? '100%' : `min(1152px, calc(55vh * ${embedAspectRatio?.split('/').map(v => v.trim()).length === 2
                                 ? (Number(embedAspectRatio.split('/')[0]) / Number(embedAspectRatio.split('/')[1]))

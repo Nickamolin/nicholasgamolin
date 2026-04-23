@@ -93,7 +93,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                         className="!py-2 !px-4 !text-[10px] md:!text-xs border-white/10 !backdrop-blur-none"
                                         animateEntrance={false}
                                     >
-                                        {action_button_text} ↗
+                                        {action_button_text} ↗︎
                                     </Button>
                                 )}
                             </div>

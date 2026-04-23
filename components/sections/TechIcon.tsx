@@ -15,7 +15,7 @@ export default function TechIcon({ src, alt }: { src: string, alt: string }) {
 
             {/* Masked Sheen Overlay */}
             <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0 pointer-events-none overflow-hidden"
                 style={{
                     WebkitMaskImage: `url('${src}')`,
                     WebkitMaskSize: 'contain',

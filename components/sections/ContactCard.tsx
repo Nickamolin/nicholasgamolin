@@ -45,7 +45,7 @@ export default function ContactCard() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center w-full mb-[5vh]">
+        <div className="flex flex-col items-center justify-center w-full mb-[8vh]">
             <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
                 <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Contact Me</h1>
                 <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">Open to new projects, ideas, and conversations</span>

@@ -143,11 +143,11 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                             </div>
 
                             {/* Project Details Section */}
-                            <div className="p-6 md:p-8 bg-white/2 backdrop-blur-sm">
-                                <div className="max-w-4xl mx-auto flex flex-col gap-5 md:gap-6">
+                            <div className="py-5 px-6 md:py-6 md:px-8 bg-white/2 backdrop-blur-sm">
+                                <div className="max-w-4xl mx-auto flex flex-col gap-3 md:gap-4">
                                     {/* Summary */}
-                                    <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-8">
-                                        <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em] pt-1">
+                                    <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4">
+                                        <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">
                                             Summary
                                         </h4>
                                         <p className="text-sm md:text-base font-body text-gray-300 leading-relaxed">
@@ -156,8 +156,8 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                     </div>
 
                                     {/* Role */}
-                                    <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-8">
-                                        <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em] pt-1">
+                                    <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4">
+                                        <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">
                                             Role
                                         </h4>
                                         <p className="text-sm md:text-base font-body text-gray-300 leading-relaxed">
@@ -166,8 +166,8 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                     </div>
 
                                     {/* Tools Used */}
-                                    <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-8">
-                                        <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em] pt-1">
+                                    <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4">
+                                        <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">
                                             Tools Used
                                         </h4>
                                         <p className="text-sm md:text-base font-body text-gray-300">

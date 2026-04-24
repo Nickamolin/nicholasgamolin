@@ -5,8 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Button from "@/components/UI/Button";
 import ContactCard from "@/components/sections/ContactCard";
-import TechIcon from "@/components/sections/TechIcon";
-import { tech, tools } from "@/lib/constants";
+import Toolbox from "@/components/sections/Toolbox";
 
 export default async function Home() {
 
@@ -88,43 +87,7 @@ export default async function Home() {
       {/* Tech Section */}
 
       <div className="flex flex-col items-center justify-center w-full">
-        <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold text-center">My Toolbox</h1>
-        </div>
-
-        <div className="w-full flex flex-col items-center gap-16 md:gap-24">
-          {/* Build Stack */}
-          <div className="flex flex-col items-center w-full">
-            <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">
-              Some of the technology I use to build
-            </span>
-            <div className="flex flex-row flex-wrap items-center justify-center gap-10 md:gap-16 mt-12 max-w-[300px] sm:max-w-[500px] lg:max-w-none">
-              {tech.map((t) => (
-                <TechIcon
-                  key={t.alt}
-                  src={t.src}
-                  alt={t.alt}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Design Stack */}
-          <div className="flex flex-col items-center w-full">
-            <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">
-              Some of the software I use to create
-            </span>
-            <div className="flex flex-row flex-wrap items-center justify-center gap-10 md:gap-16 mt-12 max-w-[300px] sm:max-w-[500px] lg:max-w-none">
-              {tools.map((t) => (
-                <TechIcon
-                  key={t.alt}
-                  src={t.src}
-                  alt={t.alt}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+        <Toolbox />
 
         <Button href="/about" variant="secondary" className="mt-20 md:mt-32" useTransition>
           About Me

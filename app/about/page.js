@@ -2,6 +2,7 @@ import Image from "next/image";
 import ContactCard from "@/components/sections/ContactCard";
 import WorkExperience from "@/components/sections/WorkExperience";
 import Button from "@/components/UI/Button";
+import Toolbox from "@/components/sections/Toolbox";
 
 export default function AboutPage() {
     return (
@@ -47,6 +48,11 @@ export default function AboutPage() {
                 >
                     Download Resume
                 </Button>
+            </div>
+
+            {/* Tech Section */}
+            <div className="flex flex-col items-center justify-center w-full">
+                <Toolbox />
             </div>
 
             {/* Contact Section */}

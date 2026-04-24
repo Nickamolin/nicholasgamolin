@@ -97,7 +97,7 @@ export default function ContactCard() {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 hover:border-white/40 transition-all duration-300 placeholder:text-gray-600"
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 hover:border-white/20 transition-all duration-300 placeholder:text-gray-600"
                             />
                         </div>
 
@@ -109,7 +109,7 @@ export default function ContactCard() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 hover:border-white/40 transition-all duration-300 placeholder:text-gray-600"
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 hover:border-white/20 transition-all duration-300 placeholder:text-gray-600"
                             />
                         </div>
 
@@ -121,7 +121,7 @@ export default function ContactCard() {
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 hover:border-white/40 transition-all duration-300 placeholder:text-gray-600 resize-none"
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 hover:border-white/20 transition-all duration-300 placeholder:text-gray-600 resize-none"
                             />
                         </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import ProjectCard from "./ProjectCard";
 import type { Project } from "./types";
 
@@ -34,7 +34,7 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
                             onClick={() => setFilter(type)}
                             whileTap={{ scale: 0.95 }}
                             className={`relative px-6 py-2 text-sm font-body rounded-full transition-all duration-300 border ${filter === type
-                                ? "text-black font-bold"
+                                ? "text-black"
                                 : "border-white/10 hover:bg-white/10 hover:text-white"
                                 }`}
                         >
@@ -52,17 +52,40 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
             </div>
 
             {/* Project Grid */}
-            {filteredProjects.length > 0 ? (
-                <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full max-w-[2000px] gap-4">
-                    {filteredProjects.map((project) => (
-                        <ProjectCard key={project.id} project={project} />
-                    ))}
-                </ul>
-            ) : (
-                <div className="w-full max-w-[2000px] py-12 text-center text-gray-500">
-                    No projects found for this category.
-                </div>
-            )}
+            <motion.div layout transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="w-full max-w-[2000px]">
+                {filteredProjects.length > 0 ? (
+                    <motion.ul
+                        layout
+                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full gap-4"
+                    >
+                        <AnimatePresence mode="popLayout">
+                            {filteredProjects.map((project) => (
+                                <motion.li
+                                    key={project.id}
+                                    layout
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                >
+                                    <ProjectCard project={project} />
+                                </motion.li>
+                            ))}
+                        </AnimatePresence>
+                    </motion.ul>
+                ) : (
+                    <motion.div
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.4 }}
+                        className="w-full py-12 text-center text-gray-500"
+                    >
+                        No projects found for this category.
+                    </motion.div>
+                )}
+            </motion.div>
         </div>
     );
 }

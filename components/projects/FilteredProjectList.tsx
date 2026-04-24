@@ -22,24 +22,20 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
     return (
         <div className="w-full max-w-[2000px] flex flex-col items-center">
             {/* Filter Menu */}
-            <div className="w-full flex flex-col items-center gap-4 my-4">
-                {/* Header with Dividers */}
-                <div className="flex items-center justify-center gap-4 w-full max-w-xl">
-                    <span className="text-xs md:text-sm font-subtitle font-bold text-gray-500 uppercase tracking-[0.4em] whitespace-nowrap">
-                        Filter By:
-                    </span>
-                </div>
+            <div className="w-full flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 my-8 px-4">
+                <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">
+                    Filter By:
+                </span>
 
-                {/* Grid for Buttons */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full max-w-3xl px-4">
+                <div className="flex flex-row flex-wrap items-center justify-center gap-2 md:gap-3">
                     {filterOptions.map(type => (
                         <motion.button
                             key={type}
                             onClick={() => setFilter(type)}
                             whileTap={{ scale: 0.95 }}
-                            className={`relative px-4 py-2.5 text-[10px] md:text-xs font-subtitle tracking-[0.2em] uppercase rounded-full transition-colors duration-300 ${filter === type
-                                ? "text-black"
-                                : "text-white/40 hover:text-white"
+                            className={`relative px-6 py-2 text-sm font-body rounded-full transition-all duration-300 border ${filter === type
+                                ? "text-black font-bold"
+                                : "border-white/10 hover:bg-white/10 hover:text-white"
                                 }`}
                         >
                             {filter === type && (

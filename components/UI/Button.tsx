@@ -14,6 +14,7 @@ interface ButtonProps {
   useTransition?: boolean;
   target?: string;
   download?: boolean | string;
+  isExternalHover?: boolean;
 }
 
 /**
@@ -31,14 +32,15 @@ export default function Button({
   useTransition = false,
   target,
   download,
+  isExternalHover,
 }: ButtonProps) {
   const { navigateWithTransition } = useLoading();
   const baseStyles =
-    "inline-flex items-center justify-center font-subtitle tracking-[0.2em] uppercase text-xs md:text-sm whitespace-nowrap overflow-hidden transition-colors duration-300";
+    "inline-flex items-center justify-center font-subtitle tracking-[0.2em] uppercase text-xs md:text-sm whitespace-nowrap overflow-hidden transition-colors duration-300 cursor-pointer";
 
   const variants = {
     primary:
-      "bg-white text-black px-8 py-3 rounded-full hover:bg-gray-100 shadow-lg",
+      "bg-white text-black px-8 py-3 rounded-full border border-black/20",
     secondary:
       "bg-transparent text-white px-8 py-3 rounded-full border border-white/20 backdrop-blur-md",
     ghost:
@@ -48,7 +50,7 @@ export default function Button({
   const combinedClasses = `${baseStyles} ${variants[variant]} ${className}`;
 
   const tapVariants = {
-    primary: { scale: 0.96, backgroundColor: "#f3f4f6" }, // slight grey-ish white
+    primary: { scale: 0.96, backgroundColor: "#f3f4f6" },
     secondary: { scale: 0.96, backgroundColor: "rgba(255, 255, 255, 0.15)" },
     ghost: { scale: 0.96, opacity: 0.8 },
   };
@@ -89,6 +91,7 @@ export default function Button({
     return (
       <motion.div
         initial="initial"
+        animate={isExternalHover !== undefined ? (isExternalHover ? "hover" : "initial") : undefined}
         whileHover="hover"
         className="inline-block"
       >
@@ -109,6 +112,7 @@ export default function Button({
   return (
     <motion.button
       initial="initial"
+      animate={isExternalHover !== undefined ? (isExternalHover ? "hover" : "initial") : undefined}
       whileHover="hover"
       whileTap={tapVariants[variant]}
       onClick={onClick}

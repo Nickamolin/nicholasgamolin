@@ -132,7 +132,6 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                             <video
                                                 className="w-full h-full object-contain bg-black"
                                                 src={cleanUrl}
-                                                controls
                                                 autoPlay
                                                 muted
                                                 loop

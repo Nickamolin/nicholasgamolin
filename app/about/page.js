@@ -3,6 +3,7 @@ import ContactCard from "@/components/sections/ContactCard";
 import WorkExperience from "@/components/sections/WorkExperience";
 import Button from "@/components/UI/Button";
 import Toolbox from "@/components/sections/Toolbox";
+import InvertImage from "@/components/sections/InvertImage";
 
 export default function AboutPage() {
     return (
@@ -17,12 +18,7 @@ export default function AboutPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
                     <div className="relative w-full min-h-[300px] md:min-h-0">
-                        <Image
-                            src="/photos/TimesSquare.jpeg"
-                            fill
-                            alt="Headshot"
-                            className="rounded-xl object-cover"
-                        />
+                        <InvertImage src="/photos/TimesSquare.jpeg" alt="Headshot" />
                     </div>
                     <div className="text-lg md:text-xl text-center md:text-left font-body font-medium text-gray-400 flex flex-col justify-between gap-8">
                         <p>I&apos;m a self-taught digital artist and full-stack engineer with a B.S. in Computer Science from the University of Virginia. My work sits at the intersection of design and engineering, spanning graphic design, animation, video editing, and interactive experiences.</p>

@@ -128,9 +128,18 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                             <RiveWrapper url={cleanUrl} onLoaded={() => setIsLoading(false)} />
                                         </div>
                                     ) : embedType?.toLowerCase() === "video" ? (
-                                        <div className={`w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                                        <div className={`relative w-full h-full transition-opacity duration-700 overflow-hidden ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                                            {/* Ambient Background */}
                                             <video
-                                                className="w-full h-full object-contain bg-black"
+                                                className="absolute inset-0 w-full h-full object-cover blur-md opacity-50 scale-110 pointer-events-none"
+                                                src={cleanUrl}
+                                                autoPlay
+                                                muted
+                                                loop
+                                            />
+                                            {/* Foreground Video */}
+                                            <video
+                                                className="relative z-10 w-full h-full object-contain"
                                                 src={cleanUrl}
                                                 autoPlay
                                                 muted

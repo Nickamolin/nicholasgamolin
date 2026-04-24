@@ -5,7 +5,7 @@ import Button from "@/components/UI/Button";
 
 export default function AboutPage() {
     return (
-        <div className="min-h-screen w-full px-(--spacing-page-x) pt-(--spacing-page-top) pb-(--spacing-page-bottom) flex flex-col items-center justify-start gap-(--spacing-section)">
+        <div className="min-h-screen w-full pt-(--spacing-page-top) pb-(--spacing-page-bottom) flex flex-col items-center justify-start gap-(--spacing-section)">
 
             {/* Background Section */}
             <div className="flex flex-col items-center w-full max-w-5xl">

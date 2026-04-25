@@ -105,7 +105,7 @@ export default function Blurb({
                 const rect = charData.node.getBoundingClientRect();
                 const x = rect.left + rect.width / 2 - containerRect.left;
                 const y = rect.top + rect.height / 2 - containerRect.top;
-                
+
                 charData.x = x;
                 charData.y = y;
             });
@@ -147,7 +147,8 @@ export default function Blurb({
                     if (!charData.isRainbow) {
                         const distFromCenter = Math.hypot(activeRipple.x - charData.x, activeRipple.y - charData.y);
                         // Radial rainbow: hue depends on distance from click and a random base per click
-                        const hue = (activeRipple.baseHue + distFromCenter / 2.5) % 360;
+                        // A smaller divisor (0.8) makes the rainbow more "dense" and visible
+                        const hue = (activeRipple.baseHue + distFromCenter / 1.5) % 360;
                         charData.node.style.color = `hsl(${hue}, 80%, 65%)`;
                         charData.isRainbow = true;
                     }

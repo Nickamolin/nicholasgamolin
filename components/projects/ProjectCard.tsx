@@ -1,7 +1,7 @@
 "use client";
-
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence, useMotionValue, useSpring } from "motion/react";
 import type { Project } from "./types";
 import Modal from "./Modal";
 
@@ -9,10 +9,59 @@ type ProjectCardProps = {
     project: Project;
 };
 
+const OptimizedTooltip = ({ text, isHovered, initialX, initialY }: { text: string; isHovered: boolean, initialX: number, initialY: number }) => {
+    const mouseX = useMotionValue(initialX);
+    const mouseY = useMotionValue(initialY);
+
+    useEffect(() => {
+        if (!isHovered) return;
+
+        // Reset to entry position immediately
+        mouseX.set(initialX);
+        mouseY.set(initialY);
+
+        const handleMouseMove = (e: MouseEvent) => {
+            mouseX.set(e.clientX);
+            mouseY.set(e.clientY);
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => window.removeEventListener("mousemove", handleMouseMove);
+    }, [isHovered, mouseX, mouseY, initialX, initialY]);
+
+    return (
+        <AnimatePresence>
+            {isHovered && (
+                <motion.div
+                    initial={{ scaleX: 0, opacity: 0, x: "-50%", y: "-50%" }}
+                    animate={{ scaleX: 1, opacity: 1, x: "-50%", y: "-50%" }}
+                    exit={{ scaleX: 0, opacity: 0, x: "-50%", y: "-50%" }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="fixed z-[100] pointer-events-none [@media(hover:none)]:hidden origin-center"
+                    style={{
+                        left: mouseX,
+                        top: mouseY,
+                    }}
+                >
+                    <div className="relative bg-black/10 backdrop-blur-xs text-white px-6 py-2 text-xs sm:text-sm font-subtitle font-medium tracking-[0.2em] uppercase shadow-2xl border border-white/10 whitespace-nowrap">
+                        {/* Viewfinder Brackets */}
+                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white" />
+                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white" />
+                        <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white" />
+                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white" />
+
+                        {text}
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};
+
 export default function ProjectCard({ project }: ProjectCardProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [isHovered, setIsHovered] = useState(false);
+    const [entryPos, setEntryPos] = useState({ x: 0, y: 0 });
 
     const hasHoverText = Boolean(project.hover_text);
     const isInteractive = Boolean(project.embed_url || project.info_url);
@@ -26,16 +75,11 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && isHovered ? "cursor-none" : "cursor-default"}`}
                 onMouseEnter={(e) => {
                     if (hasHoverText) {
-                        setMousePos({ x: e.clientX, y: e.clientY });
+                        setEntryPos({ x: e.clientX, y: e.clientY });
                         setIsHovered(true);
                     }
                 }}
                 onMouseLeave={() => hasHoverText && setIsHovered(false)}
-                onMouseMove={(e) => {
-                    if (hasHoverText) {
-                        setMousePos({ x: e.clientX, y: e.clientY });
-                    }
-                }}
                 onClick={(e) => {
                     if (project.embed_url) {
                         e.preventDefault();
@@ -75,20 +119,14 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 </div>
             </a>
 
-            {/* Hover Tooltip */}
+            {/* Hover Tooltip (Optimized Component) */}
             {hasHoverText && (
-                <div
-                    className={`fixed z-[100] pointer-events-none transition-opacity duration-300 [@media(hover:none)]:hidden ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-                    style={{
-                        left: mousePos.x,
-                        top: mousePos.y,
-                        transform: 'translate(-50%, -50%)'
-                    }}
-                >
-                    <span className="bg-black/50 text-white px-3 py-1.5 rounded-lg text-sm sm:text-base font-body font-medium shadow-xl whitespace-nowrap">
-                        {project.hover_text}
-                    </span>
-                </div>
+                <OptimizedTooltip
+                    text={project.hover_text!}
+                    isHovered={isHovered}
+                    initialX={entryPos.x}
+                    initialY={entryPos.y}
+                />
             )}
 
             <Modal

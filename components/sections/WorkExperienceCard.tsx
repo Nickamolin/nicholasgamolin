@@ -55,14 +55,14 @@ const ExperienceContent = ({
         <div className="flex flex-col lg:flex-row items-start lg:items-center w-full gap-4 md:gap-8 py-8 px-8 md:px-12">
             {/* Date range */}
             <div className="lg:w-[200px] lg:shrink-0">
-                <span className={`text-sm font-subtitle font-medium tracking-wider uppercase whitespace-nowrap transition-colors duration-300 ${isBase ? 'text-gray-500' : 'text-neutral-500'}`}>
+                <span className={`text-sm font-subtitle font-medium tracking-wider uppercase whitespace-nowrap transition-colors duration-300 ${isBase ? 'text-gray-500' : 'text-zinc-500'}`}>
                     {dateRange}
                 </span>
             </div>
 
             {/* Title & Company */}
             <div className="flex flex-col gap-1 md:w-[280px] md:shrink-0">
-                <h3 className={`text-lg md:text-xl font-title font-bold transition-colors duration-300 ${isBase ? 'text-white' : 'text-neutral-900'}`}>
+                <h3 className={`text-lg md:text-xl font-title font-bold transition-colors duration-300 ${isBase ? 'text-white' : 'text-zinc-900'}`}>
                     {work.title}
                 </h3>
                 {work.company_url ? (
@@ -70,12 +70,12 @@ const ExperienceContent = ({
                         href={work.company_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`text-sm font-subtitle font-medium transition-colors duration-300 underline underline-offset-2 ${isBase ? 'text-gray-400 hover:text-white decoration-white/20 hover:decoration-white/60' : 'text-neutral-600 decoration-neutral-900/20'}`}
+                        className={`text-sm font-subtitle font-medium transition-colors duration-300 underline underline-offset-2 ${isBase ? 'text-gray-400 hover:text-white decoration-white/20 hover:decoration-white/60' : 'text-zinc-600 decoration-black/20'}`}
                     >
                         {work.company}
                     </a>
                 ) : (
-                    <span className={`text-sm font-subtitle font-medium transition-colors duration-300 ${isBase ? 'text-gray-400' : 'text-neutral-600'}`}>
+                    <span className={`text-sm font-subtitle font-medium transition-colors duration-300 ${isBase ? 'text-gray-400' : 'text-zinc-600'}`}>
                         {work.company}
                     </span>
                 )}
@@ -83,7 +83,7 @@ const ExperienceContent = ({
 
             {/* Responsibilities */}
             <div className="flex-1">
-                <p className={`text-sm md:text-base text-justify font-body leading-relaxed transition-colors duration-300 ${isBase ? 'text-gray-400' : 'text-neutral-700'}`}>
+                <p className={`text-sm md:text-base text-justify font-body leading-relaxed transition-colors duration-300 ${isBase ? 'text-gray-400' : 'text-zinc-700'}`}>
                     {work.responsibilities}
                 </p>
             </div>
@@ -100,7 +100,7 @@ const ExperienceContent = ({
                             variant={isBase ? "secondary" : "primary"}
                             onClick={onViewClick}
                             isExternalHover={isButtonHovered}
-                            className={!isBase ? "!bg-transparent !border !border-black/20 !text-neutral-900" : ""}
+                            className={!isBase ? "!bg-transparent !border !border-black/20 !text-zinc-900" : ""}
                         >
                             View
                         </Button>
@@ -174,7 +174,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
                 onMouseLeave={() => setIsHovered(false)}
                 className="group relative w-screen left-1/2 -translate-x-1/2 border-b border-white/10 last:border-b-0 transition-all duration-300 overflow-hidden"
             >
-                {/* Base Layer (White on Black) */}
+                {/* Base Layer (Dimmed) */}
                 <ExperienceContent
                     work={work}
                     project={project}
@@ -185,11 +185,11 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
                     onViewClick={() => setIsModalOpen(true)}
                 />
 
-                {/* Hover Reveal Layer (Black on White) */}
+                {/* Hover Reveal Layer (Soft Slate Effect) */}
                 <motion.div
                     initial={{ clipPath: "inset(0 100% 0 0)" }}
                     animate={controls}
-                    className="absolute inset-0 z-20 bg-white overflow-hidden pointer-events-none"
+                    className="absolute inset-0 z-20 bg-zinc-200 overflow-hidden pointer-events-none"
                 >
                     <div className="pointer-events-auto h-full w-full">
                         <ExperienceContent

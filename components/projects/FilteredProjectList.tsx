@@ -22,20 +22,20 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
     return (
         <div className="w-full max-w-[2000px] flex flex-col items-center">
             {/* Filter Menu */}
-            <div className="w-full flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 my-8 px-4">
-                <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">
+            <div className="w-full flex flex-wrap items-center justify-center gap-x-6 gap-y-4 my-8 px-4">
+                <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase w-full text-center sm:w-auto">
                     Filter By:
                 </span>
 
-                <div className="flex flex-row flex-wrap items-center justify-center gap-2 md:gap-3">
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center gap-2 md:gap-3 w-full sm:w-auto max-w-sm sm:max-w-none">
                     {filterOptions.map(type => (
                         <motion.button
                             key={type}
                             onClick={() => setFilter(type)}
                             whileTap={{ scale: 0.95 }}
-                            className={`relative px-6 py-2 text-xs md:text-sm font-subtitle font-medium text-center tracking-[0.2em] uppercase rounded-full transition-all duration-300 border cursor-pointer ${filter === type
+                            className={`relative px-4 sm:px-6 py-2 text-xs md:text-sm font-subtitle font-medium text-center tracking-[0.2em] uppercase rounded-full transition-all duration-300 border cursor-pointer w-full sm:w-auto ${filter === type
                                 ? "text-black"
-                                : "border-white/10 hover:bg-white/10 hover:text-white"
+                                : "border-white/10 hover:bg-white/10 hover:text-white text-gray-400"
                                 }`}
                         >
                             {filter === type && (

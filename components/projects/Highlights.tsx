@@ -16,8 +16,8 @@ export default async function Highlights() {
     }
 
     return (
-        <div className="w-full max-w-[2000px] flex flex-col items-center">
-            <ul className="grid grid-cols-1 sm:grid-cols-2 w-full max-w-[2000px] gap-4">
+        <div className="w-full max-w-7xl flex flex-col items-center">
+            <ul className="grid grid-cols-1 sm:grid-cols-2 w-full gap-4">
                 {projects.map((project) => (
                     <ProjectCard key={project.id} project={project} />
                 ))}

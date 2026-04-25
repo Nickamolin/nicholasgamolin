@@ -83,7 +83,7 @@ const ExperienceContent = ({
 
             {/* Responsibilities */}
             <div className="flex-1">
-                <p className={`text-sm md:text-base font-body leading-relaxed transition-colors duration-300 ${isBase ? 'text-gray-400' : 'text-neutral-700'}`}>
+                <p className={`text-sm md:text-base text-justify font-body leading-relaxed transition-colors duration-300 ${isBase ? 'text-gray-400' : 'text-neutral-700'}`}>
                     {work.responsibilities}
                 </p>
             </div>

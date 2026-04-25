@@ -1,4 +1,4 @@
-import { Outfit, Inter, Montserrat } from "next/font/google";
+import { Outfit, Inter, Montserrat, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import LoadingScreen from "@/components/loading/LoadingScreen";
 import { LoadingProvider } from "@/components/loading/LoadingProvider";
@@ -20,6 +20,11 @@ const montserrat = Montserrat({
   subsets: ["latin"],
 });
 
+const jetbrains_mono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+});
+
 
 
 export const metadata = {
@@ -31,7 +36,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${outfit.variable} ${inter.variable} ${montserrat.variable} antialiased`}
+        className={`${outfit.variable} ${inter.variable} ${montserrat.variable} ${jetbrains_mono.variable} antialiased`}
       >
         <LoadingProvider>
           <LoadingScreen />

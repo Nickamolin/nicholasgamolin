@@ -4,6 +4,7 @@ import WorkExperience from "@/components/sections/WorkExperience";
 import Button from "@/components/UI/Button";
 import Toolbox from "@/components/sections/Toolbox";
 import InvertImage from "@/components/sections/InvertImage";
+import GlitchText from "@/components/sections/GlitchText";
 
 export default function AboutPage() {
     return (
@@ -21,9 +22,15 @@ export default function AboutPage() {
                         <InvertImage src="/photos/TimesSquare.jpeg" alt="Headshot" />
                     </div>
                     <div className="text-lg md:text-xl text-justify font-body font-medium text-gray-400 flex flex-col justify-between gap-8">
-                        <p>I&apos;m a self-taught digital artist and full-stack engineer with a B.S. in Computer Science from the University of Virginia. My work sits at the intersection of design and engineering, spanning graphic design, animation, video editing, and interactive experiences.</p>
-                        <p>I&apos;m heavily inspired by film, music, and games, and I approach my work with the same mindset - focusing on aesthetic, detail, and how something feels as much as how it functions.</p>
-                        <p>I&apos;m currently looking for opportunities to build interactive products and experiences that blend strong visual design with thoughtful engineering.</p>
+                        <p>
+                            <GlitchText text="I'm a self-taught digital artist and full-stack engineer with a B.S. in Computer Science from the University of Virginia. My work sits at the intersection of design and engineering, spanning graphic design, animation, video editing, and interactive experiences." />
+                        </p>
+                        <p>
+                            <GlitchText text="I'm heavily inspired by film, music, and games, and I approach my work with the same mindset - focusing on aesthetic, detail, and how something feels as much as how it functions." />
+                        </p>
+                        <p>
+                            <GlitchText text="I'm currently looking for opportunities to build interactive products and experiences that blend strong visual design with thoughtful engineering." />
+                        </p>
                     </div>
                 </div>
             </div>

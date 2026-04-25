@@ -24,7 +24,7 @@ const MemoizedBio = React.memo(({
     charsMap: React.MutableRefObject<Map<string, CharData>> 
 }) => {
     return (
-        <div className="text-lg md:text-xl text-justify font-body font-medium text-gray-400 flex flex-col justify-center gap-8">
+        <div className="text-lg md:text-xl text-justify font-body font-medium text-gray-400 flex flex-col justify-center gap-8 cursor-text select-text">
             {paragraphs.map((p, pIdx) => (
                 <p key={pIdx}>
                     {p.split(" ").map((word, wIdx) => (
@@ -82,6 +82,7 @@ export default function Blurb({
     const [ripples, setRipples] = useState<{ id: number; x: number; y: number; imgX: number; imgY: number; startTime: number }[]>([]);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [isHovered, setIsHovered] = useState(false);
+    const [isImageHovered, setIsImageHovered] = useState(false);
     const [hasHover, setHasHover] = useState(false);
     const [scalingRippleCount, setScalingRippleCount] = useState(0);
 
@@ -164,6 +165,10 @@ export default function Blurb({
 
     const triggerRipple = (e: React.PointerEvent) => {
         if (!containerRef.current || !imageContainerRef.current) return;
+        
+        // Don't trigger ripples if the user is right-clicking or similar
+        if (e.button !== 0) return;
+
         const rect = containerRef.current.getBoundingClientRect();
         const imgRect = imageContainerRef.current.getBoundingClientRect();
         
@@ -175,11 +180,15 @@ export default function Blurb({
         const baseId = Date.now();
 
         setRipples(prev => [...prev, { id: baseId, x, y, imgX, imgY, startTime: baseId }]);
-        setScalingRippleCount(prev => prev + 1);
 
-        setTimeout(() => {
-            setScalingRippleCount(prev => Math.max(0, prev - 1));
-        }, 1000);
+        // Only scale the image if the click was actually on the image
+        const isImageClick = imageContainerRef.current.contains(e.target as Node);
+        if (isImageClick) {
+            setScalingRippleCount(prev => prev + 1);
+            setTimeout(() => {
+                setScalingRippleCount(prev => Math.max(0, prev - 1));
+            }, 1000);
+        }
 
         setTimeout(() => {
             setRipples(prev => prev.filter(r => r.id !== baseId));
@@ -189,22 +198,24 @@ export default function Blurb({
     return (
         <div
             ref={containerRef}
-            className="flex flex-col items-center w-full max-w-5xl relative select-none"
+            className="flex flex-col items-center w-full max-w-5xl relative cursor-none group"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
             onMouseMove={handleMouseMove}
+            onPointerDown={triggerRipple}
         >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full items-stretch relative">
                 {/* Image Section */}
-                <div className="relative w-full min-h-[400px] md:min-h-0">
+                <div className="relative w-full min-h-[400px] md:min-h-0 select-none">
                     <div
                         ref={imageContainerRef}
-                        className="relative w-full h-full cursor-none overflow-hidden rounded-xl group"
-                        onMouseEnter={() => setIsHovered(true)}
-                        onMouseLeave={() => setIsHovered(false)}
-                        onPointerDown={triggerRipple}
+                        className="relative w-full h-full overflow-hidden rounded-xl"
+                        onMouseEnter={() => setIsImageHovered(true)}
+                        onMouseLeave={() => setIsImageHovered(false)}
                     >
                         <motion.div
                             animate={{
-                                scale: (isHovered && hasHover) || scalingRippleCount > 0 ? 1.05 : 1
+                                scale: (isImageHovered && hasHover) || scalingRippleCount > 0 ? 1.05 : 1
                             }}
                             transition={{ duration: 0.7, ease: "easeOut" }}
                             className="relative w-full h-full"
@@ -218,14 +229,14 @@ export default function Blurb({
                             />
                         </motion.div>
 
-                        {/* Inversion Ripples (Optimized Coords) */}
+                        {/* Inversion Ripples (Local to Image, but triggered globally) */}
                         <AnimatePresence>
                             {ripples.map((ripple) => (
                                 <React.Fragment key={ripple.id}>
                                     <motion.div
                                         initial={{ scale: 0, x: "-50%", y: "-50%" }}
-                                        animate={{ scale: 4, x: "-50%", y: "-50%" }}
-                                        transition={{ duration: 1, ease: [0.4, 0, 0.2, 1] }}
+                                        animate={{ scale: 8, x: "-50%", y: "-50%" }}
+                                        transition={{ duration: 1.5, ease: [0.4, 0, 0.2, 1] }}
                                         className="absolute bg-white rounded-full pointer-events-none z-10"
                                         style={{
                                             left: ripple.imgX,
@@ -237,8 +248,8 @@ export default function Blurb({
                                     />
                                     <motion.div
                                         initial={{ scale: 0, x: "-50%", y: "-50%" }}
-                                        animate={{ scale: 4, x: "-50%", y: "-50%" }}
-                                        transition={{ duration: 1, delay: 1, ease: [0.4, 0, 0.2, 1] }}
+                                        animate={{ scale: 8, x: "-50%", y: "-50%" }}
+                                        transition={{ duration: 1.5, delay: 1, ease: [0.4, 0, 0.2, 1] }}
                                         className="absolute bg-white rounded-full pointer-events-none z-10"
                                         style={{
                                             left: ripple.imgX,
@@ -251,30 +262,30 @@ export default function Blurb({
                                 </React.Fragment>
                             ))}
                         </AnimatePresence>
-
-                        {/* Custom Cursor */}
-                        <motion.div
-                            initial={false}
-                            animate={{
-                                opacity: isHovered ? 1 : 0,
-                                scale: isHovered ? 1 : 0,
-                                x: "-50%",
-                                y: "-50%"
-                            }}
-                            transition={{ duration: 0.15, ease: "easeOut" }}
-                            className="absolute pointer-events-none bg-white rounded-full z-30 w-5 h-5 hidden [@media(hover:hover)]:block"
-                            style={{
-                                left: mousePos.x - (imageContainerRef.current?.offsetLeft || 0),
-                                top: mousePos.y - (imageContainerRef.current?.offsetTop || 0),
-                                mixBlendMode: 'difference',
-                            }}
-                        />
                     </div>
                 </div>
 
                 {/* Bio Text Section (Memoized) */}
                 <MemoizedBio paragraphs={paragraphs} charsMap={charsMap} />
             </div>
+
+            {/* Global Custom Cursor */}
+            <motion.div
+                initial={false}
+                animate={{
+                    opacity: isHovered ? 1 : 0,
+                    scale: isHovered ? 1 : 0,
+                    x: "-50%",
+                    y: "-50%"
+                }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="absolute pointer-events-none bg-white rounded-full z-50 w-6 h-6 hidden [@media(hover:hover)]:block"
+                style={{
+                    left: mousePos.x,
+                    top: mousePos.y,
+                    mixBlendMode: 'difference',
+                }}
+            />
         </div>
     );
 }

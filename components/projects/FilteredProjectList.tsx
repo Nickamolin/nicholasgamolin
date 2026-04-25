@@ -22,7 +22,7 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
     return (
         <div className="w-full max-w-[2000px] flex flex-col items-center">
             {/* Filter Menu */}
-            <div className="w-full flex flex-wrap items-center justify-center gap-x-6 gap-y-4 my-8 px-4">
+            <div className="w-full flex flex-wrap items-center justify-center gap-x-6 gap-y-4 py-4 px-4">
                 <span className="text-xs md:text-sm font-subtitle font-medium text-gray-400 tracking-[0.2em] uppercase w-full text-center sm:w-auto">
                     Filter By:
                 </span>

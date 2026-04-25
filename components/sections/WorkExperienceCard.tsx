@@ -115,7 +115,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [isButtonHovered, setIsButtonHovered] = useState(false);
-    
+
     // Tracking the 'anchor' side of the clip-path:
     // 'left' uses inset(0 X% 0 0) - wipes from/to the left
     // 'right' uses inset(0 0 0 X%) - wipes from/to the right
@@ -134,7 +134,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
                 controls.set({ clipPath: "inset(0 100% 0 0)" });
             }
             // If anchor is 'right', we just animate back to 0% left-inset
-            controls.start({ 
+            controls.start({
                 clipPath: anchor.current === 'left' ? "inset(0 0% 0 0)" : "inset(0 0 0 0%)",
                 transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
             }).then(() => {
@@ -146,7 +146,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
                 // Was fully open -> wipe out to the RIGHT
                 anchor.current = 'right';
                 isFull.current = false;
-                controls.start({ 
+                controls.start({
                     clipPath: "inset(0 0 0 100%)",
                     transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
                 }).then(() => {
@@ -155,7 +155,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
             } else {
                 // Was only partially open (or already shrinking)
                 // If anchored left, retrace back to left. If anchored right, continue to right.
-                controls.start({ 
+                controls.start({
                     clipPath: anchor.current === 'left' ? "inset(0 100% 0 0)" : "inset(0 0 0 100%)",
                     transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
                 }).then(() => {
@@ -172,7 +172,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
                     setIsHovered(true);
                 }}
                 onMouseLeave={() => setIsHovered(false)}
-                className="group relative w-full border-b border-white/10 last:border-b-0 transition-all duration-300 overflow-hidden"
+                className="group relative w-screen left-1/2 -translate-x-1/2 border-b border-white/10 last:border-b-0 transition-all duration-300 overflow-hidden"
             >
                 {/* Base Layer (White on Black) */}
                 <ExperienceContent

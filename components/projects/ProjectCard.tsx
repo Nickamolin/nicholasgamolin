@@ -10,19 +10,19 @@ type ProjectCardProps = {
 };
 
 const OptimizedTooltip = ({ text, isHovered, initialX, initialY }: { text: string; isHovered: boolean, initialX: number, initialY: number }) => {
-    const mouseX = useMotionValue(initialX);
-    const mouseY = useMotionValue(initialY);
+    const mouseX = useMotionValue(Math.round(initialX));
+    const mouseY = useMotionValue(Math.round(initialY));
 
     useEffect(() => {
         if (!isHovered) return;
 
         // Reset to entry position immediately
-        mouseX.set(initialX);
-        mouseY.set(initialY);
+        mouseX.set(Math.round(initialX));
+        mouseY.set(Math.round(initialY));
 
         const handleMouseMove = (e: MouseEvent) => {
-            mouseX.set(e.clientX);
-            mouseY.set(e.clientY);
+            mouseX.set(Math.round(e.clientX));
+            mouseY.set(Math.round(e.clientY));
         };
 
         window.addEventListener("mousemove", handleMouseMove);
@@ -43,14 +43,29 @@ const OptimizedTooltip = ({ text, isHovered, initialX, initialY }: { text: strin
                         top: mouseY,
                     }}
                 >
-                    <div className="relative bg-black/10 backdrop-blur-xs text-white px-6 py-2 text-xs sm:text-sm font-subtitle font-medium tracking-[0.2em] uppercase shadow-2xl border border-white/10 whitespace-nowrap">
-                        {/* Viewfinder Brackets */}
-                        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white" />
-                        <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white" />
-                        <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white" />
-                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white" />
+                    <div
+                        className="relative shadow-2xl whitespace-nowrap overflow-visible"
+                        style={{ transformStyle: "preserve-3d" }}
+                    >
+                        {/* Separate Glass Background Layer */}
+                        <div
+                            className="absolute inset-0 bg-black/40 backdrop-blur-md"
+                            style={{ transform: "translateZ(0px)" }}
+                        />
 
-                        {text}
+                        {/* Content Layer (Physically floating above the background) */}
+                        <div
+                            className="relative px-6 py-2 text-xs sm:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-white"
+                            style={{ transform: "translateZ(30px)" }}
+                        >
+                            {/* Viewfinder Brackets */}
+                            <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white" />
+                            <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white" />
+                            <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white" />
+                            <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white" />
+
+                            {text}
+                        </div>
                     </div>
                 </motion.div>
             )}

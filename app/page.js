@@ -14,8 +14,8 @@ export default async function Home() {
 
       {/* Hero Section */}
 
-      <div className="flex flex-col md:flex-row items-center justify-center min-h-[60vh] sm:min-h-[70vh] md:min-h-[80vh] max-h-[90vh] w-full gap-8 md:gap-0">
-        <div className="w-full max-w-[300px] md:max-w-[500px] aspect-square flex items-center justify-center">
+      <div className="flex flex-col md:flex-row items-center justify-evenly min-h-[60vh] sm:min-h-[70vh] md:min-h-[80vh] max-h-[90vh] w-full gap-8 md:gap-0">
+        <div className="w-full max-w-[300px] md:max-w-[500px] lg:max-w-[700px] aspect-square flex items-center justify-center">
           <Head3D />
         </div>
 

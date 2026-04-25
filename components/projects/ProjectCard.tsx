@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "motion/react";
 import type { Project } from "./types";
 import Modal from "./Modal";
 import { useMousePosition } from "@/components/context/MouseContext";
@@ -10,54 +10,90 @@ type ProjectCardProps = {
     project: Project;
 };
 
-const OptimizedTooltip = ({ text, isHovered }: { text: string; isHovered: boolean }) => {
+const OptimizedTooltip = ({ text, isHovered, containerRef }: { text: string; isHovered: boolean; containerRef: React.RefObject<HTMLElement> }) => {
     const { mouseX, mouseY } = useMousePosition();
+    const [rect, setRect] = useState<{ left: number; top: number } | null>(null);
+
+    // Measure the card position only when hovered to calculate local coordinates
+    useLayoutEffect(() => {
+        if (isHovered && containerRef.current) {
+            const r = containerRef.current.getBoundingClientRect();
+            setRect({ left: r.left, top: r.top });
+        }
+    }, [isHovered, containerRef]);
+
+    // Update rect on scroll/resize
+    useEffect(() => {
+        if (!isHovered) return;
+        const update = () => {
+            if (containerRef.current) {
+                const r = containerRef.current.getBoundingClientRect();
+                setRect({ left: r.left, top: r.top });
+            }
+        };
+        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("resize", update);
+        return () => {
+            window.removeEventListener("scroll", update);
+            window.removeEventListener("resize", update);
+        };
+    }, [isHovered, containerRef]);
+
+    // Use transforms for high-performance coordinate mapping
+    // These react to both mouse movement and rect updates
+    const x = useTransform(mouseX, (v) => v - (rect?.left || 0));
+    const y = useTransform(mouseY, (v) => v - (rect?.top || 0));
 
     return (
-        <AnimatePresence>
-            {isHovered && (
-                <motion.div
-                    initial={{ scaleX: 0, opacity: 0, x: "-50%", y: "-50%" }}
-                    animate={{ scaleX: 1, opacity: 1, x: "-50%", y: "-50%" }}
-                    exit={{ scaleX: 0, opacity: 0, x: "-50%", y: "-50%" }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="fixed z-[100] pointer-events-none [@media(hover:none)]:hidden origin-center"
-                    style={{
-                        left: mouseX,
-                        top: mouseY,
-                    }}
-                >
-                    <div
-                        className="relative shadow-2xl whitespace-nowrap overflow-visible"
-                        style={{ transformStyle: "preserve-3d" }}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl z-[100]">
+            <AnimatePresence>
+                {isHovered && rect && (
+                    <motion.div
+                        initial={{ scaleX: 0, opacity: 0, x: "-50%", y: "-50%" }}
+                        animate={{
+                            scaleX: 1,
+                            opacity: 1,
+                            x: "-50%",
+                            y: "-50%",
+                        }}
+                        exit={{
+                            scaleX: 0,
+                            opacity: 0,
+                            x: "-50%",
+                            y: "-50%",
+                        }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="absolute pointer-events-none [@media(hover:none)]:hidden origin-center"
+                        style={{
+                            left: x,
+                            top: y,
+                        }}
                     >
-                        {/* Separate Glass Background Layer */}
-                        <div
-                            className="absolute inset-0 bg-black/40 backdrop-blur-md"
-                            style={{ transform: "translateZ(0px)" }}
-                        />
+                        <div className="relative shadow-2xl whitespace-nowrap overflow-visible">
+                            {/* Premium Glass Background Layer */}
+                            <div className="absolute inset-0 bg-zinc-950/40 border border-white/10" />
 
-                        {/* Content Layer (Physically floating above the background) */}
-                        <div
-                            className="relative px-6 py-2 text-xs sm:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-white"
-                            style={{ transform: "translateZ(30px)" }}
-                        >
-                            {/* Viewfinder Brackets */}
-                            <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white" />
-                            <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white" />
-                            <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white" />
-                            <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white" />
+                            {/* Content Layer */}
+                            <div className="relative z-10 px-6 py-2 text-xs sm:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-white antialiased">
+                                {/* Viewfinder Brackets */}
+                                <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white" />
+                                <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white" />
+                                <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white" />
+                                <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white" />
 
-                            {text}
+                                {text}
+                            </div>
                         </div>
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
 
 export default function ProjectCard({ project }: ProjectCardProps) {
+    const { mouseX, mouseY } = useMousePosition();
+    const cardRef = React.useRef<HTMLAnchorElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
 
@@ -67,12 +103,17 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     return (
         <>
             <a
+                ref={cardRef}
                 href={project.embed_url ? undefined : (project.info_url || undefined)}
                 target={project.embed_url ? undefined : (project.info_url ? "_blank" : undefined)}
                 rel={project.embed_url ? undefined : (project.info_url ? "noopener noreferrer" : undefined)}
                 className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && isHovered ? "cursor-none" : "cursor-default"}`}
-                onMouseEnter={() => {
+                onMouseEnter={(e) => {
                     if (hasHoverText) {
+                        // Bootstrap the global mouse position immediately on entry
+                        // to prevent the "top-left jump" before the first move event
+                        mouseX.set(e.clientX);
+                        mouseY.set(e.clientY);
                         setIsHovered(true);
                     }
                 }}
@@ -114,15 +155,15 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         </div>
                     </div>
                 </div>
+                {/* Hover Tooltip (Optimized Component) */}
+                {hasHoverText && (
+                    <OptimizedTooltip
+                        text={project.hover_text!}
+                        isHovered={isHovered}
+                        containerRef={cardRef}
+                    />
+                )}
             </a>
-
-            {/* Hover Tooltip (Optimized Component) */}
-            {hasHoverText && (
-                <OptimizedTooltip
-                    text={project.hover_text!}
-                    isHovered={isHovered}
-                />
-            )}
 
             <Modal
                 isOpen={isModalOpen}

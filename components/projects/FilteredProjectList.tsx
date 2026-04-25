@@ -33,7 +33,7 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
                             key={type}
                             onClick={() => setFilter(type)}
                             whileTap={{ scale: 0.95 }}
-                            className={`relative px-6 py-2 text-sm font-body rounded-full transition-all duration-300 border ${filter === type
+                            className={`relative px-6 py-2 text-xs md:text-sm font-subtitle font-medium text-center tracking-[0.2em] uppercase rounded-full transition-all duration-300 border cursor-pointer ${filter === type
                                 ? "text-black"
                                 : "border-white/10 hover:bg-white/10 hover:text-white"
                                 }`}

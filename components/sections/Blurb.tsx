@@ -43,7 +43,7 @@ const MemoizedBio = React.memo(({
                                                             node: el,
                                                             x: 0,
                                                             y: 0,
-                                                            color: RAINBOW[Math.floor(Math.random() * RAINBOW.length)],
+                                                            color: '#ffffff', // Default to white until positioned
                                                             isRainbow: false
                                                         });
                                                     } else {
@@ -80,7 +80,7 @@ export default function Blurb({
     const containerRef = useRef<HTMLDivElement>(null);
     const imageContainerRef = useRef<HTMLDivElement>(null);
     const charsMap = useRef<Map<string, CharData>>(new Map());
-    const [ripples, setRipples] = useState<{ id: number; x: number; y: number; imgX: number; imgY: number; imgWidth: number; startTime: number }[]>([]);
+    const [ripples, setRipples] = useState<{ id: number; x: number; y: number; imgX: number; imgY: number; imgWidth: number; baseHue: number; startTime: number }[]>([]);
     const [isHovered, setIsHovered] = useState(false);
     const [isImageHovered, setIsImageHovered] = useState(false);
     const [hasHover, setHasHover] = useState(false);
@@ -103,8 +103,11 @@ export default function Blurb({
             charsMap.current.forEach(charData => {
                 if (!charData.node) return;
                 const rect = charData.node.getBoundingClientRect();
-                charData.x = rect.left + rect.width / 2 - containerRect.left;
-                charData.y = rect.top + rect.height / 2 - containerRect.top;
+                const x = rect.left + rect.width / 2 - containerRect.left;
+                const y = rect.top + rect.height / 2 - containerRect.top;
+                
+                charData.x = x;
+                charData.y = y;
             });
         };
 
@@ -129,20 +132,23 @@ export default function Blurb({
             const now = Date.now();
             charsMap.current.forEach(charData => {
                 if (!charData.node) return;
-                let inWake = false;
+                let activeRipple = null;
                 for (const ripple of ripples) {
                     const elapsed = now - ripple.startTime;
                     const radius1 = elapsed * SPEED;
                     const radius2 = Math.max(0, (elapsed - REVERT_DELAY) * SPEED);
-                    const dist = Math.hypot(ripple.x - charData.x, ripple.y - charData.y);
-                    if (dist < radius1 && dist > radius2) {
-                        inWake = true;
+                    const distFromCenter = Math.hypot(ripple.x - charData.x, ripple.y - charData.y);
+                    if (distFromCenter < radius1 && distFromCenter > radius2) {
+                        activeRipple = ripple;
                         break;
                     }
                 }
-                if (inWake) {
+                if (activeRipple) {
                     if (!charData.isRainbow) {
-                        charData.node.style.color = charData.color;
+                        const distFromCenter = Math.hypot(activeRipple.x - charData.x, activeRipple.y - charData.y);
+                        // Radial rainbow: hue depends on distance from click and a random base per click
+                        const hue = (activeRipple.baseHue + distFromCenter / 2.5) % 360;
+                        charData.node.style.color = `hsl(${hue}, 80%, 65%)`;
                         charData.isRainbow = true;
                     }
                 } else {
@@ -186,8 +192,9 @@ export default function Blurb({
         const imgY = e.clientY - imgRect.top;
 
         const baseId = Date.now();
+        const baseHue = Math.random() * 360;
 
-        setRipples(prev => [...prev, { id: baseId, x, y, imgX, imgY, imgWidth: imgRect.width, startTime: baseId }]);
+        setRipples(prev => [...prev, { id: baseId, x, y, imgX, imgY, imgWidth: imgRect.width, baseHue, startTime: baseId }]);
 
         // Only scale the image if the click was actually on the image
         const isImageClick = imageContainerRef.current.contains(e.target as Node);

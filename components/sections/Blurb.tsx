@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
+import { useMousePosition } from "@/components/context/MouseContext";
 
 const RAINBOW = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#a855f7", "#ec4899"];
 
@@ -80,11 +81,12 @@ export default function Blurb({
     const imageContainerRef = useRef<HTMLDivElement>(null);
     const charsMap = useRef<Map<string, CharData>>(new Map());
     const [ripples, setRipples] = useState<{ id: number; x: number; y: number; imgX: number; imgY: number; startTime: number }[]>([]);
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [isHovered, setIsHovered] = useState(false);
     const [isImageHovered, setIsImageHovered] = useState(false);
     const [hasHover, setHasHover] = useState(false);
     const [scalingRippleCount, setScalingRippleCount] = useState(0);
+
+    const { mouseX, mouseY } = useMousePosition();
 
     useEffect(() => {
         setHasHover(window.matchMedia("(hover: hover)").matches);
@@ -154,15 +156,6 @@ export default function Blurb({
         return () => cancelAnimationFrame(rafId);
     }, [ripples]);
 
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (!containerRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
-        setMousePos({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-        });
-    };
-
     const triggerRipple = (e: React.PointerEvent) => {
         if (!containerRef.current || !imageContainerRef.current) return;
         
@@ -201,7 +194,6 @@ export default function Blurb({
             className="flex flex-col items-center w-full max-w-5xl relative cursor-none group"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            onMouseMove={handleMouseMove}
             onPointerDown={triggerRipple}
         >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full items-stretch relative">
@@ -279,10 +271,10 @@ export default function Blurb({
                     y: "-50%"
                 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="absolute pointer-events-none bg-white rounded-full z-50 w-6 h-6 hidden [@media(hover:hover)]:block"
+                className="fixed pointer-events-none bg-white rounded-full z-50 w-6 h-6 hidden [@media(hover:hover)]:block"
                 style={{
-                    left: mousePos.x,
-                    top: mousePos.y,
+                    left: mouseX,
+                    top: mouseY,
                     mixBlendMode: 'difference',
                 }}
             />

@@ -2,6 +2,7 @@ import { Outfit, Inter, Montserrat, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import LoadingScreen from "@/components/loading/LoadingScreen";
 import { LoadingProvider } from "@/components/loading/LoadingProvider";
+import { MouseProvider } from "@/components/context/MouseContext";
 import Navbar from "@/components/UI/Navbar";
 import { Analytics } from "@vercel/analytics/next"
 
@@ -39,9 +40,11 @@ export default function RootLayout({ children }) {
         className={`${outfit.variable} ${inter.variable} ${montserrat.variable} ${jetbrains_mono.variable} antialiased`}
       >
         <LoadingProvider>
-          <LoadingScreen />
-          <Navbar />
-          {children}
+          <MouseProvider>
+            <LoadingScreen />
+            <Navbar />
+            {children}
+          </MouseProvider>
         </LoadingProvider>
         <Analytics />
       </body>

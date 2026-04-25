@@ -1,33 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence, useMotionValue, useSpring } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import type { Project } from "./types";
 import Modal from "./Modal";
+import { useMousePosition } from "@/components/context/MouseContext";
 
 type ProjectCardProps = {
     project: Project;
 };
 
-const OptimizedTooltip = ({ text, isHovered, initialX, initialY }: { text: string; isHovered: boolean, initialX: number, initialY: number }) => {
-    const mouseX = useMotionValue(Math.round(initialX));
-    const mouseY = useMotionValue(Math.round(initialY));
-
-    useEffect(() => {
-        if (!isHovered) return;
-
-        // Reset to entry position immediately
-        mouseX.set(Math.round(initialX));
-        mouseY.set(Math.round(initialY));
-
-        const handleMouseMove = (e: MouseEvent) => {
-            mouseX.set(Math.round(e.clientX));
-            mouseY.set(Math.round(e.clientY));
-        };
-
-        window.addEventListener("mousemove", handleMouseMove);
-        return () => window.removeEventListener("mousemove", handleMouseMove);
-    }, [isHovered, mouseX, mouseY, initialX, initialY]);
+const OptimizedTooltip = ({ text, isHovered }: { text: string; isHovered: boolean }) => {
+    const { mouseX, mouseY } = useMousePosition();
 
     return (
         <AnimatePresence>
@@ -76,7 +60,6 @@ const OptimizedTooltip = ({ text, isHovered, initialX, initialY }: { text: strin
 export default function ProjectCard({ project }: ProjectCardProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    const [entryPos, setEntryPos] = useState({ x: 0, y: 0 });
 
     const hasHoverText = Boolean(project.hover_text);
     const isInteractive = Boolean(project.embed_url || project.info_url);
@@ -88,9 +71,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 target={project.embed_url ? undefined : (project.info_url ? "_blank" : undefined)}
                 rel={project.embed_url ? undefined : (project.info_url ? "noopener noreferrer" : undefined)}
                 className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && isHovered ? "cursor-none" : "cursor-default"}`}
-                onMouseEnter={(e) => {
+                onMouseEnter={() => {
                     if (hasHoverText) {
-                        setEntryPos({ x: e.clientX, y: e.clientY });
                         setIsHovered(true);
                     }
                 }}
@@ -139,8 +121,6 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 <OptimizedTooltip
                     text={project.hover_text!}
                     isHovered={isHovered}
-                    initialX={entryPos.x}
-                    initialY={entryPos.y}
                 />
             )}
 

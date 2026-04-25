@@ -56,7 +56,7 @@ export default function TechIcon({ src, alt }: { src: string, alt: string }) {
 
             {/* Tooltip Name */}
             <motion.span
-                className="absolute -bottom-8 text-xs font-subtitle font-medium text-white tracking-widest whitespace-nowrap pointer-events-none"
+                className="absolute -bottom-6 text-xs font-subtitle font-medium text-white tracking-widest whitespace-nowrap pointer-events-none"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: (isActive || isHovered) ? 1 : 0 }}
                 transition={{ duration: 0.3 }}

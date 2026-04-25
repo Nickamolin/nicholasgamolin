@@ -132,27 +132,32 @@ export default function Blurb({
             const now = Date.now();
             charsMap.current.forEach(charData => {
                 if (!charData.node) return;
-                let activeRipple = null;
+                
+                // Track all ripples currently "touching" this character
+                const activeRipples = [];
                 for (const ripple of ripples) {
                     const elapsed = now - ripple.startTime;
                     const radius1 = elapsed * SPEED;
                     const radius2 = Math.max(0, (elapsed - REVERT_DELAY) * SPEED);
                     const distFromCenter = Math.hypot(ripple.x - charData.x, ripple.y - charData.y);
                     if (distFromCenter < radius1 && distFromCenter > radius2) {
-                        activeRipple = ripple;
-                        break;
+                        activeRipples.push(ripple);
                     }
                 }
-                if (activeRipple) {
-                    if (!charData.isRainbow) {
-                        const distFromCenter = Math.hypot(activeRipple.x - charData.x, activeRipple.y - charData.y);
-                        // Radial rainbow: hue depends on distance from click and a random base per click
-                        // A smaller divisor (0.8) makes the rainbow more "dense" and visible
-                        const hue = (activeRipple.baseHue + distFromCenter / 1.5) % 360;
-                        charData.node.style.color = `hsl(${hue}, 80%, 65%)`;
-                        charData.isRainbow = true;
-                    }
+
+                const count = activeRipples.length;
+                
+                // Alternating logic: only color if an ODD number of ripples overlap (mimics difference blend mode)
+                if (count % 2 === 1) {
+                    // Use the most recent ripple for the color parameters
+                    const ripple = activeRipples[activeRipples.length - 1];
+                    const distFromCenter = Math.hypot(ripple.x - charData.x, ripple.y - charData.y);
+                    const hue = (ripple.baseHue + distFromCenter / 1.5) % 360;
+                    
+                    charData.node.style.color = `hsl(${hue}, 80%, 65%)`;
+                    charData.isRainbow = true;
                 } else {
+                    // Revert to white if an even number of ripples overlap or if no ripples are active
                     if (charData.isRainbow) {
                         charData.node.style.color = '';
                         charData.isRainbow = false;

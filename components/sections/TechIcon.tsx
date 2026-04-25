@@ -4,8 +4,13 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function TechIcon({ src, alt }: { src: string, alt: string }) {
-    const [isActive, setIsActive] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
+    const [isActive, setIsActive] = React.useState(false);
+    const [isHovered, setIsHovered] = React.useState(false);
+    const [canDrag, setCanDrag] = React.useState(false);
+
+    React.useEffect(() => {
+        setCanDrag(window.matchMedia("(hover: hover)").matches);
+    }, []);
 
     const handleTap = () => {
         if (isActive) return;
@@ -19,6 +24,13 @@ export default function TechIcon({ src, alt }: { src: string, alt: string }) {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={handleTap}
+            // Physics-based Drag Configuration
+            drag={canDrag}
+            dragSnapToOrigin
+            dragElastic={0.15}
+            dragTransition={{ bounceStiffness: 500, bounceDamping: 20 }}
+            whileHover={{ cursor: canDrag ? 'grab' : 'default' }}
+            whileDrag={{ scale: 1.15, cursor: 'grabbing', zIndex: 50 }}
             animate={{ scale: (isActive || isHovered) ? 1.1 : 1 }}
             transition={{ duration: 0.3 }}
         >
@@ -28,7 +40,8 @@ export default function TechIcon({ src, alt }: { src: string, alt: string }) {
                 src={src}
                 alt={alt}
                 fill
-                className="object-contain filter grayscale invert opacity-50"
+                draggable={false}
+                className="object-contain filter grayscale invert opacity-50 select-none"
             />
 
             {/* Masked Sheen Overlay */}

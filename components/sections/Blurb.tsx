@@ -86,6 +86,9 @@ export default function Blurb({
     const [hasHover, setHasHover] = useState(false);
     const [scalingRippleCount, setScalingRippleCount] = useState(0);
 
+    const pointerDownPos = useRef({ x: 0, y: 0 });
+    const pointerDownTime = useRef(0);
+
     const { mouseX, mouseY } = useMousePosition();
 
     useEffect(() => {
@@ -156,11 +159,23 @@ export default function Blurb({
         return () => cancelAnimationFrame(rafId);
     }, [ripples]);
 
-    const triggerRipple = (e: React.PointerEvent) => {
+    const handlePointerDown = (e: React.PointerEvent) => {
+        pointerDownPos.current = { x: e.clientX, y: e.clientY };
+        pointerDownTime.current = Date.now();
+    };
+
+    const handlePointerUp = (e: React.PointerEvent) => {
         if (!containerRef.current || !imageContainerRef.current) return;
         
         // Don't trigger ripples if the user is right-clicking or similar
         if (e.button !== 0) return;
+
+        const deltaX = Math.abs(e.clientX - pointerDownPos.current.x);
+        const deltaY = Math.abs(e.clientY - pointerDownPos.current.y);
+        const deltaTime = Date.now() - pointerDownTime.current;
+
+        // Thresholds: move less than 10px and hold for less than 300ms
+        if (deltaX > 10 || deltaY > 10 || deltaTime > 300) return;
 
         const rect = containerRef.current.getBoundingClientRect();
         const imgRect = imageContainerRef.current.getBoundingClientRect();
@@ -194,7 +209,8 @@ export default function Blurb({
             className="flex flex-col items-center w-full max-w-5xl relative cursor-none group"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            onPointerDown={triggerRipple}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
         >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full items-stretch relative">
                 {/* Image Section */}

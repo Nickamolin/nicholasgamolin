@@ -34,27 +34,51 @@ function RiveWrapper({ url, onLoaded }: { url: string; onLoaded: () => void }) {
 
 export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, embedAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
     const [isLoading, setIsLoading] = useState(true);
+    const hasLoadedRef = React.useRef(false);
+
+    // Reset loaded state if the URL actually changes (shouldn't happen for a static card, but good practice)
+    useEffect(() => {
+        hasLoadedRef.current = false;
+    }, [embedUrl]);
 
     useEffect(() => {
         if (isOpen) {
-            setIsLoading(true);
             document.body.style.overflow = 'hidden';
 
-            // Safety fallback: ensure loading screen clears even if iframe onLoad fails
-            const timer = setTimeout(() => {
+            if (!hasLoadedRef.current) {
+                setIsLoading(true);
+                // Safety fallback: ensure loading screen clears even if iframe onLoad fails
+                const timer = setTimeout(() => {
+                    setIsLoading(false);
+                    hasLoadedRef.current = true;
+                }, 10000);
+                return () => clearTimeout(timer);
+            } else {
                 setIsLoading(false);
-            }, 10000);
-            return () => {
-                clearTimeout(timer);
-                document.body.style.overflow = 'unset';
-            };
+            }
         } else {
             document.body.style.overflow = 'unset';
         }
-    }, [isOpen, embedUrl]);
+    }, [isOpen]);
+
+    const handleLoad = () => {
+        setIsLoading(false);
+        hasLoadedRef.current = true;
+    };
 
     const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
     const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+    // Safely calculate aspect ratio to prevent NaN or collapse
+    const numericRatio = React.useMemo(() => {
+        if (!embedAspectRatio) return 16 / 9;
+        const parts = embedAspectRatio.split('/');
+        if (parts.length !== 2) return 16 / 9;
+        const n1 = Number(parts[0]);
+        const n2 = Number(parts[1]);
+        if (isNaN(n1) || isNaN(n2) || n2 === 0) return 16 / 9;
+        return n1 / n2;
+    }, [embedAspectRatio]);
 
     return (
         <AnimatePresence>
@@ -77,14 +101,11 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         className="relative z-10 w-full bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col h-fit my-auto"
                         style={{
-                            maxWidth: isTouchScreen ? '100%' : `min(1152px, calc(55vh * ${embedAspectRatio?.split('/').map(v => v.trim()).length === 2
-                                ? (Number(embedAspectRatio.split('/')[0]) / Number(embedAspectRatio.split('/')[1]))
-                                : (16 / 9)
-                                }))`
+                            maxWidth: isTouchScreen ? '100%' : `min(1152px, calc(55vh * ${numericRatio}))`
                         }}
                     >
                         {/* Header Bar */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20 shrink-0">
                             <div className="flex gap-4">
                                 {infoUrl && action_button_text && (
                                     <Button
@@ -106,15 +127,16 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                         </div>
 
                         {/* Body Container */}
-                        <div className="flex-1 flex flex-col min-h-0">
+                        <div className="flex-1 flex flex-col min-h-0 relative">
                             {/* Content Area Wrapper */}
-                            <div className="flex items-center justify-center w-full min-h-0">
+                            <div className="flex items-center justify-center w-full min-h-0 bg-black/20">
                                 <div
-                                    className={`relative w-full overflow-hidden ${embedType?.toLowerCase() === "pico8" && isTouchScreen ? "h-[60vh]" : ""
+                                    className={`relative w-full overflow-hidden flex items-center justify-center ${embedType?.toLowerCase() === "pico8" && isTouchScreen ? "h-[60vh]" : ""
                                         }`}
                                     style={{
-                                        aspectRatio: (embedType?.toLowerCase() === "pico8" && isTouchScreen) ? "auto" : (embedAspectRatio || '16 / 9'),
-                                        maxHeight: isTouchScreen ? '70vh' : '55vh'
+                                        aspectRatio: (embedType?.toLowerCase() === "pico8" && isTouchScreen) ? "auto" : numericRatio,
+                                        maxHeight: isTouchScreen ? '70vh' : '55vh',
+                                        minHeight: '200px' // Prevent collapse during rapid switches
                                     }}
                                 >
                                     <LoadingAnimation
@@ -125,7 +147,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
 
                                     {embedType?.toLowerCase() === "riv" ? (
                                         <div className={`w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                                            <RiveWrapper url={cleanUrl} onLoaded={() => setIsLoading(false)} />
+                                            <RiveWrapper url={cleanUrl} onLoaded={handleLoad} />
                                         </div>
                                     ) : embedType?.toLowerCase() === "video" ? (
                                         <div className={`relative w-full h-full transition-opacity duration-700 overflow-hidden ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
@@ -144,17 +166,17 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                                 autoPlay
                                                 muted
                                                 loop
-                                                onCanPlay={() => setIsLoading(false)}
+                                                onCanPlay={handleLoad}
                                             />
                                         </div>
                                     ) : embedType?.toLowerCase() === "website" ? (
-                                        <div className={`relative w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                                        <div className={`relative w-full h-full transition-opacity duration-700 flex flex-col ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                                             <iframe
-                                                className="w-full h-full border-none bg-black"
+                                                className="w-full h-full border-none bg-black flex-1"
                                                 src={cleanUrl}
                                                 title="Project Preview"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                onLoad={() => setIsLoading(false)}
+                                                onLoad={handleLoad}
                                                 allowFullScreen
                                             />
                                             {!isLoading && (
@@ -162,7 +184,7 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                                     href={cleanUrl}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="absolute bottom-3 right-3 md:bottom-4 md:right-4 text-[10px] md:text-xs font-subtitle font-medium text-white/60 hover:text-white transition-all bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-1.5 hover:scale-105 active:scale-95"
+                                                    className="absolute bottom-3 right-3 md:bottom-4 md:right-4 text-[10px] md:text-xs font-subtitle font-medium text-white/60 hover:text-white transition-all bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-1.5 hover:scale-105 active:scale-95 z-30"
                                                 >
                                                     Visit Site {"\u2197\uFE0E"}
                                                 </a>
@@ -170,11 +192,11 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
                                         </div>
                                     ) : (
                                         <iframe
-                                            className={`w-full h-full border-none transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                                            className={`w-full h-full border-none transition-opacity duration-700 bg-black ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                                             src={cleanUrl}
                                             title="Project Preview"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                            onLoad={() => setIsLoading(false)}
+                                            onLoad={handleLoad}
                                             allowFullScreen
                                         />
                                     )}

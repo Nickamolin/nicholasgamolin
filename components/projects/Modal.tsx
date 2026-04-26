@@ -79,7 +79,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     // or fixed-ratio media (videos, rive animations)
     const isResponsive = React.useMemo(() => {
         const type = embedType?.toLowerCase();
-        return !["video", "youtube", "riv"].includes(type || "");
+        return !["youtube", "riv"].includes(type || "");
     }, [embedType]);
 
     const handleLoad = () => {
@@ -120,8 +120,8 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ 
-                            opacity: 0, 
+                        exit={{
+                            opacity: 0,
                             pointerEvents: "none",
                             transition: { pointerEvents: { duration: 0 } }
                         }}
@@ -133,9 +133,9 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ 
-                            opacity: 0, 
-                            y: 20, 
+                        exit={{
+                            opacity: 0,
+                            y: 20,
                             pointerEvents: "none",
                             transition: { pointerEvents: { duration: 0 } }
                         }}

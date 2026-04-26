@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import LoadingAnimation from "../loading/LoadingAnimation";
 import Button from "../UI/Button";
@@ -36,6 +36,46 @@ function RiveWrapper({ url, onLoaded }: { url: string; onLoaded: () => void }) {
 
 export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl, embedType, embedAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
     const [isLoading, setIsLoading] = useState(true);
+    const [extrasHeight, setExtrasHeight] = useState(300); // Safe default
+    const headerRef = useRef<HTMLDivElement>(null);
+    const detailsRef = useRef<HTMLDivElement>(null);
+
+    // Calculate actual height of header + details to perfectly size the embed
+    useEffect(() => {
+        if (headerRef.current && detailsRef.current) {
+            const hHeight = headerRef.current.getBoundingClientRect().height;
+            const dHeight = detailsRef.current.getBoundingClientRect().height;
+            setExtrasHeight(hHeight + dHeight);
+        }
+    }, [isOpen, title, summary, role, tools_used]);
+
+    const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
+    const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
+    // Safely calculate aspect ratio from the provided string to prevent NaN or collapse
+    const numericRatio = React.useMemo(() => {
+        if (!embedAspectRatio) return 16 / 9;
+        const parts = embedAspectRatio.split('/');
+        if (parts.length !== 2) return 16 / 9;
+        const n1 = Number(parts[0]);
+        const n2 = Number(parts[1]);
+        if (isNaN(n1) || isNaN(n2) || n2 === 0) return 16 / 9;
+        return n1 / n2;
+    }, [embedAspectRatio]);
+
+    // Determine if the content should be treated as flexible/responsive (websites, games)
+    // or fixed-ratio media (videos, rive animations)
+    const isResponsive = React.useMemo(() => {
+        const type = embedType?.toLowerCase();
+        return !["video", "youtube", "riv"].includes(type || "");
+    }, [embedType]);
+
+    const handleLoad = () => {
+        // Add a tiny delay to prevent flicker on instant loads
+        setTimeout(() => {
+            setIsLoading(false);
+        }, 300);
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -53,28 +93,12 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
         } else {
             document.body.style.overflow = 'unset';
         }
-    }, [isOpen]);
+    }, [isOpen, cleanUrl]);
 
-    const handleLoad = () => {
-        // Add a tiny delay to prevent flicker on instant loads
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 300);
-    };
-
-    const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
-    const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-
-    // Safely calculate aspect ratio to prevent NaN or collapse
-    const numericRatio = React.useMemo(() => {
-        if (!embedAspectRatio) return 16 / 9;
-        const parts = embedAspectRatio.split('/');
-        if (parts.length !== 2) return 16 / 9;
-        const n1 = Number(parts[0]);
-        const n2 = Number(parts[1]);
-        if (isNaN(n1) || isNaN(n2) || n2 === 0) return 16 / 9;
-        return n1 / n2;
-    }, [embedAspectRatio]);
+    // Determine which ratio to use for fixed-media layouts
+    const displayRatio = React.useMemo(() => {
+        return numericRatio || 16 / 9;
+    }, [numericRatio]);
 
     return (
         <AnimatePresence>
@@ -95,13 +119,15 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="relative z-10 w-full bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col h-fit my-auto"
+                        className={`relative z-10 bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col my-auto
+                            w-full h-fit md:w-[var(--modal-w)] md:h-[var(--modal-h)] md:max-w-[90vw] md:max-h-[90vh] md:rounded-[2.5rem] rounded-[1.5rem]`}
                         style={{
-                            maxWidth: isTouchScreen ? '100%' : `min(1152px, calc(55vh * ${numericRatio}))`
-                        }}
+                            '--modal-w': isResponsive ? '90vw' : `min(90vw, calc((90vh - ${extrasHeight}px) * ${displayRatio}))`,
+                            '--modal-h': isResponsive ? '90vh' : 'fit-content',
+                        } as React.CSSProperties}
                     >
                         {/* Header Bar */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20 shrink-0">
+                        <div ref={headerRef} className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20 shrink-0">
                             <div className="flex gap-4">
                                 {infoUrl && action_button_text && (
                                     <Button
@@ -123,16 +149,17 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
                         </div>
 
                         {/* Body Container */}
-                        <div className="flex-1 flex flex-col min-h-0 relative">
+                        <div className="flex-1 flex flex-col min-h-0 relative w-full">
                             {/* Content Area Wrapper */}
-                            <div className="flex items-center justify-center w-full min-h-0 bg-black/20">
+                            <div className="flex-1 flex w-full min-h-0 bg-black/20 shrink-0 flex-col justify-center items-center">
                                 <div
-                                    className={`relative w-full overflow-hidden flex items-center justify-center ${embedType?.toLowerCase() === "pico8" && isTouchScreen ? "h-[60vh]" : ""
+                                    className={`relative w-full max-w-full
+                                        ${isResponsive 
+                                            ? 'min-h-[80vh] md:min-h-0 md:flex-1' 
+                                            : ''
                                         }`}
                                     style={{
-                                        aspectRatio: (embedType?.toLowerCase() === "pico8" && isTouchScreen) ? "auto" : numericRatio,
-                                        maxHeight: isTouchScreen ? '70vh' : '55vh',
-                                        minHeight: '200px' // Prevent collapse during rapid switches
+                                        aspectRatio: isResponsive ? 'auto' : displayRatio,
                                     }}
                                 >
                                     <LoadingAnimation
@@ -141,12 +168,13 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
                                         className="w-32 h-32 md:w-48 md:h-48"
                                     />
 
+                                    {/* All embedded content is absolutely positioned to perfectly fill the container's calculated aspect-ratio or flex-stretch bounds */}
                                     {embedType?.toLowerCase() === "riv" ? (
-                                        <div className={`w-full h-full transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                                        <div className={`absolute inset-0 transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                                             <RiveWrapper url={cleanUrl} onLoaded={handleLoad} />
                                         </div>
                                     ) : embedType?.toLowerCase() === "video" ? (
-                                        <div className={`relative w-full h-full transition-opacity duration-700 overflow-hidden ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                                        <div className={`absolute inset-0 transition-opacity duration-700 overflow-hidden ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                                             {/* Ambient Background */}
                                             <video
                                                 className="absolute inset-0 w-full h-full object-cover blur-md opacity-50 scale-110 pointer-events-none"
@@ -157,7 +185,7 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
                                             />
                                             {/* Foreground Video */}
                                             <video
-                                                className="relative z-10 w-full h-full object-contain"
+                                                className="absolute inset-0 z-10 w-full h-full object-contain"
                                                 src={cleanUrl}
                                                 autoPlay
                                                 muted
@@ -166,9 +194,9 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
                                             />
                                         </div>
                                     ) : embedType?.toLowerCase() === "website" ? (
-                                        <div className={`relative w-full h-full transition-opacity duration-700 flex flex-col ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                                        <div className={`absolute inset-0 transition-opacity duration-700 flex flex-col ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                                             <iframe
-                                                className="w-full h-full border-none bg-black flex-1"
+                                                className="w-full h-full border-none bg-black"
                                                 src={cleanUrl}
                                                 title="Project Preview"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -188,7 +216,7 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
                                         </div>
                                     ) : (
                                         <iframe
-                                            className={`w-full h-full border-none transition-opacity duration-700 bg-black ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                                            className={`absolute inset-0 w-full h-full border-none transition-opacity duration-700 bg-black ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                                             src={cleanUrl}
                                             title="Project Preview"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -200,7 +228,7 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
                             </div>
 
                             {/* Project Details Section */}
-                            <div className="py-5 px-6 md:py-6 md:px-8 bg-white/2 backdrop-blur-sm">
+                            <div ref={detailsRef} className="py-5 px-6 md:py-6 md:px-8 bg-white/2 backdrop-blur-sm">
                                 <div className="mx-auto flex flex-col gap-3 md:gap-4">
                                     {/* Header: Title and Year */}
                                     <div className="flex flex-col gap-2">

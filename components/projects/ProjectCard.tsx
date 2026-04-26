@@ -168,6 +168,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                title={project.title}
+                year={new Date(project.date_published).getFullYear()}
                 infoUrl={project.info_url}
                 embedUrl={project.embed_url}
                 embedType={project.embed_type}

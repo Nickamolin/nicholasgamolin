@@ -9,6 +9,8 @@ import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 type ModalProps = {
     isOpen: boolean;
     onClose: () => void;
+    title: string;
+    year: string | number;
     infoUrl: string;
     embedUrl: string;
     embedType: string;
@@ -32,38 +34,32 @@ function RiveWrapper({ url, onLoaded }: { url: string; onLoaded: () => void }) {
     return <RiveComponent className="w-full h-full" />;
 }
 
-export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, embedAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl, embedType, embedAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
     const [isLoading, setIsLoading] = useState(true);
-    const hasLoadedRef = React.useRef(false);
-
-    // Reset loaded state if the URL actually changes (shouldn't happen for a static card, but good practice)
-    useEffect(() => {
-        hasLoadedRef.current = false;
-    }, [embedUrl]);
 
     useEffect(() => {
         if (isOpen) {
+            setIsLoading(true);
             document.body.style.overflow = 'hidden';
 
-            if (!hasLoadedRef.current) {
-                setIsLoading(true);
-                // Safety fallback: ensure loading screen clears even if iframe onLoad fails
-                const timer = setTimeout(() => {
-                    setIsLoading(false);
-                    hasLoadedRef.current = true;
-                }, 10000);
-                return () => clearTimeout(timer);
-            } else {
+            // Safety fallback: ensure loading screen clears even if iframe onLoad fails
+            const timer = setTimeout(() => {
                 setIsLoading(false);
-            }
+            }, 10000);
+            return () => {
+                clearTimeout(timer);
+                document.body.style.overflow = 'unset';
+            };
         } else {
             document.body.style.overflow = 'unset';
         }
     }, [isOpen]);
 
     const handleLoad = () => {
-        setIsLoading(false);
-        hasLoadedRef.current = true;
+        // Add a tiny delay to prevent flicker on instant loads
+        setTimeout(() => {
+            setIsLoading(false);
+        }, 300);
     };
 
     const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
@@ -205,7 +201,20 @@ export default function Modal({ isOpen, onClose, infoUrl, embedUrl, embedType, e
 
                             {/* Project Details Section */}
                             <div className="py-5 px-6 md:py-6 md:px-8 bg-white/2 backdrop-blur-sm">
-                                <div className="max-w-4xl mx-auto flex flex-col gap-3 md:gap-4">
+                                <div className="mx-auto flex flex-col gap-3 md:gap-4">
+                                    {/* Header: Title and Year */}
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-baseline justify-between gap-4">
+                                            <h2 className="text-2xl md:text-4xl font-title font-bold text-white tracking-tight">
+                                                {title}
+                                            </h2>
+                                            <span className="text-xl md:text-4xl font-subtitle font-medium text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">
+                                                {year}
+                                            </span>
+                                        </div>
+                                        <div className="h-px w-full bg-white/10" />
+                                    </div>
+
                                     {/* Summary */}
                                     <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4">
                                         <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">

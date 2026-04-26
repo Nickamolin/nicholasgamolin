@@ -10,34 +10,8 @@ type ProjectCardProps = {
     project: Project;
 };
 
-const OptimizedTooltip = ({ text, containerRef, isModalOpen, hasInteracted }: { text: string; containerRef: React.RefObject<HTMLElement>; isModalOpen: boolean; hasInteracted: boolean }) => {
+const OptimizedTooltip = ({ text, rect, isModalOpen, hasInteracted }: { text: string; rect: { left: number; top: number }; isModalOpen: boolean; hasInteracted: boolean }) => {
     const { mouseX, mouseY } = useMousePosition();
-    const [rect, setRect] = useState<{ left: number; top: number }>({ left: 0, top: 0 });
-
-    // Track the card position
-    useLayoutEffect(() => {
-        const updateRect = () => {
-            if (containerRef.current) {
-                const r = containerRef.current.getBoundingClientRect();
-                setRect({ left: r.left, top: r.top });
-            }
-        };
-
-        updateRect();
-        
-        // Double-check after a few frames to ensure layout is settled
-        const raf = requestAnimationFrame(updateRect);
-        const timer = setTimeout(updateRect, 500);
-
-        window.addEventListener("scroll", updateRect, { passive: true });
-        window.addEventListener("resize", updateRect);
-        return () => {
-            cancelAnimationFrame(raf);
-            clearTimeout(timer);
-            window.removeEventListener("scroll", updateRect);
-            window.removeEventListener("resize", updateRect);
-        };
-    }, [containerRef]);
 
     return (
         <div className={`absolute inset-0 overflow-hidden pointer-events-none rounded-2xl z-[100] ${isModalOpen ? 'hidden' : 'block'}`}>
@@ -76,9 +50,28 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     const cardRef = React.useRef<HTMLAnchorElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
+    const [rect, setRect] = useState({ left: 0, top: 0 });
 
     const hasHoverText = Boolean(project.hover_text);
     const isInteractive = Boolean(project.embed_url || project.info_url);
+
+    const updateRect = () => {
+        if (cardRef.current) {
+            const r = cardRef.current.getBoundingClientRect();
+            setRect({ left: r.left, top: r.top });
+        }
+    };
+
+    // Ensure we track the card position even during scrolls/resizes
+    useEffect(() => {
+        updateRect();
+        window.addEventListener("scroll", updateRect, { passive: true });
+        window.addEventListener("resize", updateRect);
+        return () => {
+            window.removeEventListener("scroll", updateRect);
+            window.removeEventListener("resize", updateRect);
+        };
+    }, []);
 
     return (
         <>
@@ -90,6 +83,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && !isModalOpen ? "cursor-none" : "cursor-default"}`}
                 onMouseEnter={(e) => {
                     if (hasHoverText) {
+                        updateRect();
                         mouseX.set(e.clientX);
                         mouseY.set(e.clientY);
                         setHasInteracted(true);
@@ -97,6 +91,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 }}
                 onMouseMove={(e) => {
                     if (hasHoverText) {
+                        updateRect();
                         mouseX.set(e.clientX);
                         mouseY.set(e.clientY);
                         setHasInteracted(true);
@@ -143,7 +138,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 {hasHoverText && (
                     <OptimizedTooltip
                         text={project.hover_text!}
-                        containerRef={cardRef}
+                        rect={rect}
                         isModalOpen={isModalOpen}
                         hasInteracted={hasInteracted}
                     />

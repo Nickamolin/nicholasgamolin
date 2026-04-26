@@ -176,7 +176,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                 <div
                                     className={`relative w-full max-w-full
                                         ${isResponsive
-                                            ? 'min-h-[80vh] md:min-h-0 md:flex-1'
+                                            ? 'min-h-[70vh] md:min-h-0 md:flex-1'
                                             : ''
                                         }`}
                                     style={{

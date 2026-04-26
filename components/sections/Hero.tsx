@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Hero() {
     return (
-        <div className="flex flex-col md:grid md:grid-cols-2 items-center justify-center min-h-[80vh] w-full gap-8 md:gap-0 px-6 max-w-[2000px] mx-auto">
+        <div className="flex flex-col md:grid md:grid-cols-2 items-center justify-center min-h-[60vh] md:min-h-[80vh] w-full gap-8 md:gap-0 px-6 max-w-[2000px] mx-auto">
             {/* 3D Head Container - Using Grid for perfect 50/50 split */}
             <div className="w-full max-w-[300px] sm:max-w-[400px] md:max-w-none aspect-square flex items-center justify-center order-1 md:order-none">
                 <div className="w-full h-full">

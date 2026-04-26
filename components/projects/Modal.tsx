@@ -79,7 +79,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     // or fixed-ratio media (videos, rive animations)
     const isResponsive = React.useMemo(() => {
         const type = embedType?.toLowerCase();
-        return !["youtube", "riv"].includes(type || "");
+        return !["video", "youtube", "riv"].includes(type || "");
     }, [embedType]);
 
     const handleLoad = () => {

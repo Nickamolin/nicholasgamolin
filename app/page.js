@@ -1,64 +1,43 @@
-import Logo3D from "@/components/Logo3D";
-import Projects from "@/components/projects/Projects";
-import Image from "next/image";
+import Highlights from "@/components/projects/Highlights";
+import Button from "@/components/UI/Button";
+import ContactCard from "@/components/sections/ContactCard";
+import Toolbox from "@/components/sections/Toolbox";
+import Hero from "@/components/sections/Hero";
 
 export default async function Home() {
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen p-8 gap-4 sm:gap-8 font-[family-name:var(--font-geist-sans)]">
-      <div className="relative flex justify-center items-center w-full">
-        <Logo3D></Logo3D>
+    <div className="flex flex-col items-center justify-start min-h-screen px-(--spacing-page-x) pt-(--spacing-page-top) pb-(--spacing-page-bottom) gap-(--spacing-section)">
 
-        <div className="absolute inset-0 flex flex-col justify-center items-center gap-2">
-          <span className="text-4xl sm:text-5xl font-bold text-center w-auto pointer-events-auto text-shadow-lg">Nicholas Gamolin</span>
+      {/* Hero Section */}
+      <Hero />
 
-          <div className="flex gap-8 items-center flex-row opacity-75">
-            <a
-              href="https://www.linkedin.com/in/nicholas-gamolin/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Image
-                src="/linkedinBlack.svg"
-                width={50}
-                height={50}
-                alt="LinkedIn"
-                className="invert dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] sm:w-[24px] sm:h-[24px]"
-              />
-            </a>
-            <a
-              href="https://github.com/Nickamolin"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Image
-                src="/github.svg"
-                width={50}
-                height={50}
-                alt="GitHub"
-                className="invert dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] sm:w-[24px] sm:h-[24px]"
-              />
-            </a>
-            <a
-              href="https://www.youtube.com/@Drakonic/videos"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Image
-                src="/YouTubeIconBW.svg"
-                width={50}
-                height={50}
-                alt="YouTube"
-                className="invert dark:invert hover:opacity-75 transition-all duration-500 w-[24px] h-[24px] sm:w-[24px] sm:h-[24px]"
-              />
-            </a>
-          </div>
+      {/* Project Highlights Section */}
+
+      <div className="flex flex-col items-center w-full">
+        <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Featured Projects</h1>
+          <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">A curated selection of some of my work</span>
         </div>
+        <Highlights />
+        <Button href="/projects" variant="secondary" className="mt-(--spacing-header-mb)" useTransition>
+          View All Projects
+        </Button>
       </div>
 
+      {/* Tech Section */}
 
+      <div className="flex flex-col items-center justify-center w-full">
+        <Toolbox />
 
-      <Projects />
+        <Button href="/about" variant="secondary" className="mt-20 md:mt-32" useTransition>
+          About Me
+        </Button>
+      </div>
+
+      {/* Contact Section */}
+
+      <ContactCard />
 
     </div>
   );

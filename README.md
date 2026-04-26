@@ -5,22 +5,23 @@ View the portfolio <a href="https://nicholasgamolin.com/">here</a>.
 <img src="https://github.com/Nickamolin/nicholasgamolin/blob/main/PortfolioPreview.png" width="512">
 
 <h3>Summary</h3>
-A portfolio website directing visitors towards my code (Github), videos (Youtube), and art (personal art portfolio).
+A premium, interactive portfolio website showcasing my work across programming, 3D art, and game development.
 
 <h3>Purpose</h3>
-Built to highlight my work across a variety of mediums and websites.
+Built to highlight my projects through a highly immersive, cinematic web experience that emphasizes modern design aesthetics and fluid micro-interactions.
 
 <h3>Implementation</h3>
-This portfolio is built with Next.js and React, styled using Tailwind CSS with custom CSS variables for theme support. The focus is an interactive 3D logo rendered with Three.js that loads a GLB model and features smooth orbit controls with auto-rotation that pauses during user interaction and gradually resumes. The 3D scene includes theme-aware materials that automatically switch between white (dark mode) and light gray (light mode) based on the user's system preferences, and the entire component is optimized for performance with client-side rendering, proper memory cleanup, and Retina display support.
+This portfolio is built with Next.js and React, and styled using Tailwind CSS for a custom, dark-themed premium aesthetic. The experience is driven by Framer Motion, which powers everything from the cinematic loading sequences to the complex layout animations and custom cursor-following tooltips.
 
-<h3>Skills Learned</h3>
+The site features a custom 3D focal point built with Three.js (React Three Fiber), utilizing custom shaders for dynamic depth-based rendering. Project data is managed dynamically via Supabase, allowing for seamless filtering and categorized galleries. The site also includes custom modals for interactive embeds (like Pico-8 games and web apps) and a functional contact form powered by Resend.
 
-- Next.js 15 - Modern React framework with App Router and Turbopack.
-- React 19 - Latest React features with hooks and component architecture.
-- Three.js - 3D graphics programming with WebGL rendering.
-- Tailwind CSS 4 - Utility-first CSS framework with modern features.
-- 3D Model Integration - GLB/GLTF model loading and manipulation.
-- Interactive 3D Controls - Orbit controls with damping and user interaction.
-- Responsive Design - Mobile-first approach with breakpoint optimization.
-- Dark/Light Theme - System preference detection and dynamic theming.
-- Performance Optimization - Retina display support and efficient rendering.
+<h3>Skills & Technologies</h3>
+
+- **Next.js 15 & React 19** - Modern App Router architecture and server/client component optimization.
+- **Framer Motion** - Advanced UI choreography, shared layout animations, and custom mouse-tracking interactions.
+- **Three.js & React Three Fiber** - 3D graphics programming, GLB model integration, and custom ShaderMaterials.
+- **Tailwind CSS 4** - Utility-first styling with a custom 3-typeface typography system (Outfit, Inter, Montserrat).
+- **Supabase** - Backend-as-a-Service for dynamic project data management.
+- **Resend** - Server-side API integration for reliable contact form delivery.
+- **Responsive Design** - Mobile-first approach with fluid layouts and breakpoint-specific optimizations.
+- **Interactive Embeds** - Seamless integration of interactive iframes, videos, and game engines via responsive modals.

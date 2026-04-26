@@ -12,4 +12,8 @@ export type Project = {
     embed_aspect_ratio: string;
     hover_text: string;
     render_title: boolean;
+    summary: string;
+    role: string;
+    tools_used: string;
+    action_button_text: string;
 };

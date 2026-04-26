@@ -3,13 +3,16 @@ import Image from "next/image";
 
 export default function Hero() {
     return (
-        <div className="flex flex-col md:flex-row items-center justify-evenly min-h-[60vh] sm:min-h-[70vh] md:min-h-[80vh] max-h-[90vh] w-full gap-8 md:gap-0">
-            <div className="w-full max-w-[300px] md:max-w-[500px] lg:max-w-[700px] aspect-square flex items-center justify-center">
-                <Head3D />
+        <div className="flex flex-col md:grid md:grid-cols-2 items-center justify-center min-h-[80vh] md:min-h-[80vh] w-full gap-8 md:gap-0 px-6 max-w-[1400px] mx-auto">
+            {/* 3D Head Container - Using Grid for perfect 50/50 split */}
+            <div className="w-full max-w-[300px] sm:max-w-[400px] md:max-w-none aspect-square flex items-center justify-center order-1 md:order-none">
+                <div className="w-full h-full max-w-[500px] max-h-[500px]">
+                    <Head3D />
+                </div>
             </div>
 
-            <div className="flex flex-col justify-center items-center gap-4 z-10">
-                <h1 className="text-5xl sm:text-6xl md:text-8xl font-title font-bold text-center">
+            <div className="flex flex-col justify-center items-center gap-4 z-10 w-full order-2 md:order-none">
+                <h1 className="text-[clamp(2rem,9vw,4rem)] md:text-[clamp(3rem,5vw,6rem)] font-title font-bold text-center whitespace-nowrap leading-[0.9]">
                     Nicholas Gamolin
                 </h1>
 

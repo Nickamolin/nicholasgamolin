@@ -16,6 +16,7 @@ interface Head3DProps {
 const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const composerRef = useRef<EffectComposer | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
@@ -46,17 +47,9 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     const renderPass = new RenderPass(scene, camera);
     const composer = new EffectComposer(renderer);
     composer.addPass(renderPass);
-
-    // const bloomPass = new UnrealBloomPass(
-    //   new THREE.Vector2(window.innerWidth, window.innerHeight),
-    //   1.5, // strength
-    //   0.05, // radius
-    //   0.95 // threshold
-    // );
-    // composer.addPass(bloomPass);
+    composerRef.current = composer;
 
     // Controls
-    // const controls = new OrbitControls(camera, renderer.domElement);
     const controls = new TrackballControls(camera, renderer.domElement);
     controls.noZoom = true;
     controls.noPan = true;
@@ -117,7 +110,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
 
     // Resize Handling
     const handleResize = () => {
-      if (!container || !rendererRef.current || !cameraRef.current) return;
+      if (!container || !rendererRef.current || !cameraRef.current || !composerRef.current) return;
 
       const width = container.clientWidth;
       const height = container.clientHeight;
@@ -126,6 +119,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
       cameraRef.current.updateProjectionMatrix();
 
       rendererRef.current.setSize(width, height);
+      composerRef.current.setSize(width, height);
     };
 
     const resizeObserver = new ResizeObserver(handleResize);
@@ -140,7 +134,9 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
       }
 
       controls.update();
-      composer.render();
+      if (composerRef.current) {
+        composerRef.current.render();
+      }
     };
 
     animate();

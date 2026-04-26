@@ -203,6 +203,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                                 autoPlay
                                                 muted
                                                 loop
+                                                playsInline
                                             />
                                             {/* Foreground Video */}
                                             <video
@@ -211,6 +212,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                                 autoPlay
                                                 muted
                                                 loop
+                                                playsInline
                                                 onCanPlay={handleLoad}
                                             />
                                         </div>

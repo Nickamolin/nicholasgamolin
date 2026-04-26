@@ -115,6 +115,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [isButtonHovered, setIsButtonHovered] = useState(false);
+    const cardRef = React.useRef<HTMLDivElement>(null);
 
     // Tracking the 'anchor' side of the clip-path:
     // 'left' uses inset(0 X% 0 0) - wipes from/to the left
@@ -125,6 +126,28 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
     const controls = useAnimation();
 
     const dateRange = `${formatDate(work.start_date)} — ${work.end_date ? formatDate(work.end_date) : "Present"}`;
+
+    const handleModalExitComplete = () => {
+        // Persistent check over 10 frames to ensure we catch the browser's state update
+        let attempts = 0;
+        const check = () => {
+            if (cardRef.current?.matches(':hover')) {
+                setIsHovered(true);
+            } else if (attempts < 10) {
+                attempts++;
+                requestAnimationFrame(check);
+            }
+        };
+        check();
+    };
+
+    // Reset hover state when modal opens so it can be re-triggered on close
+    useEffect(() => {
+        if (isModalOpen) {
+            setIsHovered(false);
+            setIsButtonHovered(false);
+        }
+    }, [isModalOpen]);
 
     useEffect(() => {
         if (isHovered) {
@@ -168,6 +191,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
     return (
         <>
             <div
+                ref={cardRef}
                 onMouseEnter={() => {
                     setIsHovered(true);
                 }}
@@ -210,6 +234,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
                 <Modal
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
+                    onExitComplete={handleModalExitComplete}
                     title={project.title}
                     year={new Date(project.date_published).getFullYear()}
                     infoUrl={project.info_url}

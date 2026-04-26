@@ -111,6 +111,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         src={project.thumbnail_url}
                         alt={project.title}
                         fill
+                        draggable={false}
                         style={project.embed_type === 'pico8' ? { imageRendering: "pixelated" } : undefined}
                         className="object-cover saturate-0 group-hover:saturate-100 [@media(hover:none)]:saturate-100 group-hover:scale-105 transition-all duration-500"
                     />

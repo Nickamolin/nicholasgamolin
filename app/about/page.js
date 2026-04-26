@@ -1,4 +1,3 @@
-import Image from "next/image";
 import ContactCard from "@/components/sections/ContactCard";
 import WorkExperience from "@/components/sections/WorkExperience";
 import Button from "@/components/UI/Button";
@@ -36,7 +35,7 @@ export default function AboutPage() {
                 </div>
                 <WorkExperience />
                 <Button
-                    href="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/documents/resume.pdf?download="
+                    href="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/documents/Nicholas_Gamolin_Resume.pdf?download="
                     variant="secondary"
                     className="mt-(--spacing-header-mb)"
                     target="_blank"

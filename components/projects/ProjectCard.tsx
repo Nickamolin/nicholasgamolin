@@ -13,60 +13,55 @@ type ProjectCardProps = {
 const OptimizedTooltip = ({ text, isHovered, containerRef }: { text: string; isHovered: boolean; containerRef: React.RefObject<HTMLElement> }) => {
     const { mouseX, mouseY } = useMousePosition();
     const [rect, setRect] = useState<{ left: number; top: number } | null>(null);
+    const [hasMeasured, setHasMeasured] = useState(false);
 
-    // Measure the card position only when hovered to calculate local coordinates
+    // Measure the card position synchronously
     useLayoutEffect(() => {
         if (isHovered && containerRef.current) {
-            const r = containerRef.current.getBoundingClientRect();
-            setRect({ left: r.left, top: r.top });
+            const updateRect = () => {
+                if (containerRef.current) {
+                    const r = containerRef.current.getBoundingClientRect();
+                    setRect({ left: r.left, top: r.top });
+                    setHasMeasured(true);
+                }
+            };
+
+            updateRect();
+
+            // Handle scroll/resize to keep rect fresh
+            window.addEventListener("scroll", updateRect, { passive: true });
+            window.addEventListener("resize", updateRect);
+
+            return () => {
+                window.removeEventListener("scroll", updateRect);
+                window.removeEventListener("resize", updateRect);
+            };
+        } else {
+            setHasMeasured(false);
         }
     }, [isHovered, containerRef]);
-
-    // Update rect on scroll/resize
-    useEffect(() => {
-        if (!isHovered) return;
-        const update = () => {
-            if (containerRef.current) {
-                const r = containerRef.current.getBoundingClientRect();
-                setRect({ left: r.left, top: r.top });
-            }
-        };
-        window.addEventListener("scroll", update, { passive: true });
-        window.addEventListener("resize", update);
-        return () => {
-            window.removeEventListener("scroll", update);
-            window.removeEventListener("resize", update);
-        };
-    }, [isHovered, containerRef]);
-
-    // Use transforms for high-performance coordinate mapping
-    // These react to both mouse movement and rect updates
-    const x = useTransform(mouseX, (v) => v - (rect?.left || 0));
-    const y = useTransform(mouseY, (v) => v - (rect?.top || 0));
 
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl z-[100]">
             <AnimatePresence>
-                {isHovered && rect && (
+                {isHovered && hasMeasured && rect && (
                     <motion.div
-                        initial={{ scaleX: 0, opacity: 0, x: "-50%", y: "-50%" }}
+                        initial={{ scale: 0.8, opacity: 0 }}
                         animate={{
-                            scaleX: 1,
+                            scale: 1,
                             opacity: 1,
-                            x: "-50%",
-                            y: "-50%",
                         }}
                         exit={{
-                            scaleX: 0,
+                            scale: 0.8,
                             opacity: 0,
-                            x: "-50%",
-                            y: "-50%",
                         }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute pointer-events-none [@media(hover:none)]:hidden origin-center"
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="absolute pointer-events-none [@media(hover:none)]:hidden origin-center flex items-center justify-center -translate-x-1/2 -translate-y-1/2"
                         style={{
-                            left: x,
-                            top: y,
+                            left: mouseX,
+                            top: mouseY,
+                            marginLeft: -rect.left,
+                            marginTop: -rect.top,
                         }}
                     >
                         <div className="relative shadow-2xl whitespace-nowrap overflow-visible">
@@ -100,6 +95,19 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     const hasHoverText = Boolean(project.hover_text);
     const isInteractive = Boolean(project.embed_url || project.info_url);
 
+    // Reset hover state when modal opens, and RE-CHECK when it closes
+    useEffect(() => {
+        if (isModalOpen) {
+            setIsHovered(false);
+        } else {
+            // When modal closes, check if we're already hovered
+            // this catches the "still mouse" case
+            if (cardRef.current?.matches(':hover')) {
+                setIsHovered(true);
+            }
+        }
+    }, [isModalOpen]);
+
     return (
         <>
             <a
@@ -110,11 +118,24 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && isHovered ? "cursor-none" : "cursor-default"}`}
                 onMouseEnter={(e) => {
                     if (hasHoverText) {
-                        // Bootstrap the global mouse position immediately on entry
-                        // to prevent the "top-left jump" before the first move event
                         mouseX.set(e.clientX);
                         mouseY.set(e.clientY);
                         setIsHovered(true);
+                    }
+                }}
+                onMouseOver={(e) => {
+                    if (hasHoverText && !isModalOpen) {
+                        // Always keep context fresh during the "bubble" phase
+                        mouseX.set(e.clientX);
+                        mouseY.set(e.clientY);
+                        if (!isHovered) setIsHovered(true);
+                    }
+                }}
+                onMouseMove={(e) => {
+                    if (hasHoverText && !isModalOpen) {
+                        mouseX.set(e.clientX);
+                        mouseY.set(e.clientY);
+                        if (!isHovered) setIsHovered(true);
                     }
                 }}
                 onMouseLeave={() => hasHoverText && setIsHovered(false)}

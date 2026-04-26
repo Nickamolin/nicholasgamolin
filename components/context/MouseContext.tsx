@@ -20,8 +20,16 @@ export const MouseProvider = ({ children }: { children: React.ReactNode }) => {
             mouseY.set(event.clientY);
         };
 
+        // Capture mouse position on any interaction to bootstrap the context
         window.addEventListener("mousemove", handleMouseMove);
-        return () => window.removeEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseover", handleMouseMove);
+        window.addEventListener("mousedown", handleMouseMove);
+        
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseover", handleMouseMove);
+            window.removeEventListener("mousedown", handleMouseMove);
+        };
     }, [mouseX, mouseY]);
 
     return (

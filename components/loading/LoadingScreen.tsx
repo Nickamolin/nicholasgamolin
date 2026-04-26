@@ -108,7 +108,7 @@ export default function LoadingScreen() {
             <div className="relative flex flex-col items-center justify-center">
                 <LoadingAnimation
                     isVisible={isOpaque}
-                    className="w-48 h-48 md:w-64 md:h-64"
+                    className="w-32 h-32 md:w-64 md:h-64"
                 />
             </div>
         </div>

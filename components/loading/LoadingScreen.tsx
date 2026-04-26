@@ -67,22 +67,20 @@ export default function LoadingScreen() {
             setIsOpaque(false); // ensure we start from opacity-0
             document.body.style.overflow = "hidden";
 
-            // Double rAF: first frame guarantees React has committed the DOM node,
-            // second frame guarantees the browser has painted it at opacity-0.
-            // This ensures the CSS transition always has a starting value to animate from.
-            fadeInFrame1Ref.current = requestAnimationFrame(() => {
-                fadeInFrame2Ref.current = requestAnimationFrame(() => {
-                    setIsOpaque(true);
+            // We use a small setTimeout instead of double rAF to guarantee 
+            // the browser paints the opacity-0 state before transitioning.
+            // This fixes the 'pop-in' race condition that occurs when the main thread is idle.
+            fadeInFrame1Ref.current = setTimeout(() => {
+                setIsOpaque(true);
 
-                    // Scroll to top only after the overlay is fully opaque (duration-500)
-                    scrollTimerRef.current = setTimeout(() => {
-                        if (!hasScrolledRef.current) {
-                            window.scrollTo(0, 0);
-                            hasScrolledRef.current = true;
-                        }
-                    }, 500);
-                });
-            });
+                // Scroll to top only after the overlay is fully opaque (duration-500)
+                scrollTimerRef.current = setTimeout(() => {
+                    if (!hasScrolledRef.current) {
+                        window.scrollTo(0, 0);
+                        hasScrolledRef.current = true;
+                    }
+                }, 500);
+            }, 20) as any;
 
         } else if (isAppLoaded) {
             // Not transitioning and page is ready — start fade-out sequence

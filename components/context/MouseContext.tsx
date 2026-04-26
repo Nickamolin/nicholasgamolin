@@ -21,14 +21,15 @@ export const MouseProvider = ({ children }: { children: React.ReactNode }) => {
         };
 
         // Capture mouse position on any interaction to bootstrap the context
-        window.addEventListener("mousemove", handleMouseMove);
-        window.addEventListener("mouseover", handleMouseMove);
-        window.addEventListener("mousedown", handleMouseMove);
+        // Use capture phase to ensure we get coordinates even if propagation is stopped
+        window.addEventListener("mousemove", handleMouseMove, { capture: true });
+        window.addEventListener("mouseover", handleMouseMove, { capture: true });
+        window.addEventListener("mousedown", handleMouseMove, { capture: true });
         
         return () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-            window.removeEventListener("mouseover", handleMouseMove);
-            window.removeEventListener("mousedown", handleMouseMove);
+            window.removeEventListener("mousemove", handleMouseMove, { capture: true });
+            window.removeEventListener("mouseover", handleMouseMove, { capture: true });
+            window.removeEventListener("mousedown", handleMouseMove, { capture: true });
         };
     }, [mouseX, mouseY]);
 

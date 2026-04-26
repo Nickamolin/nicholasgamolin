@@ -9,6 +9,7 @@ import { useRive, Layout, Fit, Alignment } from "@rive-app/react-canvas";
 type ModalProps = {
     isOpen: boolean;
     onClose: () => void;
+    onExitComplete?: () => void;
     title: string;
     year: string | number;
     infoUrl: string;
@@ -34,11 +35,23 @@ function RiveWrapper({ url, onLoaded }: { url: string; onLoaded: () => void }) {
     return <RiveComponent className="w-full h-full" />;
 }
 
-export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl, embedType, embedAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
+export default function Modal({ isOpen, onClose, onExitComplete, title, year, infoUrl, embedUrl, embedType, embedAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [extrasHeight, setExtrasHeight] = useState(300); // Safe default
     const headerRef = useRef<HTMLDivElement>(null);
     const detailsRef = useRef<HTMLDivElement>(null);
+    const prevUrlRef = useRef<string>("");
+    const prevIsOpenRef = useRef<boolean>(false);
+
+    const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
+
+    // Synchronously reset loading state during render if the URL changes OR the modal is being opened
+    // This prevents the "one-frame peek" flicker when switching projects or re-opening the same one
+    if (prevUrlRef.current !== cleanUrl || (isOpen && !prevIsOpenRef.current)) {
+        setIsLoading(true);
+        prevUrlRef.current = cleanUrl;
+    }
+    prevIsOpenRef.current = isOpen;
 
     // Calculate actual height of header + details to perfectly size the embed
     useEffect(() => {
@@ -49,7 +62,6 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
         }
     }, [isOpen, title, summary, role, tools_used]);
 
-    const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
     const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
     // Safely calculate aspect ratio from the provided string to prevent NaN or collapse
@@ -101,14 +113,18 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
     }, [numericRatio]);
 
     return (
-        <AnimatePresence>
+        <AnimatePresence onExitComplete={onExitComplete}>
             {isOpen && (
                 <div className="fixed inset-0 z-[100] flex justify-center overflow-y-auto md:p-8 p-0">
                     {/* Background overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        exit={{ 
+                            opacity: 0, 
+                            pointerEvents: "none",
+                            transition: { pointerEvents: { duration: 0 } }
+                        }}
                         className="fixed inset-0 bg-black/70 backdrop-blur-md transform-gpu"
                         onClick={onClose}
                     />
@@ -117,7 +133,12 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
+                        exit={{ 
+                            opacity: 0, 
+                            y: 20, 
+                            pointerEvents: "none",
+                            transition: { pointerEvents: { duration: 0 } }
+                        }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         className={`relative z-10 bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col my-auto
                             w-full h-fit md:w-[var(--modal-w)] md:h-[var(--modal-h)] md:max-w-[90vw] md:max-h-[90vh] md:rounded-[2.5rem] rounded-[1.5rem]`}
@@ -154,8 +175,8 @@ export default function Modal({ isOpen, onClose, title, year, infoUrl, embedUrl,
                             <div className="flex-1 flex w-full min-h-0 bg-black/20 shrink-0 flex-col justify-center items-center">
                                 <div
                                     className={`relative w-full max-w-full
-                                        ${isResponsive 
-                                            ? 'min-h-[80vh] md:min-h-0 md:flex-1' 
+                                        ${isResponsive
+                                            ? 'min-h-[80vh] md:min-h-0 md:flex-1'
                                             : ''
                                         }`}
                                     style={{

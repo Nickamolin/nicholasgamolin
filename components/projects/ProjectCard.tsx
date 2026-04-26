@@ -10,78 +10,63 @@ type ProjectCardProps = {
     project: Project;
 };
 
-const OptimizedTooltip = ({ text, isHovered, containerRef }: { text: string; isHovered: boolean; containerRef: React.RefObject<HTMLElement> }) => {
+const OptimizedTooltip = ({ text, containerRef, isModalOpen, hasInteracted }: { text: string; containerRef: React.RefObject<HTMLElement>; isModalOpen: boolean; hasInteracted: boolean }) => {
     const { mouseX, mouseY } = useMousePosition();
-    const [rect, setRect] = useState<{ left: number; top: number } | null>(null);
-    const [hasMeasured, setHasMeasured] = useState(false);
+    const [rect, setRect] = useState<{ left: number; top: number }>({ left: 0, top: 0 });
 
-    // Measure the card position synchronously
+    // Track the card position
     useLayoutEffect(() => {
-        if (isHovered && containerRef.current) {
-            const updateRect = () => {
-                if (containerRef.current) {
-                    const r = containerRef.current.getBoundingClientRect();
-                    setRect({ left: r.left, top: r.top });
-                    setHasMeasured(true);
-                }
-            };
+        const updateRect = () => {
+            if (containerRef.current) {
+                const r = containerRef.current.getBoundingClientRect();
+                setRect({ left: r.left, top: r.top });
+            }
+        };
 
-            updateRect();
+        updateRect();
+        
+        // Double-check after a few frames to ensure layout is settled
+        const raf = requestAnimationFrame(updateRect);
+        const timer = setTimeout(updateRect, 500);
 
-            // Handle scroll/resize to keep rect fresh
-            window.addEventListener("scroll", updateRect, { passive: true });
-            window.addEventListener("resize", updateRect);
-
-            return () => {
-                window.removeEventListener("scroll", updateRect);
-                window.removeEventListener("resize", updateRect);
-            };
-        } else {
-            setHasMeasured(false);
-        }
-    }, [isHovered, containerRef]);
+        window.addEventListener("scroll", updateRect, { passive: true });
+        window.addEventListener("resize", updateRect);
+        return () => {
+            cancelAnimationFrame(raf);
+            clearTimeout(timer);
+            window.removeEventListener("scroll", updateRect);
+            window.removeEventListener("resize", updateRect);
+        };
+    }, [containerRef]);
 
     return (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl z-[100]">
-            <AnimatePresence>
-                {isHovered && hasMeasured && rect && (
-                    <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{
-                            scale: 1,
-                            opacity: 1,
-                        }}
-                        exit={{
-                            scale: 0.8,
-                            opacity: 0,
-                        }}
-                        transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute pointer-events-none [@media(hover:none)]:hidden origin-center flex items-center justify-center -translate-x-1/2 -translate-y-1/2"
-                        style={{
-                            left: mouseX,
-                            top: mouseY,
-                            marginLeft: -rect.left,
-                            marginTop: -rect.top,
-                        }}
-                    >
-                        <div className="relative shadow-2xl whitespace-nowrap overflow-visible">
-                            {/* Premium Glass Background Layer */}
-                            <div className="absolute inset-0 bg-zinc-950/40 border border-white/10" />
+        <div className={`absolute inset-0 overflow-hidden pointer-events-none rounded-2xl z-[100] ${isModalOpen ? 'hidden' : 'block'}`}>
+            <motion.div
+                className={`absolute pointer-events-none [@media(hover:none)]:hidden origin-center flex items-center justify-center -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300
+                    ${hasInteracted ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
+                style={{
+                    left: mouseX,
+                    top: mouseY,
+                    marginLeft: -rect.left,
+                    marginTop: -rect.top,
+                }}
+            >
+                <div className="relative shadow-2xl whitespace-nowrap overflow-visible">
+                    {/* Premium Glass Background Layer */}
+                    <div className="absolute inset-0 bg-zinc-950/40 border border-white/10" />
 
-                            {/* Content Layer */}
-                            <div className="relative z-10 px-6 py-2 text-xs sm:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-white antialiased">
-                                {/* Viewfinder Brackets */}
-                                <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white" />
-                                <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white" />
-                                <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white" />
-                                <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white" />
+                    {/* Content Layer */}
+                    <div className="relative z-10 px-6 py-2 text-xs sm:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-white antialiased">
+                        {/* Viewfinder Brackets */}
+                        <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white" />
+                        <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white" />
+                        <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white" />
+                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white" />
 
-                                {text}
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        {text}
+                    </div>
+                </div>
+            </motion.div>
         </div>
     );
 };
@@ -90,23 +75,10 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     const { mouseX, mouseY } = useMousePosition();
     const cardRef = React.useRef<HTMLAnchorElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
+    const [hasInteracted, setHasInteracted] = useState(false);
 
     const hasHoverText = Boolean(project.hover_text);
     const isInteractive = Boolean(project.embed_url || project.info_url);
-
-    // Reset hover state when modal opens, and RE-CHECK when it closes
-    useEffect(() => {
-        if (isModalOpen) {
-            setIsHovered(false);
-        } else {
-            // When modal closes, check if we're already hovered
-            // this catches the "still mouse" case
-            if (cardRef.current?.matches(':hover')) {
-                setIsHovered(true);
-            }
-        }
-    }, [isModalOpen]);
 
     return (
         <>
@@ -115,30 +87,21 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 href={project.embed_url ? undefined : (project.info_url || undefined)}
                 target={project.embed_url ? undefined : (project.info_url ? "_blank" : undefined)}
                 rel={project.embed_url ? undefined : (project.info_url ? "noopener noreferrer" : undefined)}
-                className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && isHovered ? "cursor-none" : "cursor-default"}`}
+                className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && !isModalOpen ? "cursor-none" : "cursor-default"}`}
                 onMouseEnter={(e) => {
                     if (hasHoverText) {
                         mouseX.set(e.clientX);
                         mouseY.set(e.clientY);
-                        setIsHovered(true);
-                    }
-                }}
-                onMouseOver={(e) => {
-                    if (hasHoverText && !isModalOpen) {
-                        // Always keep context fresh during the "bubble" phase
-                        mouseX.set(e.clientX);
-                        mouseY.set(e.clientY);
-                        if (!isHovered) setIsHovered(true);
+                        setHasInteracted(true);
                     }
                 }}
                 onMouseMove={(e) => {
-                    if (hasHoverText && !isModalOpen) {
+                    if (hasHoverText) {
                         mouseX.set(e.clientX);
                         mouseY.set(e.clientY);
-                        if (!isHovered) setIsHovered(true);
+                        setHasInteracted(true);
                     }
                 }}
-                onMouseLeave={() => hasHoverText && setIsHovered(false)}
                 onClick={(e) => {
                     if (project.embed_url) {
                         e.preventDefault();
@@ -180,8 +143,9 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 {hasHoverText && (
                     <OptimizedTooltip
                         text={project.hover_text!}
-                        isHovered={isHovered}
                         containerRef={cardRef}
+                        isModalOpen={isModalOpen}
+                        hasInteracted={hasInteracted}
                     />
                 )}
             </a>
@@ -201,5 +165,5 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 action_button_text={project.action_button_text}
             />
         </>
-    )
+    );
 }

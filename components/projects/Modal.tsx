@@ -42,6 +42,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     const detailsRef = useRef<HTMLDivElement>(null);
     const prevUrlRef = useRef<string>("");
     const prevIsOpenRef = useRef<boolean>(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
 
@@ -196,22 +197,15 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                         </div>
                                     ) : embedType?.toLowerCase() === "video" ? (
                                         <div className={`absolute inset-0 transition-opacity duration-700 overflow-hidden ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                                            {/* Ambient Background */}
                                             <video
-                                                className="absolute inset-0 w-full h-full object-cover blur-md opacity-50 scale-110 pointer-events-none"
+                                                ref={videoRef}
+                                                className="absolute inset-0 w-full h-full object-contain"
                                                 src={cleanUrl}
                                                 autoPlay
                                                 muted
                                                 loop
-                                            />
-                                            {/* Foreground Video */}
-                                            <video
-                                                className="absolute inset-0 z-10 w-full h-full object-contain"
-                                                src={cleanUrl}
-                                                autoPlay
-                                                muted
-                                                loop
-                                                onCanPlay={handleLoad}
+                                                playsInline
+                                                onPlaying={handleLoad}
                                             />
                                         </div>
                                     ) : embedType?.toLowerCase() === "website" ? (

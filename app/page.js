@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import Highlights from "@/components/projects/Highlights";
 import Button from "@/components/UI/Button";
 import ContactCard from "@/components/sections/ContactCard";

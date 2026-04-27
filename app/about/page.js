@@ -1,4 +1,5 @@
-import Image from "next/image";
+export const dynamic = 'force-dynamic';
+
 import ContactCard from "@/components/sections/ContactCard";
 import WorkExperience from "@/components/sections/WorkExperience";
 import Button from "@/components/UI/Button";
@@ -6,6 +7,7 @@ import Toolbox from "@/components/sections/Toolbox";
 import Blurb from "@/components/sections/Blurb";
 
 export default function AboutPage() {
+    const resumeTimestamp = new Date().getTime();
     const bioParagraphs = [
         "I'm a self-taught digital artist and full-stack engineer with a B.S. in Computer Science from the University of Virginia. My work sits at the intersection of design and engineering, spanning graphic design, animation, video editing, and interactive experiences.",
         "I'm heavily inspired by film, music, and games, and I approach my work with the same mindset - focusing on aesthetic, detail, and how something feels as much as how it functions.",
@@ -36,7 +38,7 @@ export default function AboutPage() {
                 </div>
                 <WorkExperience />
                 <Button
-                    href="https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/documents/resume.pdf?download="
+                    href={`https://ahkkpmqdyghygygqonbi.supabase.co/storage/v1/object/public/documents/Nicholas_Gamolin_Resume.pdf?download=&v=${resumeTimestamp}`}
                     variant="secondary"
                     className="mt-(--spacing-header-mb)"
                     target="_blank"

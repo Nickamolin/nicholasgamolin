@@ -111,18 +111,34 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     useEffect(() => {
         if (isOpen) {
             setIsLoading(true);
-            document.body.style.overflow = 'hidden';
+            
+            // Lock body scroll using position: fixed to prevent mobile Safari background scroll
+            const scrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.width = '100%';
+            // overflow-y: scroll ensures the scrollbar gutter remains if present to prevent layout shift
+            document.body.style.overflowY = 'scroll';
 
             // Safety fallback: ensure loading screen clears even if iframe onLoad fails
             const timer = setTimeout(() => {
                 setIsLoading(false);
             }, 10000);
+
             return () => {
                 clearTimeout(timer);
-                document.body.style.overflow = 'unset';
+                
+                // Restore body scroll
+                const savedScrollY = document.body.style.top;
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                document.body.style.overflowY = '';
+                
+                if (savedScrollY) {
+                    window.scrollTo(0, parseInt(savedScrollY || '0') * -1);
+                }
             };
-        } else {
-            document.body.style.overflow = 'unset';
         }
     }, [isOpen, cleanUrl]);
 
@@ -144,7 +160,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             pointerEvents: "none",
                             transition: { pointerEvents: { duration: 0 } }
                         }}
-                        className="fixed inset-0 bg-black/70 backdrop-blur-md transform-gpu"
+                        className="fixed inset-0 bg-black/70 backdrop-blur-md transform-gpu touch-none"
                         onClick={handleClose}
                     />
 

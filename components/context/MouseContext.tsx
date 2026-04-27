@@ -59,6 +59,10 @@ export const MouseProvider = ({ children }: { children: React.ReactNode }) => {
         };
 
         const handleScroll = () => {
+            // Disable scroll-sync on mobile/touch devices to prevent "phantom cursor" hovers.
+            // On touch devices, there is no persistent cursor sitting on the screen during scroll.
+            if (!window.matchMedia("(pointer: fine)").matches) return;
+
             if (!isScrolling) {
                 isScrolling = true;
                 rafId = requestAnimationFrame(syncHoverState);

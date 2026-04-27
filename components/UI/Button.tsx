@@ -35,6 +35,7 @@ export default function Button({
   isExternalHover,
 }: ButtonProps) {
   const { navigateWithTransition } = useLoading();
+  const [isHovered, setIsHovered] = React.useState(false);
   const baseStyles =
     "inline-flex items-center justify-center font-subtitle tracking-[0.2em] uppercase text-xs md:text-sm whitespace-nowrap overflow-hidden transition-colors duration-300 cursor-pointer";
 
@@ -64,6 +65,8 @@ export default function Button({
       onClick(e);
     }
   };
+  
+  const activeHover = isExternalHover !== undefined ? isExternalHover : isHovered;
 
   const content = (
     <div className="relative overflow-hidden h-[1.2em]">
@@ -91,8 +94,9 @@ export default function Button({
     return (
       <motion.div
         initial="initial"
-        animate={isExternalHover !== undefined ? (isExternalHover ? "hover" : "initial") : undefined}
-        whileHover="hover"
+        animate={activeHover ? "hover" : "initial"}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className="inline-block"
       >
         <MotionLink
@@ -112,8 +116,9 @@ export default function Button({
   return (
     <motion.button
       initial="initial"
-      animate={isExternalHover !== undefined ? (isExternalHover ? "hover" : "initial") : undefined}
-      whileHover="hover"
+      animate={activeHover ? "hover" : "initial"}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       whileTap={tapVariants[variant]}
       onClick={onClick}
       className={combinedClasses}

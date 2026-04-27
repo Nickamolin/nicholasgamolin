@@ -44,6 +44,7 @@ export default function ContactCard() {
         }
     };
 
+
     return (
         <div className="flex flex-col items-center justify-center w-full mb-[8vh]">
             <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb)">
@@ -91,37 +92,35 @@ export default function ContactCard() {
                     >
                         {/* Name Field */}
                         <div className="flex flex-col gap-4">
-                            <input
+                            <FormInput
                                 type="text"
                                 placeholder="Your Name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 hover:border-white/20 transition-all duration-300 placeholder:text-gray-600"
                             />
                         </div>
 
                         {/* Email Field */}
                         <div className="flex flex-col gap-4">
-                            <input
+                            <FormInput
                                 type="email"
                                 placeholder="Your Email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 hover:border-white/20 transition-all duration-300 placeholder:text-gray-600"
                             />
                         </div>
 
                         {/* Message Field */}
                         <div className="flex flex-col gap-4">
-                            <textarea
+                            <FormInput
+                                isTextarea
                                 rows={6}
                                 placeholder="Your Message"
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 hover:border-white/20 transition-all duration-300 placeholder:text-gray-600 resize-none"
                             />
                         </div>
 
@@ -136,7 +135,6 @@ export default function ContactCard() {
                             <Button
                                 variant="secondary"
                                 className="py-4 px-12 text-sm transition-transform active:scale-95"
-                                onClick={status === "submitting" ? undefined : undefined}
                             >
                                 {status === "submitting" ? "Sending..." : "Submit"}
                             </Button>
@@ -148,3 +146,52 @@ export default function ContactCard() {
         </div>
     );
 }
+
+const FormInput = ({
+    type,
+    placeholder,
+    value,
+    onChange,
+    required,
+    isTextarea,
+    rows
+}: {
+    type?: string;
+    placeholder: string;
+    value: string;
+    onChange: (e: any) => void;
+    required?: boolean;
+    isTextarea?: boolean;
+    rows?: number;
+}) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const className = `w-full bg-white/5 border rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 transition-all duration-300 placeholder:text-gray-600 ${isHovered ? 'border-white/20' : 'border-white/10'}`;
+
+    if (isTextarea) {
+        return (
+            <textarea
+                rows={rows}
+                placeholder={placeholder}
+                value={value}
+                onChange={onChange}
+                required={required}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                className={`${className} resize-none`}
+            />
+        );
+    }
+
+    return (
+        <input
+            type={type}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            required={required}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className={className}
+        />
+    );
+};

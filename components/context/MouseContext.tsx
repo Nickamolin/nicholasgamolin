@@ -25,6 +25,8 @@ export const MouseProvider = ({ children }: { children: React.ReactNode }) => {
         window.addEventListener("mousemove", handleMouseMove, { capture: true });
         window.addEventListener("mouseover", handleMouseMove, { capture: true });
         window.addEventListener("mousedown", handleMouseMove, { capture: true });
+        // The wheel event guarantees we get mouse coordinates if the user's very first action is scrolling!
+        window.addEventListener("wheel", handleMouseMove as EventListener, { capture: true, passive: true });
         
         let rafId: number;
         let isScrolling = false;
@@ -91,6 +93,7 @@ export const MouseProvider = ({ children }: { children: React.ReactNode }) => {
             window.removeEventListener("mousemove", handleMouseMove, { capture: true });
             window.removeEventListener("mouseover", handleMouseMove, { capture: true });
             window.removeEventListener("mousedown", handleMouseMove, { capture: true });
+            window.removeEventListener("wheel", handleMouseMove as EventListener, { capture: true });
             window.removeEventListener("scroll", handleScroll);
             clearTimeout(scrollTimeout);
             cancelAnimationFrame(rafId);

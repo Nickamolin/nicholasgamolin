@@ -21,6 +21,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
   const sceneRef = useRef<THREE.Scene | null>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
   const animationFrameIdRef = useRef<number | null>(null);
+  const [isHovered, setIsHovered] = React.useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -151,7 +152,14 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
     };
   }, []);
 
-  return <div ref={containerRef} className={`w-full h-full cursor-grab active:cursor-grabbing ${className}`} />;
+  return (
+    <div
+      ref={containerRef}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`w-full h-full active:cursor-grabbing ${isHovered ? 'cursor-grab' : ''} ${className}`}
+    />
+  );
 };
 
 export default Head3D;

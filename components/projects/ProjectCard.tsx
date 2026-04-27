@@ -10,19 +10,38 @@ type ProjectCardProps = {
     project: Project;
 };
 
-const OptimizedTooltip = ({ text, rect, isModalOpen, hasInteracted }: { text: string; rect: { left: number; top: number }; isModalOpen: boolean; hasInteracted: boolean }) => {
+const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted }: { text: string; cardRef: React.RefObject<HTMLAnchorElement | null>; isModalOpen: boolean; hasInteracted: boolean }) => {
     const { mouseX, mouseY } = useMousePosition();
+    const tooltipRef = React.useRef<HTMLDivElement>(null);
+
+    // Sync tooltip offset perfectly, even during CSS scale transitions and scroll
+    useLayoutEffect(() => {
+        if (!hasInteracted) return;
+        
+        let rafId: number;
+        const updateOffset = () => {
+            if (tooltipRef.current && cardRef.current) {
+                const r = cardRef.current.getBoundingClientRect();
+                tooltipRef.current.style.marginLeft = `${-r.left}px`;
+                tooltipRef.current.style.marginTop = `${-r.top}px`;
+            }
+            rafId = requestAnimationFrame(updateOffset);
+        };
+
+        updateOffset();
+        
+        return () => cancelAnimationFrame(rafId);
+    }, [cardRef, hasInteracted]);
 
     return (
         <div className={`absolute inset-0 overflow-hidden pointer-events-none rounded-2xl z-[100] ${isModalOpen ? 'hidden' : 'block'}`}>
             <motion.div
+                ref={tooltipRef}
                 className={`absolute pointer-events-none [@media(hover:none)]:hidden origin-center flex items-center justify-center -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300
-                    ${hasInteracted ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
+                    ${hasInteracted ? 'opacity-100' : 'opacity-0'}`}
                 style={{
                     left: mouseX,
                     top: mouseY,
-                    marginLeft: -rect.left,
-                    marginTop: -rect.top,
                 }}
             >
                 <div className="relative shadow-2xl whitespace-nowrap overflow-visible">
@@ -50,28 +69,9 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     const cardRef = React.useRef<HTMLAnchorElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
-    const [rect, setRect] = useState({ left: 0, top: 0 });
 
     const hasHoverText = Boolean(project.hover_text);
     const isInteractive = Boolean(project.embed_url || project.info_url);
-
-    const updateRect = () => {
-        if (cardRef.current) {
-            const r = cardRef.current.getBoundingClientRect();
-            setRect({ left: r.left, top: r.top });
-        }
-    };
-
-    // Ensure we track the card position even during scrolls/resizes
-    useEffect(() => {
-        updateRect();
-        window.addEventListener("scroll", updateRect, { passive: true });
-        window.addEventListener("resize", updateRect);
-        return () => {
-            window.removeEventListener("scroll", updateRect);
-            window.removeEventListener("resize", updateRect);
-        };
-    }, []);
 
     return (
         <>
@@ -80,10 +80,9 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 href={project.embed_url ? undefined : (project.info_url || undefined)}
                 target={project.embed_url ? undefined : (project.info_url ? "_blank" : undefined)}
                 rel={project.embed_url ? undefined : (project.info_url ? "noopener noreferrer" : undefined)}
-                className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && !isModalOpen ? "cursor-none" : "cursor-default"}`}
+                className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && !isModalOpen && hasInteracted ? "cursor-none" : "cursor-default"}`}
                 onMouseEnter={(e) => {
                     if (hasHoverText) {
-                        updateRect();
                         mouseX.set(e.clientX);
                         mouseY.set(e.clientY);
                         setHasInteracted(true);
@@ -91,11 +90,13 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 }}
                 onMouseMove={(e) => {
                     if (hasHoverText) {
-                        updateRect();
                         mouseX.set(e.clientX);
                         mouseY.set(e.clientY);
                         setHasInteracted(true);
                     }
+                }}
+                onMouseLeave={() => {
+                    setHasInteracted(false);
                 }}
                 onClick={(e) => {
                     if (project.embed_url) {
@@ -139,7 +140,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 {hasHoverText && (
                     <OptimizedTooltip
                         text={project.hover_text!}
-                        rect={rect}
+                        cardRef={cardRef}
                         isModalOpen={isModalOpen}
                         hasInteracted={hasInteracted}
                     />

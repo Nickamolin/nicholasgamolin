@@ -26,10 +26,74 @@ export const MouseProvider = ({ children }: { children: React.ReactNode }) => {
         window.addEventListener("mouseover", handleMouseMove, { capture: true });
         window.addEventListener("mousedown", handleMouseMove, { capture: true });
         
+        let rafId: number;
+        let isScrolling = false;
+        let scrollTimeout: NodeJS.Timeout;
+
+        let lastTarget: Element | null = null;
+
+        // Force browser and React to re-evaluate what element is under the mouse during scroll.
+        // Natively, hovering states don't update if the pointer is physically still.
+        const syncHoverState = () => {
+            if (!isScrolling) return;
+            const x = mouseX.get();
+            const y = mouseY.get();
+            
+            // Only fire if we actually have a mouse position (don't fire at 0,0 implicitly)
+            if (x !== 0 || y !== 0) {
+                const target = document.elementFromPoint(x, y);
+                if (target && target !== lastTarget) {
+                    if (lastTarget) {
+                        lastTarget.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, clientX: x, clientY: y, relatedTarget: target }));
+                    }
+                    target.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, clientX: x, clientY: y, relatedTarget: lastTarget }));
+                    target.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: x, clientY: y }));
+                    lastTarget = target;
+                } else if (target) {
+                    target.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: x, clientY: y }));
+                }
+            }
+            rafId = requestAnimationFrame(syncHoverState);
+        };
+
+        const handleScroll = () => {
+            if (!isScrolling) {
+                isScrolling = true;
+                rafId = requestAnimationFrame(syncHoverState);
+            }
+            
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                isScrolling = false;
+                cancelAnimationFrame(rafId);
+                // Fire one final sync to ensure perfect precision when scroll fully stops
+                const x = mouseX.get();
+                const y = mouseY.get();
+                if (x !== 0 || y !== 0) {
+                    const target = document.elementFromPoint(x, y);
+                    if (target && target !== lastTarget) {
+                        if (lastTarget) {
+                            lastTarget.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, clientX: x, clientY: y, relatedTarget: target }));
+                        }
+                        target.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, clientX: x, clientY: y, relatedTarget: lastTarget }));
+                        target.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: x, clientY: y }));
+                        lastTarget = target;
+                    } else if (target) {
+                        target.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: x, clientY: y }));
+                    }
+                }
+            }, 100); // 100ms debounce
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+
         return () => {
             window.removeEventListener("mousemove", handleMouseMove, { capture: true });
             window.removeEventListener("mouseover", handleMouseMove, { capture: true });
             window.removeEventListener("mousedown", handleMouseMove, { capture: true });
+            window.removeEventListener("scroll", handleScroll);
+            clearTimeout(scrollTimeout);
+            cancelAnimationFrame(rafId);
         };
     }, [mouseX, mouseY]);
 

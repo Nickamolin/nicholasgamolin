@@ -173,7 +173,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                         {/* Body Container */}
                         <div className="flex-1 flex flex-col min-h-0 relative w-full">
                             {/* Content Area Wrapper */}
-                            <div className="flex-1 flex w-full min-h-0 bg-black/20 shrink-0 flex-col justify-center items-center">
+                            <div className="flex-1 flex w-full min-h-0 bg-black/20 shrink-0 flex-col justify-center items-center select-none touch-none">
                                 <div
                                     className={`relative w-full max-w-full
                                         ${isResponsive
@@ -211,7 +211,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                     ) : embedType?.toLowerCase() === "website" ? (
                                         <div className={`absolute inset-0 transition-opacity duration-700 flex flex-col ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                                             <iframe
-                                                className="w-full h-full border-none bg-black"
+                                                className="w-full h-full border-none bg-black select-none touch-none"
                                                 src={cleanUrl}
                                                 title="Project Preview"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -231,7 +231,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                         </div>
                                     ) : (
                                         <iframe
-                                            className={`absolute inset-0 w-full h-full border-none transition-opacity duration-700 bg-black ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                                            className={`absolute inset-0 w-full h-full border-none transition-opacity duration-700 bg-black select-none touch-none ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                                             src={cleanUrl}
                                             title="Project Preview"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

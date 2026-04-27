@@ -42,9 +42,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     const detailsRef = useRef<HTMLDivElement>(null);
     const prevUrlRef = useRef<string>("");
     const prevIsOpenRef = useRef<boolean>(false);
-    const bgVideoRef = useRef<HTMLVideoElement>(null);
-    const fgVideoRef = useRef<HTMLVideoElement>(null);
-    const [videosReadyCount, setVideosReadyCount] = useState(0);
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
 
@@ -91,35 +89,6 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
             setIsLoading(false);
         }, 300);
     };
-
-    // Sync background video with foreground video to keep ambient blur in time
-    useEffect(() => {
-        if (embedType?.toLowerCase() !== "video" || !isOpen) return;
-
-        const interval = setInterval(() => {
-            if (bgVideoRef.current && fgVideoRef.current) {
-                const diff = Math.abs(bgVideoRef.current.currentTime - fgVideoRef.current.currentTime);
-                // If they drift by more than 100ms, snap them back together
-                if (diff > 0.1) {
-                    bgVideoRef.current.currentTime = fgVideoRef.current.currentTime;
-                }
-            }
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [isOpen, embedType]);
-
-    // Only trigger handleLoad for videos once both instances are playing
-    useEffect(() => {
-        if (embedType?.toLowerCase() === "video" && videosReadyCount >= 2) {
-            handleLoad();
-        }
-    }, [videosReadyCount, embedType]);
-
-    // Reset ready count when URL changes or modal opens
-    useEffect(() => {
-        setVideosReadyCount(0);
-    }, [cleanUrl, isOpen]);
 
     useEffect(() => {
         if (isOpen) {
@@ -228,27 +197,15 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                         </div>
                                     ) : embedType?.toLowerCase() === "video" ? (
                                         <div className={`absolute inset-0 transition-opacity duration-700 overflow-hidden ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                                            {/* Ambient Background */}
                                             <video
-                                                ref={bgVideoRef}
-                                                className="absolute inset-0 w-full h-full object-cover blur-md opacity-50 scale-110 pointer-events-none"
+                                                ref={videoRef}
+                                                className="absolute inset-0 w-full h-full object-contain"
                                                 src={cleanUrl}
                                                 autoPlay
                                                 muted
                                                 loop
                                                 playsInline
-                                                onPlaying={() => setVideosReadyCount(prev => prev + 1)}
-                                            />
-                                            {/* Foreground Video */}
-                                            <video
-                                                ref={fgVideoRef}
-                                                className="absolute inset-0 z-10 w-full h-full object-contain"
-                                                src={cleanUrl}
-                                                autoPlay
-                                                muted
-                                                loop
-                                                playsInline
-                                                onPlaying={() => setVideosReadyCount(prev => prev + 1)}
+                                                onPlaying={handleLoad}
                                             />
                                         </div>
                                     ) : embedType?.toLowerCase() === "website" ? (

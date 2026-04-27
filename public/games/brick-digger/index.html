@@ -538,6 +538,7 @@
 		}
 
 		function p8_close_cart() {
+			window.parent.postMessage({ type: 'PICO8_STOP' }, '*');
 			// just reload page! used for touch buttons -- hard to roll back state 
 			window.location.hash = ""; // triggers reload
 		}
@@ -546,6 +547,7 @@
 		var p8_script = null;
 		var Module = null;
 		function p8_run_cart() {
+			window.parent.postMessage({ type: 'PICO8_START' }, '*');
 			if (p8_is_running) return;
 			p8_is_running = true;
 

@@ -43,6 +43,24 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     const prevUrlRef = useRef<string>("");
     const prevIsOpenRef = useRef<boolean>(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const [isGameActive, setIsGameActive] = useState(false);
+
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data.type === 'PICO8_START') {
+                setIsGameActive(true);
+            } else if (event.data.type === 'PICO8_STOP') {
+                setIsGameActive(false);
+            }
+        };
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
+
+    const handleClose = () => {
+        setIsGameActive(false);
+        onClose();
+    };
 
     const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
 
@@ -127,7 +145,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             transition: { pointerEvents: { duration: 0 } }
                         }}
                         className="fixed inset-0 bg-black/70 backdrop-blur-md transform-gpu"
-                        onClick={onClose}
+                        onClick={handleClose}
                     />
 
                     {/* Modal Container */}
@@ -142,14 +160,15 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                         }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         className={`relative z-10 bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col my-auto
-                            w-full h-fit md:w-[var(--modal-w)] md:h-[var(--modal-h)] md:max-w-[90vw] md:max-h-[90vh] md:rounded-[2.5rem] rounded-[1.5rem]`}
+                            w-full h-fit md:w-[var(--modal-w)] md:h-[var(--modal-h)] md:max-w-[90vw] md:max-h-[90vh] md:rounded-[2.5rem] rounded-[1.5rem]
+                            ${(isGameActive && isTouchScreen) ? 'fixed inset-0 z-[200] !h-[100dvh] !w-full !max-h-none !max-w-none !rounded-none !m-0 !my-0' : ''}`}
                         style={{
                             '--modal-w': isResponsive ? '90vw' : `min(90vw, calc((90vh - ${extrasHeight}px) * ${displayRatio}))`,
                             '--modal-h': isResponsive ? '90vh' : 'fit-content',
                         } as React.CSSProperties}
                     >
                         {/* Header Bar */}
-                        <div ref={headerRef} className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20 shrink-0">
+                        <div ref={headerRef} className={`flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20 shrink-0 ${(isGameActive && isTouchScreen) ? 'hidden' : 'flex'}`}>
                             <div className="flex gap-4">
                                 {infoUrl && action_button_text && (
                                     <Button
@@ -161,14 +180,14 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                     </Button>
                                 )}
                             </div>
-                            <Button
-                                onClick={onClose}
-                                variant="primary"
-                                className="!py-2 !px-6 !text-[10px] md:!text-xs"
-                            >
-                                Close
-                            </Button>
-                        </div>
+                                <Button
+                                    onClick={handleClose}
+                                    variant="primary"
+                                    className="!py-2 !px-6 !text-[10px] md:!text-xs"
+                                >
+                                    Close
+                                </Button>
+                            </div>
 
                         {/* Body Container */}
                         <div className="flex-1 flex flex-col min-h-0 relative w-full">
@@ -177,7 +196,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                 <div
                                     className={`relative w-full max-w-full
                                         ${isResponsive
-                                            ? 'min-h-[70vh] md:min-h-0 md:flex-1'
+                                            ? ((isGameActive && isTouchScreen) ? 'h-full flex-1' : 'aspect-square min-h-[350px] md:min-h-0 md:flex-1')
                                             : ''
                                         }`}
                                     style={{
@@ -243,7 +262,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             </div>
 
                             {/* Project Details Section */}
-                            <div ref={detailsRef} className="py-5 px-6 md:py-6 md:px-8 bg-white/2 backdrop-blur-sm">
+                            <div ref={detailsRef} className={`py-5 px-6 md:py-6 md:px-8 bg-white/2 backdrop-blur-sm ${(isGameActive && isTouchScreen) ? 'hidden' : 'block'}`}>
                                 <div className="mx-auto flex flex-col gap-3 md:gap-4">
                                     {/* Header: Title and Year */}
                                     <div className="flex flex-col gap-2">

@@ -334,7 +334,7 @@
 
 			// assumes frame doesn't have padding
 
-			var is_fullscreen = (document.fullscreenElement || document.mozFullScreenElement || document.webkitIsFullScreen || document.msFullscreenElement);
+			var is_fullscreen = !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.webkitIsFullScreen);
 			var frame_width = p8_frame.offsetWidth;
 			var frame_height = p8_frame.offsetHeight;
 
@@ -538,6 +538,7 @@
 		}
 
 		function p8_close_cart() {
+			window.parent.postMessage({ type: 'PICO8_STOP' }, '*');
 			// just reload page! used for touch buttons -- hard to roll back state 
 			window.location.hash = ""; // triggers reload
 		}
@@ -546,6 +547,7 @@
 		var p8_script = null;
 		var Module = null;
 		function p8_run_cart() {
+			window.parent.postMessage({ type: 'PICO8_START' }, '*');
 			if (p8_is_running) return;
 			p8_is_running = true;
 
@@ -871,8 +873,7 @@
 		}
 
 		function p8_request_fullscreen() {
-
-			var is_fullscreen = (document.fullscreenElement || document.mozFullScreenElement || document.webkitIsFullScreen || document.msFullscreenElement);
+			var is_fullscreen = !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.webkitIsFullScreen);
 
 			if (is_fullscreen) {
 				if (document.exitFullscreen) {
@@ -893,6 +894,8 @@
 				el.requestFullscreen();
 			} else if (el.mozRequestFullScreen) {
 				el.mozRequestFullScreen();
+			} else if (el.webkitRequestFullscreen) {
+				el.webkitRequestFullscreen();
 			} else if (el.webkitRequestFullScreen) {
 				el.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
 			}
@@ -924,6 +927,17 @@
 			cursor: pointer;
 		}
 
+		html, body {
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			-webkit-tap-highlight-color: transparent;
+			touch-action: none;
+		}
+
 		canvas {
 			image-rendering: optimizeSpeed;
 			image-rendering: -moz-crisp-edges;
@@ -933,6 +947,8 @@
 			-ms-interpolation-mode: nearest-neighbor;
 			border: 0px;
 			cursor: none;
+			touch-action: none;
+			-webkit-tap-highlight-color: transparent;
 		}
 
 
@@ -995,7 +1011,7 @@
 					</div>
 
 					<div id="p8_playarea" style="display:none; margin:auto;
-				-webkit-user-select:none; -moz-user-select: none; user-select: none; -webkit-touch-callout:none;
+				-webkit-user-select:none; -moz-user-select: none; user-select: none; -webkit-touch-callout:none; -webkit-tap-highlight-color: transparent;
 		">
 
 						<div id="touch_controls_background" style=" pointer-events:none; display:none; background-color:#000;

@@ -132,7 +132,7 @@ export default function Blurb({
             const now = Date.now();
             charsMap.current.forEach(charData => {
                 if (!charData.node) return;
-                
+
                 // Track all ripples currently "touching" this character
                 const activeRipples = [];
                 for (const ripple of ripples) {
@@ -146,14 +146,14 @@ export default function Blurb({
                 }
 
                 const count = activeRipples.length;
-                
+
                 // Alternating logic: only color if an ODD number of ripples overlap (mimics difference blend mode)
                 if (count % 2 === 1) {
                     // Use the most recent ripple for the color parameters
                     const ripple = activeRipples[activeRipples.length - 1];
                     const distFromCenter = Math.hypot(ripple.x - charData.x, ripple.y - charData.y);
                     const hue = (ripple.baseHue + distFromCenter / 1.5) % 360;
-                    
+
                     charData.node.style.color = `hsl(${hue}, 80%, 65%)`;
                     charData.isRainbow = true;
                 } else {
@@ -219,7 +219,7 @@ export default function Blurb({
     return (
         <div
             ref={containerRef}
-            className="flex flex-col items-center w-full max-w-5xl relative cursor-none group"
+            className={`flex flex-col items-center w-full max-w-5xl relative group ${isHovered ? 'cursor-none' : ''}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onPointerDown={handlePointerDown}

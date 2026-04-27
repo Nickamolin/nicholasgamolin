@@ -43,6 +43,24 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     const prevUrlRef = useRef<string>("");
     const prevIsOpenRef = useRef<boolean>(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const [isGameActive, setIsGameActive] = useState(false);
+
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data.type === 'PICO8_START') {
+                setIsGameActive(true);
+            } else if (event.data.type === 'PICO8_STOP') {
+                setIsGameActive(false);
+            }
+        };
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
+
+    const handleClose = () => {
+        setIsGameActive(false);
+        onClose();
+    };
 
     const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
 
@@ -93,18 +111,34 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     useEffect(() => {
         if (isOpen) {
             setIsLoading(true);
-            document.body.style.overflow = 'hidden';
+            
+            // Lock body scroll using position: fixed to prevent mobile Safari background scroll
+            const scrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.width = '100%';
+            // overflow-y: scroll ensures the scrollbar gutter remains if present to prevent layout shift
+            document.body.style.overflowY = 'scroll';
 
             // Safety fallback: ensure loading screen clears even if iframe onLoad fails
             const timer = setTimeout(() => {
                 setIsLoading(false);
             }, 10000);
+
             return () => {
                 clearTimeout(timer);
-                document.body.style.overflow = 'unset';
+                
+                // Restore body scroll
+                const savedScrollY = document.body.style.top;
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                document.body.style.overflowY = '';
+                
+                if (savedScrollY) {
+                    window.scrollTo(0, parseInt(savedScrollY || '0') * -1);
+                }
             };
-        } else {
-            document.body.style.overflow = 'unset';
         }
     }, [isOpen, cleanUrl]);
 
@@ -126,8 +160,8 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             pointerEvents: "none",
                             transition: { pointerEvents: { duration: 0 } }
                         }}
-                        className="fixed inset-0 bg-black/70 backdrop-blur-md transform-gpu"
-                        onClick={onClose}
+                        className="fixed inset-0 bg-black/70 backdrop-blur-md transform-gpu touch-none"
+                        onClick={handleClose}
                     />
 
                     {/* Modal Container */}
@@ -142,14 +176,15 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                         }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         className={`relative z-10 bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col my-auto
-                            w-full h-fit md:w-[var(--modal-w)] md:h-[var(--modal-h)] md:max-w-[90vw] md:max-h-[90vh] md:rounded-[2.5rem] rounded-[1.5rem]`}
+                            w-full h-fit md:w-[var(--modal-w)] md:h-[var(--modal-h)] md:max-w-[90vw] md:max-h-[90vh] md:rounded-[2.5rem] rounded-[1.5rem]
+                            ${(isGameActive && isTouchScreen) ? 'fixed inset-0 z-[200] !h-[100dvh] !w-full !max-h-none !max-w-none !rounded-none !m-0 !my-0' : ''}`}
                         style={{
                             '--modal-w': isResponsive ? '90vw' : `min(90vw, calc((90vh - ${extrasHeight}px) * ${displayRatio}))`,
                             '--modal-h': isResponsive ? '90vh' : 'fit-content',
                         } as React.CSSProperties}
                     >
                         {/* Header Bar */}
-                        <div ref={headerRef} className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20 shrink-0">
+                        <div ref={headerRef} className={`flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20 shrink-0 ${(isGameActive && isTouchScreen) ? 'hidden' : 'flex'}`}>
                             <div className="flex gap-4">
                                 {infoUrl && action_button_text && (
                                     <Button
@@ -161,23 +196,23 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                     </Button>
                                 )}
                             </div>
-                            <Button
-                                onClick={onClose}
-                                variant="primary"
-                                className="!py-2 !px-6 !text-[10px] md:!text-xs"
-                            >
-                                Close
-                            </Button>
-                        </div>
+                                <Button
+                                    onClick={handleClose}
+                                    variant="primary"
+                                    className="!py-2 !px-6 !text-[10px] md:!text-xs"
+                                >
+                                    Close
+                                </Button>
+                            </div>
 
                         {/* Body Container */}
                         <div className="flex-1 flex flex-col min-h-0 relative w-full">
                             {/* Content Area Wrapper */}
-                            <div className="flex-1 flex w-full min-h-0 bg-black/20 shrink-0 flex-col justify-center items-center">
+                            <div className="flex-1 flex w-full min-h-0 bg-black/20 shrink-0 flex-col justify-center items-center select-none touch-none">
                                 <div
                                     className={`relative w-full max-w-full
                                         ${isResponsive
-                                            ? 'min-h-[70vh] md:min-h-0 md:flex-1'
+                                            ? ((isGameActive && isTouchScreen) ? 'h-full flex-1' : 'aspect-square min-h-[350px] md:min-h-0 md:flex-1')
                                             : ''
                                         }`}
                                     style={{
@@ -211,10 +246,10 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                     ) : embedType?.toLowerCase() === "website" ? (
                                         <div className={`absolute inset-0 transition-opacity duration-700 flex flex-col ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                                             <iframe
-                                                className="w-full h-full border-none bg-black"
+                                                className="w-full h-full border-none bg-black select-none touch-none"
                                                 src={cleanUrl}
                                                 title="Project Preview"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                                                 onLoad={handleLoad}
                                                 allowFullScreen
                                             />
@@ -231,10 +266,10 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                         </div>
                                     ) : (
                                         <iframe
-                                            className={`absolute inset-0 w-full h-full border-none transition-opacity duration-700 bg-black ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                                            className={`absolute inset-0 w-full h-full border-none transition-opacity duration-700 bg-black select-none touch-none ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                                             src={cleanUrl}
                                             title="Project Preview"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                                             onLoad={handleLoad}
                                             allowFullScreen
                                         />
@@ -243,7 +278,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             </div>
 
                             {/* Project Details Section */}
-                            <div ref={detailsRef} className="py-5 px-6 md:py-6 md:px-8 bg-white/2 backdrop-blur-sm">
+                            <div ref={detailsRef} className={`py-5 px-6 md:py-6 md:px-8 bg-white/2 backdrop-blur-sm ${(isGameActive && isTouchScreen) ? 'hidden' : 'block'}`}>
                                 <div className="mx-auto flex flex-col gap-3 md:gap-4">
                                     {/* Header: Title and Year */}
                                     <div className="flex flex-col gap-2">

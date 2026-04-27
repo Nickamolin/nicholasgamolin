@@ -334,7 +334,7 @@
 
 			// assumes frame doesn't have padding
 
-			var is_fullscreen = !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.webkitIsFullScreen || p8_is_faux_fullscreen);
+			var is_fullscreen = !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.webkitIsFullScreen);
 			var frame_width = p8_frame.offsetWidth;
 			var frame_height = p8_frame.offsetHeight;
 
@@ -543,7 +543,6 @@
 		}
 
 		var p8_is_running = false;
-		var p8_is_faux_fullscreen = false;
 		var p8_script = null;
 		var Module = null;
 		function p8_run_cart() {
@@ -874,21 +873,16 @@
 		function p8_request_fullscreen() {
 			var is_fullscreen = !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement || document.webkitIsFullScreen);
 
-			if (is_fullscreen || p8_is_faux_fullscreen) {
-				if (is_fullscreen) {
-					if (document.exitFullscreen) {
-						document.exitFullscreen();
-					} else if (document.webkitExitFullscreen) {
-						document.webkitExitFullscreen();
-					} else if (document.mozCancelFullScreen) {
-						document.mozCancelFullScreen();
-					} else if (document.msExitFullscreen) {
-						document.msExitFullscreen();
-					}
+			if (is_fullscreen) {
+				if (document.exitFullscreen) {
+					document.exitFullscreen();
+				} else if (document.webkitExitFullscreen) {
+					document.webkitExitFullscreen();
+				} else if (document.mozCancelFullScreen) {
+					document.mozCancelFullScreen();
+				} else if (document.msExitFullscreen) {
+					document.msExitFullscreen();
 				}
-				p8_is_faux_fullscreen = false;
-				document.getElementById("p8_playarea").classList.remove("faux-fullscreen");
-				if (typeof p8_update_layout !== 'undefined') p8_update_layout();
 				return;
 			}
 
@@ -902,11 +896,6 @@
 				el.webkitRequestFullscreen();
 			} else if (el.webkitRequestFullScreen) {
 				el.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
-			} else {
-				// Fallback for iOS
-				p8_is_faux_fullscreen = true;
-				el.classList.add("faux-fullscreen");
-				if (typeof p8_update_layout !== 'undefined') p8_update_layout();
 			}
 		}
 
@@ -976,17 +965,6 @@
 			stroke-opacity: 0.4;
 			fill-opacity: 0.2;
 			fill: black;
-		}
-
-		.faux-fullscreen {
-			position: fixed !important;
-			top: 0 !important;
-			left: 0 !important;
-			width: 100vw !important;
-			height: 100vh !important;
-			z-index: 9999 !important;
-			background: black !important;
-			margin: 0 !important;
 		}
 
 		.button_gfx_icon {

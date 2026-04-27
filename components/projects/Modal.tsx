@@ -214,7 +214,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                                 className="w-full h-full border-none bg-black select-none touch-none"
                                                 src={cleanUrl}
                                                 title="Project Preview"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                                                 onLoad={handleLoad}
                                                 allowFullScreen
                                             />
@@ -234,7 +234,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                             className={`absolute inset-0 w-full h-full border-none transition-opacity duration-700 bg-black select-none touch-none ${isLoading ? 'opacity-0' : 'opacity-100'}`}
                                             src={cleanUrl}
                                             title="Project Preview"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                                             onLoad={handleLoad}
                                             allowFullScreen
                                         />

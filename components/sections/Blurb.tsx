@@ -13,56 +13,68 @@ interface CharData {
     y: number;
     color: string;
     isRainbow: boolean;
+    isHeader: boolean;
 }
 
 // --- Memoized Bio Component ---
 // Prevents re-rendering 500+ spans on every mouse move
 const MemoizedBio = React.memo(({
-    paragraphs,
+    content,
     charsMap
 }: {
-    paragraphs: string[],
+    content: { header?: string; text: string }[],
     charsMap: React.MutableRefObject<Map<string, CharData>>
 }) => {
-    return (
-        <div className="text-lg md:text-xl text-justify font-body font-medium text-gray-400 flex flex-col justify-center gap-8 cursor-text select-text">
-            {paragraphs.map((p, pIdx) => (
-                <p key={pIdx}>
-                    {p.split(" ").map((word, wIdx) => (
-                        <React.Fragment key={wIdx}>
-                            <span className="whitespace-nowrap">
-                                {word.split("").map((char, cIdx) => {
-                                    const id = `${pIdx}-${wIdx}-${cIdx}`;
-                                    return (
-                                        <span
-                                            key={cIdx}
-                                            ref={(el) => {
-                                                if (el) {
-                                                    if (!charsMap.current.has(id)) {
-                                                        charsMap.current.set(id, {
-                                                            node: el,
-                                                            x: 0,
-                                                            y: 0,
-                                                            color: '#ffffff', // Default to white until positioned
-                                                            isRainbow: false
-                                                        });
-                                                    } else {
-                                                        const data = charsMap.current.get(id);
-                                                        if (data) data.node = el;
-                                                    }
-                                                }
-                                            }}
-                                            className="transition-colors duration-300"
-                                        >
-                                            {char}
-                                        </span>
-                                    );
-                                })}
+    const renderText = (text: string, pIdx: number, prefix: string) => {
+        return text.split(" ").map((word, wIdx) => (
+            <React.Fragment key={`${prefix}-${wIdx}`}>
+                <span className="whitespace-nowrap">
+                    {word.split("").map((char, cIdx) => {
+                        const id = `${prefix}-${pIdx}-${wIdx}-${cIdx}`;
+                        return (
+                            <span
+                                key={cIdx}
+                                ref={(el) => {
+                                    if (el) {
+                                        if (!charsMap.current.has(id)) {
+                                            charsMap.current.set(id, {
+                                                node: el,
+                                                x: 0,
+                                                y: 0,
+                                                color: '#ffffff',
+                                                isRainbow: false,
+                                                isHeader: prefix === 'h'
+                                            });
+                                        } else {
+                                            const data = charsMap.current.get(id);
+                                            if (data) data.node = el;
+                                        }
+                                    }
+                                }}
+                                className="transition-colors duration-300"
+                            >
+                                {char}
                             </span>
-                            {" "}
-                        </React.Fragment>
-                    ))}
-                </p>
+                        );
+                    })}
+                </span>
+                {" "}
+            </React.Fragment>
+        ));
+    };
+    return (
+        <div className="text-lg md:text-xl text-left font-body font-medium text-gray-400 flex flex-col justify-center gap-8 cursor-text select-text">
+            {content.map((section, pIdx) => (
+                <div key={pIdx} className="flex flex-col">
+                    {section.header && (
+                        <h2 className="font-body font-bold text-white">
+                            {renderText(section.header, pIdx, 'h')}
+                        </h2>
+                    )}
+                    <p>
+                        {renderText(section.text, pIdx, 'p')}
+                    </p>
+                </div>
             ))}
         </div>
     );
@@ -72,10 +84,10 @@ MemoizedBio.displayName = "MemoizedBio";
 
 export default function Blurb({
     imageSrc,
-    paragraphs
+    content
 }: {
     imageSrc: string;
-    paragraphs: string[];
+    content: { header?: string; text: string }[];
 }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -118,7 +130,7 @@ export default function Blurb({
             clearTimeout(timeoutId);
             window.removeEventListener('resize', calculatePositions);
         };
-    }, [paragraphs]);
+    }, [content]);
 
     // Centralized animation loop (DOM-only)
     useEffect(() => {
@@ -154,7 +166,10 @@ export default function Blurb({
                     const distFromCenter = Math.hypot(ripple.x - charData.x, ripple.y - charData.y);
                     const hue = (ripple.baseHue + distFromCenter / 1.5) % 360;
 
-                    charData.node.style.color = `hsl(${hue}, 80%, 65%)`;
+                    const saturation = charData.isHeader ? '100%' : '100%';
+                    const lightness = charData.isHeader ? '80%' : '60%';
+
+                    charData.node.style.color = `hsl(${hue}, ${saturation}, ${lightness})`;
                     charData.isRainbow = true;
                 } else {
                     // Revert to white if an even number of ripples overlap or if no ripples are active
@@ -287,7 +302,7 @@ export default function Blurb({
                 </div>
 
                 {/* Bio Text Section (Memoized) */}
-                <MemoizedBio paragraphs={paragraphs} charsMap={charsMap} />
+                <MemoizedBio content={content} charsMap={charsMap} />
             </div>
 
             {/* Global Outline Ripples (Visible outside the image) */}

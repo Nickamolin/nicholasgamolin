@@ -8,10 +8,19 @@ import Blurb from "@/components/sections/Blurb";
 
 export default function AboutPage() {
     const resumeTimestamp = new Date().getTime();
-    const bioParagraphs = [
-        "I'm a self-taught digital artist and full-stack engineer with a B.S. in Computer Science from the University of Virginia. My work sits at the intersection of design and engineering, spanning graphic design, animation, video editing, and interactive experiences.",
-        "I'm heavily inspired by film, music, and games, and I approach my work with the same mindset - focusing on aesthetic, detail, and how something feels as much as how it functions.",
-        "I'm currently looking for opportunities to build interactive products and experiences that blend strong visual design with thoughtful engineering."
+    const bioContent = [
+        {
+            header: "Overview",
+            text: "I'm a self-taught digital artist and full-stack engineer with a B.S. in Computer Science from the University of Virginia. My work sits at the intersection of design and engineering, spanning graphic design, animation, video editing, and interactive experiences."
+        },
+        {
+            header: "Influences",
+            text: "I'm heavily inspired by film, music, and games, and I approach my work with the same mindset - focusing on aesthetic, detail, and how something feels as much as how it functions."
+        },
+        {
+            header: "Current Focus",
+            text: "I'm currently looking for opportunities to build interactive products and experiences that blend strong visual design with thoughtful engineering."
+        }
     ];
 
     return (
@@ -26,7 +35,7 @@ export default function AboutPage() {
 
                 <Blurb
                     imageSrc="/photos/TimesSquare.jpeg"
-                    paragraphs={bioParagraphs}
+                    content={bioContent}
                 />
             </div>
 

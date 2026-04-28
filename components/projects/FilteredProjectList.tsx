@@ -51,32 +51,28 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
                 </div>
             </div>
 
-            {/* Project Grid */}
-            <motion.div layout transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="w-full max-w-[2000px]">
-                {filteredProjects.length > 0 ? (
-                    <motion.ul
-                        layout
-                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full gap-4"
-                    >
-                        <AnimatePresence mode="popLayout">
-                            {filteredProjects.map((project) => (
-                                <motion.li
-                                    key={project.id}
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                                >
-                                    <ProjectCard project={project} />
-                                </motion.li>
-                            ))}
-                        </AnimatePresence>
-                    </motion.ul>
-                ) : (
+            {/* Project Grid Container (Always Mounted) */}
+            <div className="w-full max-w-[2000px] min-h-[500px]">
+                <ul className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full gap-4">
+                    <AnimatePresence mode="popLayout">
+                        {filteredProjects.map((project) => (
+                            <motion.li
+                                key={project.id}
+                                layout
+                                className="w-full"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                            >
+                                <ProjectCard project={project} />
+                            </motion.li>
+                        ))}
+                    </AnimatePresence>
+                </ul>
+
+                {filteredProjects.length === 0 && (
                     <motion.div
-                        layout
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.4 }}
@@ -85,7 +81,7 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
                         No projects found for this category.
                     </motion.div>
                 )}
-            </motion.div>
+            </div>
         </div>
     );
 }

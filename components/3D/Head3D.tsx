@@ -8,6 +8,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
+import { useLoading } from "../loading/LoadingProvider";
 
 interface Head3DProps {
   className?: string;
@@ -22,6 +23,15 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
   const modelRef = useRef<THREE.Object3D | null>(null);
   const animationFrameIdRef = useRef<number | null>(null);
   const [isHovered, setIsHovered] = React.useState(false);
+  const { registerLoadingItem, resolveLoadingItem } = useLoading();
+  const hasRegisteredRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasRegisteredRef.current) {
+      registerLoadingItem("head-3d");
+      hasRegisteredRef.current = true;
+    }
+  }, [registerLoadingItem]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -103,7 +113,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
 
-        window.dispatchEvent(new Event("logo-loaded"));
+        resolveLoadingItem("head-3d");
       },
       undefined,
       (err) => console.error("Error loading Head.glb:", err)

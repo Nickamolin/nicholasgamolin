@@ -261,6 +261,7 @@ export default function Blurb({
                                 fill
                                 alt="Headshot"
                                 draggable={false}
+                                priority={true}
                                 className="rounded-xl object-cover"
                             />
                         </motion.div>

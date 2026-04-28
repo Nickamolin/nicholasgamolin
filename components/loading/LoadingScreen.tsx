@@ -9,7 +9,6 @@ export default function LoadingScreen() {
     const pathname = usePathname();
     const { isTransitioning, isInitialLoad } = useLoading();
 
-    const [isLogoLoaded, setIsLogoLoaded] = useState(false);
     const [isAppLoaded, setIsAppLoaded] = useState(false);
     const [isOpaque, setIsOpaque] = useState(true);
     const [isHidden, setIsHidden] = useState(false);
@@ -35,25 +34,16 @@ export default function LoadingScreen() {
         hideTimerRef.current = null;
     };
 
+    // Handle initial app readiness
     useEffect(() => {
-        if (pathname !== "/") {
-            // Non-home pages: nothing special to wait for, mark ready immediately
-            setIsLogoLoaded(true);
-            return;
-        }
-
-        // Home page: wait for the 3D logo GLB to load before fading out
-        const handleLogoLoaded = () => setIsLogoLoaded(true);
-        window.addEventListener("logo-loaded", handleLogoLoaded);
-        return () => window.removeEventListener("logo-loaded", handleLogoLoaded);
-    }, [pathname]);
-
-    // Mark app as loaded as soon as our primary asset signal fires
-    useEffect(() => {
-        if (isLogoLoaded) {
+        // We rely entirely on isTransitioning, which tracks assets via registerLoadingItem.
+        // Components (3D models, images) register themselves on mount.
+        if (!isTransitioning) {
             setIsAppLoaded(true);
+        } else {
+            setIsAppLoaded(false);
         }
-    }, [isLogoLoaded]);
+    }, [isTransitioning]);
 
     // Handle visibility and opacity transitions
     useEffect(() => {

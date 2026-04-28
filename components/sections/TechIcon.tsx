@@ -20,7 +20,7 @@ export default function TechIcon({ src, alt }: { src: string, alt: string }) {
 
     return (
         <motion.div
-            className="relative flex items-center justify-center w-24 h-24"
+            className="relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={handleTap}

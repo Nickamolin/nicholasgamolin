@@ -75,13 +75,14 @@ export default function Toolbox() {
           <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">
             Some of the technology I use to build
           </span>
-          <div className="flex flex-row flex-wrap items-center justify-center gap-10 md:gap-16 mt-12 max-w-[300px] sm:max-w-[500px] lg:max-w-none">
+          <div className="grid grid-cols-3 md:flex md:flex-row md:flex-wrap items-center justify-center gap-x-4 gap-y-12 md:gap-16 mt-12 max-w-[300px] sm:max-w-[500px] lg:max-w-none">
             {tech.map((t) => (
-              <TechIcon
-                key={t.alt}
-                src={t.src}
-                alt={t.alt}
-              />
+              <div key={t.alt}>
+                <TechIcon
+                  src={t.src}
+                  alt={t.alt}
+                />
+              </div>
             ))}
           </div>
         </div>
@@ -91,13 +92,14 @@ export default function Toolbox() {
           <span className="text-xs md:text-sm font-subtitle font-medium text-center text-gray-400 tracking-[0.2em] uppercase">
             Some of the software I use to create
           </span>
-          <div className="flex flex-row flex-wrap items-center justify-center gap-10 md:gap-16 mt-12 max-w-[300px] sm:max-w-[500px] lg:max-w-none">
+          <div className="grid grid-cols-3 md:flex md:flex-row md:flex-wrap items-center justify-center gap-x-4 gap-y-12 md:gap-16 mt-12 max-w-[300px] sm:max-w-[500px] lg:max-w-none">
             {tools.map((t) => (
-              <TechIcon
-                key={t.alt}
-                src={t.src}
-                alt={t.alt}
-              />
+              <div key={t.alt}>
+                <TechIcon
+                  src={t.src}
+                  alt={t.alt}
+                />
+              </div>
             ))}
           </div>
         </div>

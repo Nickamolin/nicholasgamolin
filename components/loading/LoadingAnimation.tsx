@@ -15,45 +15,65 @@ export default function LoadingAnimation({
     wrapperClassName = ""
 }: LoadingAnimationProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [isAutoplayFailed, setIsAutoplayFailed] = useState(false);
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+    const [hasMounted, setHasMounted] = useState(false);
 
+    // Trigger mount on client
     useEffect(() => {
-        const video = videoRef.current;
-        if (video) {
-            // Explicitly try to play to detect browser/power mode blocks
-            video.play().catch((error) => {
-                console.warn("Autoplay blocked, falling back to static poster:", error);
-                setIsAutoplayFailed(true);
-            });
-        }
+        setHasMounted(true);
     }, []);
+
+    // Handle video playback once mounted
+    useEffect(() => {
+        if (hasMounted && videoRef.current) {
+            const video = videoRef.current;
+            // Explicitly try to play to handle browser restrictions
+            video.play()
+                .then(() => {
+                    // Reset to first frame so it matches the poster perfectly 
+                    // when the fade begins
+                    video.currentTime = 0;
+                    setIsVideoPlaying(true);
+                })
+                .catch(() => {
+                    setIsVideoPlaying(false);
+                });
+        }
+    }, [hasMounted]);
 
     return (
         <div className={`flex items-center justify-center transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${wrapperClassName}`}>
-            {isAutoplayFailed ? (
-                <Image
-                    src="/animations/loading-poster.png"
-                    alt="Loading..."
-                    width={256}
-                    height={256}
-                    priority
-                    className={`object-contain ${className}`}
-                />
-            ) : (
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    poster="/animations/loading-poster.png"
-                    className={`object-contain ${className}`}
+            <div className={`relative ${className}`}>
+                {/* Fallback/Poster Image: Always on top until video starts */}
+                {/* Renders on server for instant visual feedback */}
+                <div 
+                    className={`absolute inset-0 z-10 transition-opacity duration-300 ${isVideoPlaying ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                 >
-                    <source src="/animations/loading.webm" type="video/webm" />
-                    <source src="/animations/loading.mov" type="video/mp4" />
-                    Loading...
-                </video>
-            )}
+                    <Image
+                        src="/animations/loading-poster.png"
+                        alt="Loading..."
+                        fill
+                        priority
+                        className="object-contain"
+                    />
+                </div>
+
+                {/* The Animation Video - Only rendered on client to avoid hydration mismatch */}
+                {hasMounted && (
+                    <video
+                        ref={videoRef}
+                        loop
+                        muted
+                        playsInline
+                        onPlay={() => setIsVideoPlaying(true)}
+                        className="w-full h-full object-contain"
+                    >
+                        <source src="/animations/loading.webm" type="video/webm" />
+                        <source src="/animations/loading.mov" type="video/mp4" />
+                        Loading...
+                    </video>
+                )}
+            </div>
         </div>
     );
 }

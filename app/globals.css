@@ -3,6 +3,7 @@
 :root {
   --background: #000000;
   --foreground: #ededed;
+  color-scheme: dark;
 }
 
 /* --background: #ffffff;
@@ -37,6 +38,10 @@
     --foreground: #ededed;
   }
 } */
+
+html {
+  background-color: #000000;
+}
 
 body {
   background: var(--background);

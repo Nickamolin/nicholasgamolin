@@ -62,6 +62,14 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
   }, [isActuallyTransitioning]);
 
   const navigateWithTransition = useCallback((href: string) => {
+    // If we're already on this page, just scroll to top and skip transition
+    if (href === pathname) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      navigationTarget.current = null;
+      setIsTransitioning(false);
+      return;
+    }
+
     // If we're already navigating to this target, ignore
     if (navigationTarget.current === href) return;
 
@@ -78,7 +86,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
       // We do NOT set isTransitioning(false) here.
       // The pathname useEffect above will clear it once the route actually changes.
     }, 600);
-  }, [router]);
+  }, [router, pathname]);
 
   return (
     <LoadingContext.Provider value={{

@@ -30,9 +30,6 @@ export default function LoadingAnimation({
             // Explicitly try to play to handle browser restrictions
             video.play()
                 .then(() => {
-                    // Reset to first frame so it matches the poster perfectly 
-                    // when the fade begins
-                    video.currentTime = 0;
                     setIsVideoPlaying(true);
                 })
                 .catch(() => {

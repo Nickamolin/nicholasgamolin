@@ -43,7 +43,10 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
 
     scene.fog = new THREE.Fog(0x000000, 11, 13.7);
 
-    const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.01, 1000);
+    const initialAspect = container.clientWidth > 0 && container.clientHeight > 0 
+      ? container.clientWidth / container.clientHeight 
+      : 1;
+    const camera = new THREE.PerspectiveCamera(40, initialAspect, 0.01, 1000);
     camera.position.set(0, 0, 4);
     cameraRef.current = camera;
 
@@ -125,6 +128,9 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
 
       const width = container.clientWidth;
       const height = container.clientHeight;
+
+      // Prevent NaN aspect ratio which permanently breaks the camera projection matrix
+      if (width === 0 || height === 0) return;
 
       cameraRef.current.aspect = width / height;
       cameraRef.current.updateProjectionMatrix();

@@ -67,23 +67,27 @@ export default function LoadingScreen() {
         if (isTransitioning) {
             hasScrolledRef.current = false;
             setIsHidden(false);
-            setIsOpaque(false); // ensure we start from opacity-0
             document.body.style.overflow = "hidden";
 
-            // We use a small setTimeout instead of double rAF to guarantee 
-            // the browser paints the opacity-0 state before transitioning.
-            // This fixes the 'pop-in' race condition that occurs when the main thread is idle.
-            fadeInFrame1Ref.current = setTimeout(() => {
-                setIsOpaque(true);
+            if (!isInitialLoad) {
+                setIsOpaque(false); // ensure we start from opacity-0
+                // We use a small setTimeout instead of double rAF to guarantee 
+                // the browser paints the opacity-0 state before transitioning.
+                // This fixes the 'pop-in' race condition that occurs when the main thread is idle.
+                fadeInFrame1Ref.current = setTimeout(() => {
+                    setIsOpaque(true);
 
-                // Scroll to top only after the overlay is fully opaque (duration-500)
-                scrollTimerRef.current = setTimeout(() => {
-                    if (!hasScrolledRef.current) {
-                        window.scrollTo(0, 0);
-                        hasScrolledRef.current = true;
-                    }
-                }, 500);
-            }, 20) as any;
+                    // Scroll to top only after the overlay is fully opaque (duration-500)
+                    scrollTimerRef.current = setTimeout(() => {
+                        if (!hasScrolledRef.current) {
+                            window.scrollTo(0, 0);
+                            hasScrolledRef.current = true;
+                        }
+                    }, 500);
+                }, 20) as any;
+            } else {
+                setIsOpaque(true);
+            }
 
         } else if (isAppLoaded && minWaitFinished) {
             // Not transitioning and page is ready — start fade-out sequence

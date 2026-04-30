@@ -30,7 +30,7 @@ export default function LoadingAnimation({
             // Explicitly try to play to handle browser restrictions
             video.play()
                 .then(() => {
-                    setIsVideoPlaying(true);
+                    // rely on onPlaying event for smoother transition
                 })
                 .catch(() => {
                     setIsVideoPlaying(false);
@@ -44,7 +44,7 @@ export default function LoadingAnimation({
                 {/* Fallback/Poster Image: Always on top until video starts */}
                 {/* Renders on server for instant visual feedback */}
                 <div 
-                    className={`absolute inset-0 z-10 transition-opacity duration-300 ${isVideoPlaying ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                    className={`absolute inset-0 z-10 ${isVideoPlaying ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                 >
                     <Image
                         src="/animations/loading-poster.png"
@@ -62,7 +62,7 @@ export default function LoadingAnimation({
                         loop
                         muted
                         playsInline
-                        onPlay={() => setIsVideoPlaying(true)}
+                        onPlaying={() => setIsVideoPlaying(true)}
                         className="w-full h-full object-contain"
                     >
                         <source src="/animations/loading.webm" type="video/webm" />

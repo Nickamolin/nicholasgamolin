@@ -95,6 +95,7 @@ export default function Blurb({
     const [ripples, setRipples] = useState<{ id: number; x: number; y: number; imgX: number; imgY: number; imgWidth: number; baseHue: number; startTime: number }[]>([]);
     const [isHovered, setIsHovered] = useState(false);
     const [isImageHovered, setIsImageHovered] = useState(false);
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
     const [hasHover, setHasHover] = useState(false);
     const [scalingRippleCount, setScalingRippleCount] = useState(0);
 
@@ -104,7 +105,16 @@ export default function Blurb({
     const { mouseX, mouseY } = useMousePosition();
 
     useEffect(() => {
-        setHasHover(window.matchMedia("(hover: hover)").matches);
+        const checkTouch = () => {
+            return (
+                'ontouchstart' in window ||
+                navigator.maxTouchPoints > 0 ||
+                window.matchMedia('(pointer: coarse)').matches
+            );
+        };
+        const isTouch = checkTouch();
+        setIsTouchDevice(isTouch);
+        setHasHover(!isTouch);
     }, []);
 
     useEffect(() => {
@@ -234,7 +244,7 @@ export default function Blurb({
     return (
         <div
             ref={containerRef}
-            className={`flex flex-col items-center w-full max-w-5xl relative group ${isHovered ? 'cursor-none' : ''}`}
+            className={`flex flex-col items-center w-full max-w-5xl relative group ${isHovered && !isTouchDevice ? 'cursor-none' : ''}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onPointerDown={handlePointerDown}
@@ -343,22 +353,24 @@ export default function Blurb({
             </div>
 
             {/* Global Custom Cursor */}
-            <motion.div
-                initial={false}
-                animate={{
-                    opacity: isHovered ? 1 : 0,
-                    scale: isHovered ? 1 : 0,
-                    x: "-50%",
-                    y: "-50%"
-                }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                className="fixed pointer-events-none bg-white rounded-full z-50 w-6 h-6 hidden [@media(hover:hover)]:block"
-                style={{
-                    left: mouseX,
-                    top: mouseY,
-                    mixBlendMode: 'difference',
-                }}
-            />
+            {!isTouchDevice && (
+                <motion.div
+                    initial={false}
+                    animate={{
+                        opacity: isHovered ? 1 : 0,
+                        scale: isHovered ? 1 : 0,
+                        x: "-50%",
+                        y: "-50%"
+                    }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="fixed pointer-events-none bg-white rounded-full z-50 w-6 h-6 hidden md:block"
+                    style={{
+                        left: mouseX,
+                        top: mouseY,
+                        mixBlendMode: 'difference',
+                    }}
+                />
+            )}
         </div>
     );
 }

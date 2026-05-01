@@ -9,7 +9,15 @@ export default function TechIcon({ src, alt }: { src: string, alt: string }) {
     const [canDrag, setCanDrag] = React.useState(false);
 
     React.useEffect(() => {
-        setCanDrag(window.matchMedia("(hover: hover)").matches);
+        const checkTouch = () => {
+            return (
+                'ontouchstart' in window ||
+                navigator.maxTouchPoints > 0 ||
+                window.matchMedia('(pointer: coarse)').matches
+            );
+        };
+        // Enable dragging only on non-touch (cursor) devices
+        setCanDrag(!checkTouch());
     }, []);
 
     const handleTap = () => {

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useLayoutEffect } from "react";
+import React, { useEffect, useState, useLayoutEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "motion/react";
 import type { Project } from "./types";
@@ -10,7 +10,7 @@ type ProjectCardProps = {
     project: Project;
 };
 
-const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted }: { text: string; cardRef: React.RefObject<HTMLAnchorElement | null>; isModalOpen: boolean; hasInteracted: boolean }) => {
+const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted, isTouchDevice }: { text: string; cardRef: React.RefObject<HTMLAnchorElement | null>; isModalOpen: boolean; hasInteracted: boolean; isTouchDevice: boolean }) => {
     const { mouseX, mouseY } = useMousePosition();
     const tooltipRef = React.useRef<HTMLDivElement>(null);
 
@@ -37,8 +37,8 @@ const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted }: { text:
         <div className={`absolute inset-0 overflow-hidden pointer-events-none rounded-2xl z-[100] ${isModalOpen ? 'hidden' : 'block'}`}>
             <motion.div
                 ref={tooltipRef}
-                className={`absolute pointer-events-none [@media(hover:none)]:hidden origin-center flex items-center justify-center -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300
-                    ${hasInteracted ? 'opacity-100' : 'opacity-0'}`}
+                className={`absolute pointer-events-none origin-center flex items-center justify-center -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300
+                    ${hasInteracted && !isTouchDevice ? 'opacity-100' : 'opacity-0'}`}
                 style={{
                     left: mouseX,
                     top: mouseY,
@@ -69,6 +69,18 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     const cardRef = React.useRef<HTMLAnchorElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
+    const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+    useEffect(() => {
+        const checkTouch = () => {
+            return (
+                'ontouchstart' in window ||
+                navigator.maxTouchPoints > 0 ||
+                window.matchMedia('(pointer: coarse)').matches
+            );
+        };
+        setIsTouchDevice(checkTouch());
+    }, []);
 
     const hasHoverText = Boolean(project.hover_text);
     const isInteractive = Boolean(project.embed_url || project.info_url);
@@ -110,15 +122,15 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         fill
                         draggable={false}
                         style={project.embed_type === 'pico8' ? { imageRendering: "pixelated" } : undefined}
-                        className={`object-cover transition-all duration-500 [@media(hover:none)]:saturate-100 ${hasInteracted && !isModalOpen ? 'saturate-100 scale-105' : 'saturate-0 scale-100'}`}
+                        className={`object-cover transition-all duration-500 ${isTouchDevice ? 'saturate-100 scale-100' : (hasInteracted && !isModalOpen ? 'saturate-100 scale-105' : 'saturate-0 scale-100')}`}
                     />
 
                     {/* Title Overlay */}
-                    <div className={`absolute inset-x-0 bottom-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end [@media(hover:none)]:opacity-100 transition-all duration-500 ${hasInteracted && !isModalOpen ? 'opacity-100' : 'opacity-0'}`}>
-                        <h3 className={`text-white font-title font-bold text-xl sm:text-2xl text-shadow-md [@media(hover:none)]:translate-y-0 transition-transform duration-500 ${hasInteracted && !isModalOpen ? 'translate-y-0' : 'translate-y-2'}`}>
+                    <div className={`absolute inset-x-0 bottom-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end transition-all duration-500 ${isTouchDevice || (hasInteracted && !isModalOpen) ? 'opacity-100' : 'opacity-0'}`}>
+                        <h3 className={`text-white font-title font-bold text-xl sm:text-2xl text-shadow-md transition-transform duration-500 ${isTouchDevice || (hasInteracted && !isModalOpen) ? 'translate-y-0' : 'translate-y-2'}`}>
                             {project.title}
                         </h3>
-                        <div className={`flex justify-between items-center w-full mt-1 [@media(hover:none)]:translate-y-0 transition-transform duration-500 delay-75 ${hasInteracted && !isModalOpen ? 'translate-y-0' : 'translate-y-2'}`}>
+                        <div className={`flex justify-between items-center w-full mt-1 transition-transform duration-500 delay-75 ${isTouchDevice || (hasInteracted && !isModalOpen) ? 'translate-y-0' : 'translate-y-2'}`}>
                             {project.subtitle && (
                                 <p className="text-gray-200 font-subtitle text-xs sm:text-sm pr-4 uppercase tracking-wider">
                                     {project.subtitle}
@@ -139,6 +151,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                         cardRef={cardRef}
                         isModalOpen={isModalOpen}
                         hasInteracted={hasInteracted}
+                        isTouchDevice={isTouchDevice}
                     />
                 )}
             </a>

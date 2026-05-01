@@ -9,10 +9,22 @@ export default function LoadingScreen() {
     const pathname = usePathname();
     const { isTransitioning, isInitialLoad } = useLoading();
 
-    const [isLogoLoaded, setIsLogoLoaded] = useState(false);
     const [isAppLoaded, setIsAppLoaded] = useState(false);
     const [isOpaque, setIsOpaque] = useState(true);
     const [isHidden, setIsHidden] = useState(false);
+    const [minWaitFinished, setMinWaitFinished] = useState(false);
+
+    // Enforce a minimum wait time for the initial load animation (70 frames @ 30fps = ~2.33s)
+    useEffect(() => {
+        if (isInitialLoad) {
+            const timer = setTimeout(() => {
+                setMinWaitFinished(true);
+            }, 1433); // 2333ms loop - 400ms buffer - 500ms fade = fully gone right on the last frame
+            return () => clearTimeout(timer);
+        } else {
+            setMinWaitFinished(true);
+        }
+    }, [isInitialLoad]);
 
     // Store ALL timer/frame IDs in refs so they can be cancelled at any point.
     const fadeInFrame1Ref = useRef<number | null>(null);
@@ -35,25 +47,16 @@ export default function LoadingScreen() {
         hideTimerRef.current = null;
     };
 
+    // Handle initial app readiness
     useEffect(() => {
-        if (pathname !== "/") {
-            // Non-home pages: nothing special to wait for, mark ready immediately
-            setIsLogoLoaded(true);
-            return;
-        }
-
-        // Home page: wait for the 3D logo GLB to load before fading out
-        const handleLogoLoaded = () => setIsLogoLoaded(true);
-        window.addEventListener("logo-loaded", handleLogoLoaded);
-        return () => window.removeEventListener("logo-loaded", handleLogoLoaded);
-    }, [pathname]);
-
-    // Mark app as loaded as soon as our primary asset signal fires
-    useEffect(() => {
-        if (isLogoLoaded) {
+        // We rely entirely on isTransitioning, which tracks assets via registerLoadingItem.
+        // Components (3D models, images) register themselves on mount.
+        if (!isTransitioning) {
             setIsAppLoaded(true);
+        } else {
+            setIsAppLoaded(false);
         }
-    }, [isLogoLoaded]);
+    }, [isTransitioning]);
 
     // Handle visibility and opacity transitions
     useEffect(() => {
@@ -64,25 +67,29 @@ export default function LoadingScreen() {
         if (isTransitioning) {
             hasScrolledRef.current = false;
             setIsHidden(false);
-            setIsOpaque(false); // ensure we start from opacity-0
             document.body.style.overflow = "hidden";
 
-            // We use a small setTimeout instead of double rAF to guarantee 
-            // the browser paints the opacity-0 state before transitioning.
-            // This fixes the 'pop-in' race condition that occurs when the main thread is idle.
-            fadeInFrame1Ref.current = setTimeout(() => {
+            if (!isInitialLoad) {
+                setIsOpaque(false); // ensure we start from opacity-0
+                // We use a small setTimeout instead of double rAF to guarantee 
+                // the browser paints the opacity-0 state before transitioning.
+                // This fixes the 'pop-in' race condition that occurs when the main thread is idle.
+                fadeInFrame1Ref.current = setTimeout(() => {
+                    setIsOpaque(true);
+
+                    // Scroll to top only after the overlay is fully opaque (duration-500)
+                    scrollTimerRef.current = setTimeout(() => {
+                        if (!hasScrolledRef.current) {
+                            window.scrollTo(0, 0);
+                            hasScrolledRef.current = true;
+                        }
+                    }, 500);
+                }, 20) as any;
+            } else {
                 setIsOpaque(true);
+            }
 
-                // Scroll to top only after the overlay is fully opaque (duration-500)
-                scrollTimerRef.current = setTimeout(() => {
-                    if (!hasScrolledRef.current) {
-                        window.scrollTo(0, 0);
-                        hasScrolledRef.current = true;
-                    }
-                }, 500);
-            }, 20) as any;
-
-        } else if (isAppLoaded) {
+        } else if (isAppLoaded && minWaitFinished) {
             // Not transitioning and page is ready — start fade-out sequence
             fadeOutTimerRef.current = setTimeout(() => {
                 setIsOpaque(false);
@@ -95,7 +102,7 @@ export default function LoadingScreen() {
         }
 
         return clearAllTimers;
-    }, [isTransitioning, isAppLoaded]);
+    }, [isTransitioning, isAppLoaded, minWaitFinished]);
 
     if (isHidden) return null;
 

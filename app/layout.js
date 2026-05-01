@@ -33,9 +33,13 @@ export const metadata = {
   description: "Personal Portfolio",
 };
 
+export const viewport = {
+  themeColor: "#000000",
+};
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ backgroundColor: '#000000' }}>
       <body
         className={`${outfit.variable} ${inter.variable} ${montserrat.variable} ${jetbrains_mono.variable} antialiased`}
       >

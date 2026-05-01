@@ -37,7 +37,8 @@ function RiveWrapper({ url, onLoaded }: { url: string; onLoaded: () => void }) {
 
 export default function Modal({ isOpen, onClose, onExitComplete, title, year, infoUrl, embedUrl, embedType, embedAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
     const [isLoading, setIsLoading] = useState(true);
-    const [extrasHeight, setExtrasHeight] = useState(300); // Safe default
+    const [modalWidth, setModalWidth] = useState<string>('90vw');
+    const [embedHeight, setEmbedHeight] = useState('auto');
     const headerRef = useRef<HTMLDivElement>(null);
     const detailsRef = useRef<HTMLDivElement>(null);
     const prevUrlRef = useRef<string>("");
@@ -72,14 +73,6 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     }
     prevIsOpenRef.current = isOpen;
 
-    // Calculate actual height of header + details to perfectly size the embed
-    useEffect(() => {
-        if (headerRef.current && detailsRef.current) {
-            const hHeight = headerRef.current.getBoundingClientRect().height;
-            const dHeight = detailsRef.current.getBoundingClientRect().height;
-            setExtrasHeight(hHeight + dHeight);
-        }
-    }, [isOpen, title, summary, role, tools_used]);
 
     const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
@@ -111,7 +104,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     useEffect(() => {
         if (isOpen) {
             setIsLoading(true);
-            
+
             // Lock body scroll using position: fixed to prevent mobile Safari background scroll
             const scrollY = window.scrollY;
             document.body.style.position = 'fixed';
@@ -127,14 +120,14 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
 
             return () => {
                 clearTimeout(timer);
-                
+
                 // Restore body scroll
                 const savedScrollY = document.body.style.top;
                 document.body.style.position = '';
                 document.body.style.top = '';
                 document.body.style.width = '';
                 document.body.style.overflowY = '';
-                
+
                 if (savedScrollY) {
                     window.scrollTo(0, parseInt(savedScrollY || '0') * -1);
                 }
@@ -147,10 +140,55 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
         return numericRatio || 16 / 9;
     }, [numericRatio]);
 
+    // Calculate actual dimensions to perfectly size the embed and prevent Safari/Firefox collapse bugs
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const updateDimensions = () => {
+            if (isResponsive) {
+                setModalWidth('90vw');
+                return;
+            }
+
+            // Dynamically measure the actual pinned elements.
+            const hHeight = Math.ceil(headerRef.current?.getBoundingClientRect().height || 60);
+            const titleHeight = Math.ceil(detailsRef.current?.getBoundingClientRect().height || 90);
+            // 270 = 250px scrollable text + 20px parent paddingTop
+            const maxTextHeight = 270;
+            const totalExtras = hHeight + titleHeight + maxTextHeight;
+
+            const maxModalH = window.innerHeight * 0.95; // mirrors maxHeight: 95dvh
+            const vw90 = window.innerWidth * 0.9;
+
+            // Maximum embed height that keeps the modal within 95dvh
+            const maxEmbedH = maxModalH - totalExtras;
+
+            // Width from aspect ratio, capped by viewport width
+            const targetWidth = Math.round(Math.min(vw90, maxEmbedH * displayRatio));
+            const finalWidth = Math.max(320, targetWidth);
+            const computedEmbedH = Math.round(finalWidth / displayRatio);
+
+            setModalWidth(`${finalWidth}px`);
+            setEmbedHeight(`${computedEmbedH}px`);
+        };
+
+        // Run immediately
+        updateDimensions();
+
+        // Run again after a tiny delay to ensure Safari has finished its initial layout pass
+        const timeoutId = setTimeout(updateDimensions, 100);
+
+        window.addEventListener('resize', updateDimensions);
+        return () => {
+            window.removeEventListener('resize', updateDimensions);
+            clearTimeout(timeoutId);
+        };
+    }, [isOpen, isResponsive, displayRatio, title, summary, role, tools_used]);
+
     return (
         <AnimatePresence onExitComplete={onExitComplete}>
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex justify-center overflow-y-auto md:p-8 p-0">
+                <div className="fixed inset-0 z-[100] flex justify-center overflow-y-hidden md:p-8 p-0">
                     {/* Background overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -176,11 +214,12 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                         }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         className={`relative z-10 bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col my-auto
-                            w-full h-fit md:w-[var(--modal-w)] md:h-[var(--modal-h)] md:max-w-[90vw] md:max-h-[90vh] md:rounded-[2.5rem] rounded-[1.5rem]
-                            ${(isGameActive && isTouchScreen) ? 'fixed inset-0 z-[200] !h-[100dvh] !w-full !max-h-none !max-w-none !rounded-none !m-0 !my-0' : ''}`}
+                            w-full md:w-[var(--modal-w)] md:rounded-[2.5rem] rounded-[1.5rem] min-w-[320px]
+                            ${(isGameActive && isTouchScreen) ? 'fixed inset-0 z-[200] !rounded-none !m-0 !my-0' : ''}`}
                         style={{
-                            '--modal-w': isResponsive ? '90vw' : `min(90vw, calc((90vh - ${extrasHeight}px) * ${displayRatio}))`,
-                            '--modal-h': isResponsive ? '90vh' : 'fit-content',
+                            '--modal-w': modalWidth,
+                            height: (isGameActive && isTouchScreen) ? '100dvh' : isResponsive ? '90dvh' : 'auto',
+                            maxHeight: (isGameActive && isTouchScreen) ? '100dvh' : '95dvh',
                         } as React.CSSProperties}
                     >
                         {/* Header Bar */}
@@ -196,28 +235,28 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                     </Button>
                                 )}
                             </div>
-                                <Button
-                                    onClick={handleClose}
-                                    variant="primary"
-                                    className="!py-2 !px-6 !text-[10px] md:!text-xs"
-                                >
-                                    Close
-                                </Button>
-                            </div>
+                            <Button
+                                onClick={handleClose}
+                                variant="primary"
+                                className="!py-2 !px-6 !text-[10px] md:!text-xs"
+                            >
+                                Close
+                            </Button>
+                        </div>
 
                         {/* Body Container */}
                         <div className="flex-1 flex flex-col min-h-0 relative w-full">
                             {/* Content Area Wrapper */}
-                            <div className="flex-1 flex w-full min-h-0 bg-black/20 shrink-0 flex-col justify-center items-center select-none touch-none">
+                            <div
+                                className={`relative w-full bg-black/20 flex flex-col justify-center items-center select-none touch-none overflow-hidden ${isResponsive ? 'flex-1 min-h-0' : 'flex-none'}`}
+                                style={{ height: isResponsive ? 'auto' : embedHeight }}
+                            >
                                 <div
-                                    className={`relative w-full max-w-full
+                                    className={`w-full max-w-full
                                         ${isResponsive
-                                            ? ((isGameActive && isTouchScreen) ? 'h-full flex-1' : 'aspect-square min-h-[350px] md:min-h-0 md:flex-1')
-                                            : ''
+                                            ? ((isGameActive && isTouchScreen) ? 'relative h-full flex-1' : 'relative aspect-square min-h-[350px] md:min-h-0 md:flex-1')
+                                            : 'absolute inset-0' // absolute inset-0 forces Safari to respect the parent's exact JS height, preventing native resolution overflow
                                         }`}
-                                    style={{
-                                        aspectRatio: isResponsive ? 'auto' : displayRatio,
-                                    }}
                                 >
                                     <LoadingAnimation
                                         isVisible={isLoading}
@@ -278,21 +317,30 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             </div>
 
                             {/* Project Details Section */}
-                            <div ref={detailsRef} className={`py-5 px-6 md:py-6 md:px-8 bg-white/2 backdrop-blur-sm ${(isGameActive && isTouchScreen) ? 'hidden' : 'block'}`}>
-                                <div className="mx-auto flex flex-col gap-3 md:gap-4">
-                                    {/* Header: Title and Year */}
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex items-baseline justify-between gap-4">
-                                            <h2 className="text-2xl md:text-4xl font-title font-bold text-white tracking-tight">
-                                                {title}
-                                            </h2>
-                                            <span className="text-xl md:text-4xl font-subtitle font-medium text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">
-                                                {year}
-                                            </span>
-                                        </div>
-                                        <div className="h-px w-full bg-white/10" />
+                            <div
+                                className={`flex-none ${(isGameActive && isTouchScreen) ? 'hidden' : 'block'}`}
+                                style={{ paddingTop: '20px' }}
+                            >
+                                {/* Title and Year — pinned, never scrolls */}
+                                <div ref={detailsRef} className="px-6 md:px-8">
+                                    <div className="flex items-baseline justify-between gap-4">
+                                        <h2 className="text-2xl md:text-4xl font-title font-bold text-white tracking-tight">
+                                            {title}
+                                        </h2>
+                                        <span className="text-xl md:text-4xl font-subtitle font-medium text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">
+                                            {year}
+                                        </span>
                                     </div>
+                                    <div className="h-px w-full bg-white/10 mt-2" />
+                                </div>
 
+                                {/* Scrollable text — explicit pixel height for perfect Safari routing */}
+                                <div
+                                    className="overflow-y-auto custom-scrollbar px-6 md:px-8 flex flex-col gap-4"
+                                    style={{ maxHeight: '250px', paddingTop: '16px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}
+                                    onWheel={(e) => e.stopPropagation()}
+                                    onTouchMove={(e) => e.stopPropagation()}
+                                >
                                     {/* Summary */}
                                     <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4">
                                         <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">

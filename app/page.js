@@ -9,7 +9,7 @@ import Hero from "@/components/sections/Hero";
 export default async function Home() {
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen px-(--spacing-page-x) pt-(--spacing-page-top) pb-(--spacing-page-bottom) gap-(--spacing-section)">
+    <div className="flex flex-col items-center justify-start min-h-screen px-(--spacing-page-x) pb-(--spacing-page-bottom) gap-(--spacing-section)">
 
       {/* Hero Section */}
       <Hero />

@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Hero() {
     return (
-        <div className="flex flex-col lg:grid lg:grid-cols-2 items-center justify-center h-[75vh] w-full gap-8 lg:gap-0 px-6 max-w-[2000px] mx-auto min-h-0 min-w-0">
+        <div className="flex flex-col lg:grid lg:grid-cols-2 items-center justify-center h-[70vh] lg:h-[80vh] w-full gap-8 lg:gap-0 px-6 max-w-[2000px] mx-auto min-h-0 min-w-0">
             {/* 3D Head Container */}
             <div className="w-full h-[40vh] lg:h-full flex items-center justify-center order-1 lg:order-none relative min-h-[300px] min-w-0">
                 <div className="aspect-square h-full max-w-full flex items-center justify-center">

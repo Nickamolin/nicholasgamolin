@@ -3,10 +3,10 @@ import Image from "next/image";
 
 export default function Hero() {
     return (
-        <div className="flex flex-col md:grid md:grid-cols-2 items-center justify-center h-[60vh] md:h-[75vh] w-full gap-8 md:gap-0 px-6 max-w-[2000px] mx-auto">
+        <div className="flex flex-col lg:grid lg:grid-cols-2 items-center justify-center h-[60vh] md:h-[75vh] w-full gap-8 md:gap-0 px-6 max-w-[2000px] mx-auto">
             {/* 3D Head Container */}
-            <div className="w-full h-full max-w-[300px] sm:max-w-[400px] md:max-w-none flex items-center justify-center order-1 md:order-none">
-                <div className="aspect-square w-full md:h-full md:w-auto">
+            <div className="w-full h-full max-w-[300px] sm:max-w-[400px] lg:max-w-none flex items-center justify-center order-1 md:order-none">
+                <div className="aspect-square w-full lg:h-full lg:w-auto">
                     <Head3D />
                 </div>
             </div>

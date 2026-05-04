@@ -7,9 +7,10 @@ import type { Project } from "./types";
 
 type FilteredProjectListProps = {
     initialProjects: Project[];
+    initialSlug?: string;
 };
 
-export default function FilteredProjectList({ initialProjects }: FilteredProjectListProps) {
+export default function FilteredProjectList({ initialProjects, initialSlug }: FilteredProjectListProps) {
     const [filter, setFilter] = useState("All");
 
     // Dynamically get available types from data, so if you add a new type in Supabase, this updates automatically.
@@ -65,7 +66,10 @@ export default function FilteredProjectList({ initialProjects }: FilteredProject
                                 exit={{ opacity: 0, scale: 0.9 }}
                                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                             >
-                                <ProjectCard project={project} />
+                                <ProjectCard
+                                    project={project}
+                                    initialOpen={project.slug === initialSlug}
+                                />
                             </motion.li>
                         ))}
                     </AnimatePresence>

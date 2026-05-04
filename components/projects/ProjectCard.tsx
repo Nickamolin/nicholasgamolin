@@ -8,6 +8,7 @@ import { useMousePosition } from "@/components/context/MouseContext";
 
 type ProjectCardProps = {
     project: Project;
+    initialOpen?: boolean;
 };
 
 const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted, isTouchDevice }: { text: string; cardRef: React.RefObject<HTMLAnchorElement | null>; isModalOpen: boolean; hasInteracted: boolean; isTouchDevice: boolean }) => {
@@ -64,7 +65,7 @@ const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted, isTouchDe
     );
 };
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default function ProjectCard({ project, initialOpen = false }: ProjectCardProps) {
     const { mouseX, mouseY } = useMousePosition();
     const cardRef = React.useRef<HTMLAnchorElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,6 +82,49 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         };
         setIsTouchDevice(checkTouch());
     }, []);
+
+    // Auto-open modal when initialOpen is true (deep-linked slug)
+    useEffect(() => {
+        if (initialOpen) {
+            setIsModalOpen(true);
+        }
+    }, [initialOpen]);
+
+    // Helper: are we on the /projects page (or /projects/[slug])?
+    const isOnProjectsPage = () => {
+        return typeof window !== 'undefined' && window.location.pathname.startsWith('/projects');
+    };
+
+    const openModal = () => {
+        setIsModalOpen(true);
+        // Update URL to /projects/{slug} if on the projects page
+        if (isOnProjectsPage() && project.slug) {
+            window.history.pushState(null, '', `/projects/${project.slug}`);
+        }
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        // Restore URL to /projects if on a project slug page
+        if (isOnProjectsPage() && project.slug) {
+            window.history.pushState(null, '', '/projects');
+        }
+    };
+
+    // Handle browser back/forward navigation
+    useEffect(() => {
+        const handlePopState = () => {
+            const onSlugPage = window.location.pathname === `/projects/${project.slug}`;
+            if (onSlugPage && !isModalOpen) {
+                setIsModalOpen(true);
+            } else if (!onSlugPage && isModalOpen) {
+                setIsModalOpen(false);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [isModalOpen, project.slug]);
 
     const hasHoverText = Boolean(project.hover_text);
     const isInteractive = Boolean(project.embed_url || project.info_url);
@@ -109,7 +153,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 onClick={(e) => {
                     if (project.embed_url) {
                         e.preventDefault();
-                        setIsModalOpen(true);
+                        openModal();
                     } else if (!isInteractive) {
                         e.preventDefault();
                     }
@@ -158,7 +202,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={closeModal}
                 title={project.title}
                 year={new Date(project.date_published).getFullYear()}
                 infoUrl={project.info_url}

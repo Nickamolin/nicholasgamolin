@@ -17,10 +17,11 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set());
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  // showLoader explicitly controls the visibility of the overlay
+  const [showLoader, setShowLoader] = useState(true); 
+  
   const router = useRouter();
   const pathname = usePathname();
-
-  // Track the navigation target so we can detect when the route actually changes
   const navigationTarget = useRef<string | null>(null);
 
   const registerLoadingItem = useCallback((id: string) => {
@@ -38,31 +39,32 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
   // Detect when the route has actually changed to the target
   useEffect(() => {
     if (navigationTarget.current && pathname === navigationTarget.current) {
-      // Route has changed — clear the transitioning flag.
-      // If the new page has registered loadingItems, those will keep
-      // isActuallyTransitioning true until all assets resolve.
       navigationTarget.current = null;
       setIsTransitioning(false);
     }
   }, [pathname]);
 
-  // Only consider the transition "complete" when the route has changed AND all items are resolved
-  const isActuallyTransitioning = isTransitioning || loadingItems.size > 0;
+  // Main lifecycle: Clear the loader only when items are resolved AND we aren't in a transition
+  useEffect(() => {
+    if (loadingItems.size === 0 && !isTransitioning) {
+      setShowLoader(false);
+    }
+  }, [loadingItems.size, isTransitioning]);
 
   // Safety timeout: If stuff takes too long, just force the loading screen to clear
   useEffect(() => {
-    if (isActuallyTransitioning) {
+    if (showLoader) {
       const timer = setTimeout(() => {
+        setShowLoader(false);
         setIsTransitioning(false);
         setLoadingItems(new Set());
         navigationTarget.current = null;
       }, 5000); // 5s safety limit
       return () => clearTimeout(timer);
     }
-  }, [isActuallyTransitioning]);
+  }, [showLoader]);
 
   const navigateWithTransition = useCallback((href: string) => {
-    // If we're already on this page, just scroll to top and skip transition
     if (href === pathname) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       navigationTarget.current = null;
@@ -70,27 +72,25 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // If we're already navigating to this target, ignore
     if (navigationTarget.current === href) return;
 
-    // First navigation clears the initial load state
+    // First manual navigation clears the initial load state
     setIsInitialLoad(false);
+    
+    // Explicitly start a transition "session"
     setIsTransitioning(true);
-    setLoadingItems(new Set()); // Reset for the new page
+    setShowLoader(true);
+    setLoadingItems(new Set()); 
     navigationTarget.current = href;
 
-    // Wait for the overlay to become fully opaque before pushing the route.
-    // The 600ms matches the loading screen's fade-in duration.
     setTimeout(() => {
       router.push(href);
-      // We do NOT set isTransitioning(false) here.
-      // The pathname useEffect above will clear it once the route actually changes.
     }, 600);
   }, [router, pathname]);
 
   return (
     <LoadingContext.Provider value={{
-      isTransitioning: isActuallyTransitioning,
+      isTransitioning: showLoader,
       isInitialLoad,
       navigateWithTransition,
       registerLoadingItem,

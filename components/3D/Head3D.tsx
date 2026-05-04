@@ -158,7 +158,11 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
 
     animate();
 
+    // Force a resize check after a short delay to handle Safari/iOS layout race conditions
+    const timer = setTimeout(handleResize, 100);
+
     return () => {
+      clearTimeout(timer);
       if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
       resizeObserver.disconnect();
       renderer.dispose();

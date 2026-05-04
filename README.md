@@ -2,7 +2,9 @@
 
 View the portfolio <a href="https://nicholasgamolin.com/">here</a>.
 
-<img src="https://github.com/Nickamolin/nicholasgamolin/blob/main/PortfolioPreview.png" width="1024">
+<p align="center">
+  <img src="https://github.com/Nickamolin/nicholasgamolin/blob/main/public/apple-touch-icon.png" width="180">
+</p>
 
 <h3>Summary</h3>
 A premium, interactive portfolio website showcasing my work across programming, 3D art, and game development.

@@ -2,6 +2,42 @@ export const dynamic = 'force-dynamic';
 
 import Projects from "@/components/projects/Projects";
 import ContactCard from "@/components/sections/ContactCard";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export async function generateMetadata({ params }) {
+    const { slug } = await params;
+    const supabase = createSupabaseServerClient();
+
+    const { data: project } = await supabase
+        .from("projects")
+        .select("title, subtitle, summary, thumbnail_url")
+        .eq("slug", slug)
+        .single();
+
+    if (!project) {
+        return {
+            title: "Projects | Nicholas Gamolin",
+            description: "A look at some of my work",
+        };
+    }
+
+    return {
+        title: `${project.title} | Nicholas Gamolin`,
+        description: project.summary || project.subtitle || "A look at some of my work",
+        openGraph: {
+            title: project.title,
+            description: project.summary || project.subtitle,
+            images: project.thumbnail_url ? [{ url: project.thumbnail_url }] : [],
+            type: "website",
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: project.title,
+            description: project.summary || project.subtitle,
+            images: project.thumbnail_url ? [project.thumbnail_url] : [],
+        },
+    };
+}
 
 export default async function ProjectSlugPage({ params }) {
     const { slug } = await params;

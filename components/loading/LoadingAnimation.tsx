@@ -11,7 +11,7 @@ type LoadingAnimationProps = {
 
 export default function LoadingAnimation({
     isVisible = true,
-    className = "w-[256px] h-[256px]",
+    className = "w-48 h-48",
     wrapperClassName = ""
 }: LoadingAnimationProps) {
     const videoRef = useRef<HTMLVideoElement>(null);

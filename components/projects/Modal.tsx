@@ -37,14 +37,15 @@ function RiveWrapper({ url, onLoaded }: { url: string; onLoaded: () => void }) {
 
 export default function Modal({ isOpen, onClose, onExitComplete, title, year, infoUrl, embedUrl, embedType, embedAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
     const [isLoading, setIsLoading] = useState(true);
-    const [modalWidth, setModalWidth] = useState<string>('90vw');
-    const [embedHeight, setEmbedHeight] = useState('auto');
-    const headerRef = useRef<HTMLDivElement>(null);
-    const detailsRef = useRef<HTMLDivElement>(null);
     const prevUrlRef = useRef<string>("");
     const prevIsOpenRef = useRef<boolean>(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isGameActive, setIsGameActive] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Desktop layout dimensions — computed via JS to size the modal tightly around the embed
+    const [modalStyle, setModalStyle] = useState<{ width: number; height: number } | null>(null);
+    const [embedDims, setEmbedDims] = useState<{ width: number; height: number } | null>(null);
 
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
@@ -66,51 +67,46 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     const cleanUrl = React.useMemo(() => embedUrl?.replace(/&amp;/g, '&') || "", [embedUrl]);
 
     // Synchronously reset loading state during render if the URL changes OR the modal is being opened
-    // This prevents the "one-frame peek" flicker when switching projects or re-opening the same one
     if (prevUrlRef.current !== cleanUrl || (isOpen && !prevIsOpenRef.current)) {
         setIsLoading(true);
         prevUrlRef.current = cleanUrl;
     }
     prevIsOpenRef.current = isOpen;
 
-
     const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-    // Safely calculate aspect ratio from the provided string to prevent NaN or collapse
+    // Parse aspect ratio string (e.g. "16/9") into a number, or null for responsive content
     const numericRatio = React.useMemo(() => {
-        if (!embedAspectRatio) return 16 / 9;
+        if (!embedAspectRatio) return null;
         const parts = embedAspectRatio.split('/');
-        if (parts.length !== 2) return 16 / 9;
+        if (parts.length !== 2) return null;
         const n1 = Number(parts[0]);
         const n2 = Number(parts[1]);
-        if (isNaN(n1) || isNaN(n2) || n2 === 0) return 16 / 9;
+        if (isNaN(n1) || isNaN(n2) || n2 === 0) return null;
         return n1 / n2;
     }, [embedAspectRatio]);
 
-    // Determine if the content should be treated as flexible/responsive (websites, games)
-    // or fixed-ratio media (videos, rive animations)
-    const isResponsive = React.useMemo(() => {
-        const type = embedType?.toLowerCase();
-        return !["video", "youtube", "riv"].includes(type || "");
-    }, [embedType]);
+    // Responsive content has no fixed aspect ratio (websites, games with null/empty ratio)
+    const isResponsive = numericRatio === null;
+
+    // On md+ screens, use side-by-side layout when content is portrait-ish (width < 1.3 * height)
+    const useSideLayout = React.useMemo(() => !isMobile && !isResponsive && numericRatio < 1.3, [numericRatio, isMobile, isResponsive]);
 
     const handleLoad = () => {
-        // Add a tiny delay to prevent flicker on instant loads
         setTimeout(() => {
             setIsLoading(false);
         }, 300);
     };
 
+    // Body scroll lock when modal is open
     useEffect(() => {
         if (isOpen) {
             setIsLoading(true);
 
-            // Lock body scroll using position: fixed to prevent mobile Safari background scroll
             const scrollY = window.scrollY;
             document.body.style.position = 'fixed';
             document.body.style.top = `-${scrollY}px`;
             document.body.style.width = '100%';
-            // overflow-y: scroll ensures the scrollbar gutter remains if present to prevent layout shift
             document.body.style.overflowY = 'scroll';
 
             // Safety fallback: ensure loading screen clears even if iframe onLoad fails
@@ -120,14 +116,11 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
 
             return () => {
                 clearTimeout(timer);
-
-                // Restore body scroll
                 const savedScrollY = document.body.style.top;
                 document.body.style.position = '';
                 document.body.style.top = '';
                 document.body.style.width = '';
                 document.body.style.overflowY = '';
-
                 if (savedScrollY) {
                     window.scrollTo(0, parseInt(savedScrollY || '0') * -1);
                 }
@@ -135,60 +128,195 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
         }
     }, [isOpen, cleanUrl]);
 
-    // Determine which ratio to use for fixed-media layouts
-    const displayRatio = React.useMemo(() => {
-        return numericRatio || 16 / 9;
-    }, [numericRatio]);
-
-    // Calculate actual dimensions to perfectly size the embed and prevent Safari/Firefox collapse bugs
+    // Track mobile breakpoint
     useEffect(() => {
-        if (!isOpen) return;
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
-        const updateDimensions = () => {
+    // Compute desktop modal + embed dimensions
+    // This sizes the modal tightly around the content so there's no wasted horizontal space
+    useEffect(() => {
+        if (!isOpen || isMobile) {
+            setModalStyle(null);
+            setEmbedDims(null);
+            return;
+        }
+
+        const compute = () => {
+            const maxW = window.innerWidth * 0.9;
+            const maxH = window.innerHeight * 0.9;
+            const headerH = 60;
+            const detailsH = 200; // estimated height for stacked details section
+
             if (isResponsive) {
-                setModalWidth('90vw');
+                // Responsive content: modal fills 90vw × 90vh, embed fills all available space
+                setModalStyle({ width: Math.round(maxW), height: Math.round(maxH) });
+                setEmbedDims(null);
                 return;
             }
 
-            // Dynamically measure the actual pinned elements.
-            const hHeight = Math.ceil(headerRef.current?.getBoundingClientRect().height || 60);
-            const titleHeight = Math.ceil(detailsRef.current?.getBoundingClientRect().height || 90);
-            // 270 = 250px scrollable text + 20px parent paddingTop
-            const maxTextHeight = 270;
-            const totalExtras = hHeight + titleHeight + maxTextHeight;
+            const ratio = numericRatio!; // safe because !isResponsive guarantees non-null
 
-            const maxModalH = window.innerHeight * 0.95; // mirrors maxHeight: 95dvh
-            const vw90 = window.innerWidth * 0.9;
+            if (useSideLayout) {
+                // Side-by-side: embed left, details right
+                const detailsW = Math.min(maxW * 0.4, 400);
+                const availW = maxW - detailsW;
+                const availH = maxH - headerH;
 
-            // Maximum embed height that keeps the modal within 95dvh
-            const maxEmbedH = maxModalH - totalExtras;
+                let ew = availW;
+                let eh = ew / ratio;
+                if (eh > availH) {
+                    eh = availH;
+                    ew = eh * ratio;
+                }
 
-            // Width from aspect ratio, capped by viewport width
-            const targetWidth = Math.round(Math.min(vw90, maxEmbedH * displayRatio));
-            const finalWidth = Math.max(320, targetWidth);
-            const computedEmbedH = Math.round(finalWidth / displayRatio);
+                const mw = Math.round(ew + detailsW);
+                const mh = Math.min(Math.round(headerH + eh), Math.round(maxH));
+                setEmbedDims({ width: Math.round(ew), height: Math.round(eh) });
+                setModalStyle({ width: mw, height: mh });
+            } else {
+                // Stacked: embed on top, details below
+                const availH = maxH - headerH - detailsH;
 
-            setModalWidth(`${finalWidth}px`);
-            setEmbedHeight(`${computedEmbedH}px`);
+                let ew = maxW;
+                let eh = ew / ratio;
+                if (eh > availH) {
+                    eh = availH;
+                    ew = eh * ratio;
+                }
+
+                const mh = Math.min(Math.round(headerH + eh + detailsH), Math.round(maxH));
+                setEmbedDims({ width: Math.round(ew), height: Math.round(eh) });
+                setModalStyle({ width: Math.round(ew), height: mh });
+            }
         };
 
-        // Run immediately
-        updateDimensions();
+        compute();
+        window.addEventListener('resize', compute);
+        return () => window.removeEventListener('resize', compute);
+    }, [isOpen, isMobile, numericRatio, useSideLayout, isResponsive]);
 
-        // Run again after a tiny delay to ensure Safari has finished its initial layout pass
-        const timeoutId = setTimeout(updateDimensions, 100);
+    // The fullscreen game override
+    const isFullscreenGame = isGameActive && isTouchScreen;
 
-        window.addEventListener('resize', updateDimensions);
-        return () => {
-            window.removeEventListener('resize', updateDimensions);
-            clearTimeout(timeoutId);
-        };
-    }, [isOpen, isResponsive, displayRatio, title, summary, role, tools_used]);
+    // --- Render embedded content (shared between layouts) ---
+    const renderEmbed = () => (
+        <>
+            <LoadingAnimation
+                isVisible={isLoading}
+                wrapperClassName="absolute inset-0 z-20 bg-black"
+                className="w-32 h-32 md:w-48 md:h-48"
+            />
+
+            {embedType?.toLowerCase() === "riv" ? (
+                <div className={`absolute inset-0 transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                    <RiveWrapper url={cleanUrl} onLoaded={handleLoad} />
+                </div>
+            ) : embedType?.toLowerCase() === "video" ? (
+                <div className={`absolute inset-0 transition-opacity duration-700 overflow-hidden ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                    <video
+                        ref={videoRef}
+                        className="absolute inset-0 w-full h-full object-contain"
+                        src={cleanUrl}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        onPlaying={handleLoad}
+                    />
+                </div>
+            ) : embedType?.toLowerCase() === "website" ? (
+                <div className={`absolute inset-0 transition-opacity duration-700 flex flex-col ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                    <iframe
+                        className="w-full h-full border-none bg-black select-none touch-none"
+                        src={cleanUrl}
+                        title="Project Preview"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                        onLoad={handleLoad}
+                        allowFullScreen
+                    />
+                    {!isLoading && (
+                        <a
+                            href={cleanUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute bottom-3 right-3 md:bottom-4 md:right-4 text-[10px] md:text-xs font-subtitle font-medium text-white/60 hover:text-white transition-all bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-1.5 hover:scale-105 active:scale-95 z-30"
+                        >
+                            Visit Site {"\u2197\uFE0E"}
+                        </a>
+                    )}
+                </div>
+            ) : (
+                <iframe
+                    className={`absolute inset-0 w-full h-full border-none transition-opacity duration-700 bg-black select-none touch-none ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+                    src={cleanUrl}
+                    title="Project Preview"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                    onLoad={handleLoad}
+                    allowFullScreen
+                />
+            )}
+        </>
+    );
+
+    // --- Render project details (shared between layouts) ---
+    const renderDetails = (sidePanel: boolean) => (
+        <div className={sidePanel ? 'flex flex-col gap-4' : 'flex flex-col gap-4 px-6 md:px-8 pt-5 pb-6'}>
+            {/* Title and Year */}
+            <div>
+                <div className="flex items-baseline justify-between gap-4">
+                    <h2 className={`font-title font-bold text-white tracking-tight ${sidePanel ? 'text-xl lg:text-2xl' : 'text-2xl md:text-4xl'}`}>
+                        {title}
+                    </h2>
+                    <span className={`font-subtitle font-medium text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap ${sidePanel ? 'text-lg lg:text-xl' : 'text-xl md:text-4xl'}`}>
+                        {year}
+                    </span>
+                </div>
+                <div className="h-px w-full bg-white/10 mt-2" />
+            </div>
+
+            {/* Summary */}
+            <div className={sidePanel ? 'flex flex-col gap-1' : 'grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4'}>
+                <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">
+                    Summary
+                </h4>
+                <p className="text-sm md:text-base font-body text-gray-300 leading-relaxed">
+                    {summary}
+                </p>
+            </div>
+
+            {/* Role */}
+            <div className={sidePanel ? 'flex flex-col gap-1' : 'grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4'}>
+                <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">
+                    Role
+                </h4>
+                <p className="text-sm md:text-base font-body text-gray-300 leading-relaxed">
+                    {role}
+                </p>
+            </div>
+
+            {/* Tools Used */}
+            <div className={sidePanel ? 'flex flex-col gap-1' : 'grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4'}>
+                <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">
+                    Tools Used
+                </h4>
+                <p className="text-sm md:text-base font-body text-gray-300">
+                    {tools_used}
+                </p>
+            </div>
+        </div>
+    );
 
     return (
         <AnimatePresence onExitComplete={onExitComplete}>
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex justify-center overflow-y-hidden md:p-8 p-0">
+                <div className={`fixed inset-0 z-[100] ${isMobile
+                    ? 'overflow-y-auto'
+                    : 'overflow-hidden flex items-center justify-center'
+                    }`}>
                     {/* Background overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -213,17 +341,20 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             transition: { pointerEvents: { duration: 0 } }
                         }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className={`relative z-10 bg-black/40 border-y md:border border-white/10 backdrop-blur-3xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col my-auto
-                            w-full md:w-[var(--modal-w)] md:rounded-[2.5rem] rounded-[1.5rem] min-w-[320px]
-                            ${(isGameActive && isTouchScreen) ? 'fixed inset-0 z-[200] !rounded-none !m-0 !my-0' : ''}`}
-                        style={{
-                            '--modal-w': modalWidth,
-                            height: (isGameActive && isTouchScreen) ? '100dvh' : isResponsive ? '90dvh' : 'auto',
-                            maxHeight: (isGameActive && isTouchScreen) ? '100dvh' : '95dvh',
-                        } as React.CSSProperties}
+                        className={`relative z-10 bg-black/40 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col min-w-[320px]
+                            border-y md:border border-white/10
+                            ${isMobile
+                                ? 'w-full rounded-[1.5rem]'
+                                : 'overflow-hidden rounded-[2.5rem]'
+                            }
+                            ${isFullscreenGame ? 'fixed inset-0 z-[200] !rounded-none !border-none !w-full !h-full !my-0' : ''}`}
+                        style={!isMobile && !isFullscreenGame && modalStyle ? {
+                            width: modalStyle.width,
+                            height: modalStyle.height,
+                        } : undefined}
                     >
                         {/* Header Bar */}
-                        <div ref={headerRef} className={`flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20 shrink-0 ${(isGameActive && isTouchScreen) ? 'hidden' : 'flex'}`}>
+                        <div className={`flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20 shrink-0 ${isFullscreenGame ? 'hidden' : 'flex'}`}>
                             <div className="flex gap-4">
                                 {infoUrl && action_button_text && (
                                     <Button
@@ -244,133 +375,56 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             </Button>
                         </div>
 
-                        {/* Body Container */}
-                        <div className="flex-1 flex flex-col min-h-0 relative w-full">
-                            {/* Content Area Wrapper */}
-                            <div
-                                className={`relative w-full bg-black/20 flex flex-col justify-center items-center select-none touch-none overflow-hidden ${isResponsive ? 'flex-1 min-h-0' : 'flex-none'}`}
-                                style={{ height: isResponsive ? 'auto' : embedHeight }}
-                            >
+                        {/* Body — layout switches between stacked and side-by-side on md+ */}
+                        <div className={`flex-1 min-h-0 flex ${isMobile || isFullscreenGame ? 'flex-col' : useSideLayout ? 'flex-row' : 'flex-col'}`}>
+                            {/* Embed Area */}
+                            {isMobile ? (
+                                /* Mobile: same JSX branch for normal + fullscreen to avoid iframe remount */
                                 <div
-                                    className={`w-full max-w-full
-                                        ${isResponsive
-                                            ? ((isGameActive && isTouchScreen) ? 'relative h-full flex-1' : 'relative aspect-square min-h-[350px] md:min-h-0 md:flex-1')
-                                            : 'absolute inset-0' // absolute inset-0 forces Safari to respect the parent's exact JS height, preventing native resolution overflow
-                                        }`}
+                                    className={`relative w-full bg-black/20 select-none touch-none ${
+                                        isFullscreenGame ? 'flex-1' : isResponsive ? 'aspect-square min-h-[350px]' : ''
+                                    }`}
+                                    style={!isResponsive && !isFullscreenGame ? { aspectRatio: numericRatio! } : undefined}
                                 >
-                                    <LoadingAnimation
-                                        isVisible={isLoading}
-                                        wrapperClassName="absolute inset-0 z-20 bg-black"
-                                        className="w-32 h-32 md:w-48 md:h-48"
-                                    />
-
-                                    {/* All embedded content is absolutely positioned to perfectly fill the container's calculated aspect-ratio or flex-stretch bounds */}
-                                    {embedType?.toLowerCase() === "riv" ? (
-                                        <div className={`absolute inset-0 transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                                            <RiveWrapper url={cleanUrl} onLoaded={handleLoad} />
+                                    {renderEmbed()}
+                                </div>
+                            ) : isResponsive ? (
+                                /* Desktop responsive: embed fills all available flex space */
+                                <div className="flex-1 min-h-0 relative bg-black/20 select-none touch-none">
+                                    <div className="absolute inset-0">
+                                        {renderEmbed()}
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Desktop fixed-ratio: embed is precisely sized, centered in the embed area */
+                                <div
+                                    className={`relative bg-black/20 select-none touch-none overflow-hidden flex items-center justify-center
+                                        ${useSideLayout ? 'flex-1 min-w-0 min-h-0' : 'flex-1 min-h-0'}`}
+                                >
+                                    {embedDims && (
+                                        <div
+                                            className="relative"
+                                            style={{ width: embedDims.width, height: embedDims.height }}
+                                        >
+                                            {renderEmbed()}
                                         </div>
-                                    ) : embedType?.toLowerCase() === "video" ? (
-                                        <div className={`absolute inset-0 transition-opacity duration-700 overflow-hidden ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                                            <video
-                                                ref={videoRef}
-                                                className="absolute inset-0 w-full h-full object-contain"
-                                                src={cleanUrl}
-                                                autoPlay
-                                                muted
-                                                loop
-                                                playsInline
-                                                onPlaying={handleLoad}
-                                            />
-                                        </div>
-                                    ) : embedType?.toLowerCase() === "website" ? (
-                                        <div className={`absolute inset-0 transition-opacity duration-700 flex flex-col ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                                            <iframe
-                                                className="w-full h-full border-none bg-black select-none touch-none"
-                                                src={cleanUrl}
-                                                title="Project Preview"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                                                onLoad={handleLoad}
-                                                allowFullScreen
-                                            />
-                                            {!isLoading && (
-                                                <a
-                                                    href={cleanUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="absolute bottom-3 right-3 md:bottom-4 md:right-4 text-[10px] md:text-xs font-subtitle font-medium text-white/60 hover:text-white transition-all bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-1.5 hover:scale-105 active:scale-95 z-30"
-                                                >
-                                                    Visit Site {"\u2197\uFE0E"}
-                                                </a>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <iframe
-                                            className={`absolute inset-0 w-full h-full border-none transition-opacity duration-700 bg-black select-none touch-none ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-                                            src={cleanUrl}
-                                            title="Project Preview"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                                            onLoad={handleLoad}
-                                            allowFullScreen
+                                    )}
+                                    {!embedDims && (
+                                        <LoadingAnimation
+                                            isVisible={true}
+                                            wrapperClassName="absolute inset-0 z-20 bg-black"
+                                            className="w-32 h-32 md:w-48 md:h-48"
                                         />
                                     )}
                                 </div>
-                            </div>
+                            )}
 
-                            {/* Project Details Section */}
-                            <div
-                                className={`flex-none ${(isGameActive && isTouchScreen) ? 'hidden' : 'block'}`}
-                                style={{ paddingTop: '20px' }}
-                            >
-                                {/* Title and Year — pinned, never scrolls */}
-                                <div ref={detailsRef} className="px-6 md:px-8">
-                                    <div className="flex items-baseline justify-between gap-4">
-                                        <h2 className="text-2xl md:text-4xl font-title font-bold text-white tracking-tight">
-                                            {title}
-                                        </h2>
-                                        <span className="text-xl md:text-4xl font-subtitle font-medium text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">
-                                            {year}
-                                        </span>
-                                    </div>
-                                    <div className="h-px w-full bg-white/10 mt-2" />
-                                </div>
-
-                                {/* Scrollable text — explicit pixel height for perfect Safari routing */}
-                                <div
-                                    className="overflow-y-auto custom-scrollbar px-6 md:px-8 flex flex-col gap-4"
-                                    style={{ maxHeight: '250px', paddingTop: '16px', paddingBottom: '16px', WebkitOverflowScrolling: 'touch' }}
-                                    onWheel={(e) => e.stopPropagation()}
-                                    onTouchMove={(e) => e.stopPropagation()}
-                                >
-                                    {/* Summary */}
-                                    <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4">
-                                        <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">
-                                            Summary
-                                        </h4>
-                                        <p className="text-sm md:text-base font-body text-gray-300 leading-relaxed">
-                                            {summary}
-                                        </p>
-                                    </div>
-
-                                    {/* Role */}
-                                    <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4">
-                                        <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">
-                                            Role
-                                        </h4>
-                                        <p className="text-sm md:text-base font-body text-gray-300 leading-relaxed">
-                                            {role}
-                                        </p>
-                                    </div>
-
-                                    {/* Tools Used */}
-                                    <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] gap-1 md:gap-4">
-                                        <h4 className="text-[10px] md:text-xs font-subtitle font-bold text-gray-500 uppercase tracking-[0.2em]">
-                                            Tools Used
-                                        </h4>
-                                        <p className="text-sm md:text-base font-body text-gray-300">
-                                            {tools_used}
-                                        </p>
-                                    </div>
-                                </div>
+                            {/* Project Details */}
+                            <div className={`shrink-0 ${isFullscreenGame ? 'hidden' : ''} ${useSideLayout
+                                ? 'w-[min(40%,400px)] border-l border-white/10 p-6'
+                                : ''
+                                }`}>
+                                {renderDetails(useSideLayout)}
                             </div>
                         </div>
                     </motion.div>
@@ -379,4 +433,3 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
         </AnimatePresence>
     );
 }
-

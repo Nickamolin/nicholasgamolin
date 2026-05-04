@@ -1,9 +1,9 @@
 <h1>Nicholas Gamolin Portfolio Website</h1>
 
-View the portfolio <a href="https://nicholasgamolin.com/">here</a>.
-
 <p align="center">
-  <img src="https://github.com/Nickamolin/nicholasgamolin/blob/main/public/apple-touch-icon.png" width="180">
+  <img src="https://github.com/Nickamolin/nicholasgamolin/blob/main/public/icon-square.png" width="512">
+  <br />
+  View the portfolio <a href="https://nicholasgamolin.com/">here</a>.
 </p>
 
 <h3>Summary</h3>

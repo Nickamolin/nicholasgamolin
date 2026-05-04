@@ -41,9 +41,9 @@ export const metadata = {
     siteName: "Nicholas Gamolin",
     images: [
       {
-        url: "/apple-touch-icon.png",
-        width: 180,
-        height: 180,
+        url: "/icon-square.png",
+        width: 512,
+        height: 512,
         alt: "Nicholas Gamolin Portfolio Logo",
       },
     ],
@@ -52,7 +52,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Nicholas Gamolin",
     description: "A showcase of my work as a digital artist and full-stack software engineer.",
-    images: ["/apple-touch-icon.png"],
+    images: ["/icon-square.png"],
   },
 };
 

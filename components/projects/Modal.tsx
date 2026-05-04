@@ -46,6 +46,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     // Desktop layout dimensions — computed via JS to size the modal tightly around the embed
     const [modalStyle, setModalStyle] = useState<{ width: number; height: number } | null>(null);
     const [embedDims, setEmbedDims] = useState<{ width: number; height: number } | null>(null);
+    const [detailsWidth, setDetailsWidth] = useState<number | null>(null);
 
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
@@ -175,8 +176,10 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
 
                 const mw = Math.round(ew + detailsW);
                 const mh = Math.min(Math.round(headerH + eh), Math.round(maxH));
+                const actualDetailsW = mw - Math.round(ew);
                 setEmbedDims({ width: Math.round(ew), height: Math.round(eh) });
                 setModalStyle({ width: mw, height: mh });
+                setDetailsWidth(actualDetailsW);
             } else {
                 // Stacked: embed on top, details below
                 const availH = maxH - headerH - detailsH;
@@ -314,7 +317,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
         <AnimatePresence onExitComplete={onExitComplete}>
             {isOpen && (
                 <div className={`fixed inset-0 z-[100] ${isMobile
-                    ? 'overflow-y-auto'
+                    ? 'overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
                     : 'overflow-hidden flex items-center justify-center'
                     }`}>
                     {/* Background overlay */}
@@ -396,20 +399,27 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                     </div>
                                 </div>
                             ) : (
-                                /* Desktop fixed-ratio: embed is precisely sized, centered in the embed area */
+                                /* Desktop fixed-ratio embed */
                                 <div
-                                    className={`relative bg-black/20 select-none touch-none overflow-hidden flex items-center justify-center
-                                        ${useSideLayout ? 'flex-1 min-w-0 min-h-0' : 'flex-1 min-h-0'}`}
+                                    className={`relative bg-black/20 select-none touch-none
+                                        ${useSideLayout
+                                            ? 'shrink-0'
+                                            : 'flex-1 min-h-0 flex items-center justify-center'
+                                        }`}
+                                    style={useSideLayout && embedDims ? { width: embedDims.width, height: embedDims.height } : undefined}
                                 >
-                                    {embedDims && (
+                                    {numericRatio ? (
                                         <div
-                                            className="relative"
-                                            style={{ width: embedDims.width, height: embedDims.height }}
+                                            className={useSideLayout ? 'absolute inset-0' : 'relative w-full h-full'}
+                                            style={useSideLayout ? undefined : {
+                                                maxWidth: embedDims?.width,
+                                                maxHeight: embedDims?.height,
+                                                aspectRatio: numericRatio,
+                                            }}
                                         >
                                             {renderEmbed()}
                                         </div>
-                                    )}
-                                    {!embedDims && (
+                                    ) : (
                                         <LoadingAnimation
                                             isVisible={true}
                                             wrapperClassName="absolute inset-0 z-20 bg-black"
@@ -420,10 +430,16 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             )}
 
                             {/* Project Details */}
-                            <div className={`shrink-0 ${isFullscreenGame ? 'hidden' : ''} ${useSideLayout
-                                ? 'w-[min(40%,400px)] border-l border-white/10 p-6'
-                                : ''
-                                }`}>
+                            <div
+                                className={`${isFullscreenGame ? 'hidden' : ''} ${isMobile
+                                    ? 'shrink-0'
+                                    : 'min-h-0 overflow-y-auto'
+                                } ${useSideLayout
+                                    ? 'border-l border-white/10 p-6'
+                                    : ''
+                                }`}
+                                style={useSideLayout && detailsWidth ? { width: detailsWidth } : undefined}
+                            >
                                 {renderDetails(useSideLayout)}
                             </div>
                         </div>

@@ -18,7 +18,7 @@ const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted, isTouchDe
     // Sync tooltip offset perfectly, even during CSS scale transitions and scroll
     useLayoutEffect(() => {
         if (!hasInteracted) return;
-        
+
         let rafId: number;
         const updateOffset = () => {
             if (tooltipRef.current && cardRef.current) {
@@ -30,7 +30,7 @@ const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted, isTouchDe
         };
 
         updateOffset();
-        
+
         return () => cancelAnimationFrame(rafId);
     }, [cardRef, hasInteracted]);
 
@@ -100,6 +100,7 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
         // Update URL to /projects/{slug} if on the projects page
         if (isOnProjectsPage() && project.slug) {
             window.history.pushState(null, '', `/projects/${project.slug}`);
+            document.title = project.title;
         }
     };
 
@@ -108,6 +109,7 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
         // Restore URL to /projects if on a project slug page
         if (isOnProjectsPage() && project.slug) {
             window.history.pushState(null, '', '/projects');
+            document.title = "Nicholas Gamolin | Projects";
         }
     };
 
@@ -117,8 +119,13 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
             const onSlugPage = window.location.pathname === `/projects/${project.slug}`;
             if (onSlugPage && !isModalOpen) {
                 setIsModalOpen(true);
+                document.title = project.title;
             } else if (!onSlugPage && isModalOpen) {
                 setIsModalOpen(false);
+                // If we navigated back to the main projects page, restore its title
+                if (window.location.pathname.startsWith('/projects')) {
+                    document.title = "Nicholas Gamolin | Projects";
+                }
             }
         };
 

@@ -20,6 +20,12 @@ export default function FilteredProjectList({ initialProjects, initialSlug }: Fi
         ? initialProjects
         : initialProjects.filter(p => p.type === filter);
 
+    const initialRender = React.useRef(true);
+
+    React.useEffect(() => {
+        initialRender.current = false;
+    }, []);
+
     return (
         <div className="w-full max-w-[2000px] flex flex-col items-center">
             {/* Filter Menu */}
@@ -68,7 +74,7 @@ export default function FilteredProjectList({ initialProjects, initialSlug }: Fi
                             >
                                 <ProjectCard
                                     project={project}
-                                    initialOpen={project.slug === initialSlug}
+                                    initialOpen={initialRender.current && project.slug === initialSlug}
                                 />
                             </motion.li>
                         ))}

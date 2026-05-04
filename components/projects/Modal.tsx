@@ -44,7 +44,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     const [isMobile, setIsMobile] = useState(false);
 
     // Desktop layout dimensions — computed via JS to size the modal tightly around the embed
-    const [modalStyle, setModalStyle] = useState<{ width: number; height: number } | null>(null);
+    const [modalStyle, setModalStyle] = useState<{ width: number; height?: number } | null>(null);
     const [embedDims, setEmbedDims] = useState<{ width: number; height: number } | null>(null);
     const [detailsWidth, setDetailsWidth] = useState<number | null>(null);
 
@@ -151,18 +151,18 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
             const maxH = window.innerHeight * 0.9;
             const headerH = 60;
             const detailsH = 200; // estimated height for stacked details section
+            const minEmbedH = 350; // enforce a minimum height so content never collapses to an unviewable size
 
             if (isResponsive) {
-                // Responsive content: modal fills 90vw × 90vh, embed fills all available space
+                // Responsive content: modal fills 90vw × 90vh
                 setModalStyle({ width: Math.round(maxW), height: Math.round(maxH) });
                 setEmbedDims(null);
                 return;
             }
 
-            const ratio = numericRatio!; // safe because !isResponsive guarantees non-null
+            const ratio = numericRatio!; 
 
             if (useSideLayout) {
-                // Side-by-side: embed left, details right
                 const detailsW = Math.min(maxW * 0.4, 400);
                 const availW = maxW - detailsW;
                 const availH = maxH - headerH;
@@ -173,15 +173,21 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                     eh = availH;
                     ew = eh * ratio;
                 }
+                
+                // Enforce minimum dimensions so it remains visible on very short screens
+                if (eh < minEmbedH) {
+                    eh = minEmbedH;
+                    ew = eh * ratio;
+                }
 
                 const mw = Math.round(ew + detailsW);
-                const mh = Math.min(Math.round(headerH + eh), Math.round(maxH));
+                const mh = Math.round(headerH + eh);
                 const actualDetailsW = mw - Math.round(ew);
+                
                 setEmbedDims({ width: Math.round(ew), height: Math.round(eh) });
                 setModalStyle({ width: mw, height: mh });
                 setDetailsWidth(actualDetailsW);
             } else {
-                // Stacked: embed on top, details below
                 const availH = maxH - headerH - detailsH;
 
                 let ew = maxW;
@@ -190,10 +196,17 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                     eh = availH;
                     ew = eh * ratio;
                 }
+                
+                // Enforce minimum dimensions
+                if (eh < minEmbedH) {
+                    eh = minEmbedH;
+                    ew = eh * ratio;
+                }
 
-                const mh = Math.min(Math.round(headerH + eh + detailsH), Math.round(maxH));
+                // In stacked layout, we do NOT force the modal's total height.
+                // We let it grow naturally to fit the embed + variable-length details text.
                 setEmbedDims({ width: Math.round(ew), height: Math.round(eh) });
-                setModalStyle({ width: Math.round(ew), height: mh });
+                setModalStyle({ width: Math.round(ew) });
             }
         };
 
@@ -316,10 +329,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     return (
         <AnimatePresence onExitComplete={onExitComplete}>
             {isOpen && (
-                <div className={`fixed inset-0 z-[100] ${isMobile
-                    ? 'overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
-                    : 'overflow-hidden flex items-center justify-center'
-                    }`}>
+                <div className={`fixed inset-0 z-[100] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
                     {/* Background overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -333,24 +343,26 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                         onClick={handleClose}
                     />
 
-                    {/* Modal Container */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{
-                            opacity: 0,
-                            y: 20,
-                            pointerEvents: "none",
-                            transition: { pointerEvents: { duration: 0 } }
-                        }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className={`relative z-10 bg-black/40 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col min-w-[320px]
-                            border-y md:border border-white/10
-                            ${isMobile
-                                ? 'w-full rounded-[1.5rem]'
-                                : 'overflow-hidden rounded-[2.5rem]'
-                            }
-                            ${isFullscreenGame ? 'fixed inset-0 z-[200] !rounded-none !border-none !w-full !h-full !my-0' : ''}`}
+                    {/* Centering Wrapper */}
+                    <div className={`flex min-h-full items-center justify-center ${isMobile ? 'p-0' : 'p-4 md:p-8'}`}>
+                        {/* Modal Container */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{
+                                opacity: 0,
+                                y: 20,
+                                pointerEvents: "none",
+                                transition: { pointerEvents: { duration: 0 } }
+                            }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            className={`relative z-10 bg-black/40 backdrop-blur-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col min-w-[320px]
+                                border-y md:border border-white/10
+                                ${isMobile
+                                    ? 'w-full rounded-[1.5rem]'
+                                    : 'overflow-hidden rounded-[2.5rem]'
+                                }
+                                ${isFullscreenGame ? 'fixed inset-0 z-[200] !rounded-none !border-none !w-full !h-full !my-0' : ''}`}
                         style={!isMobile && !isFullscreenGame && modalStyle ? {
                             width: modalStyle.width,
                             height: modalStyle.height,
@@ -401,22 +413,11 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             ) : (
                                 /* Desktop fixed-ratio embed */
                                 <div
-                                    className={`relative bg-black/20 select-none touch-none
-                                        ${useSideLayout
-                                            ? 'shrink-0'
-                                            : 'flex-1 min-h-0 flex items-center justify-center'
-                                        }`}
-                                    style={useSideLayout && embedDims ? { width: embedDims.width, height: embedDims.height } : undefined}
+                                    className="relative bg-black/20 select-none touch-none shrink-0 flex items-center justify-center"
+                                    style={embedDims ? { width: embedDims.width, height: embedDims.height } : undefined}
                                 >
                                     {numericRatio ? (
-                                        <div
-                                            className={useSideLayout ? 'absolute inset-0' : 'relative w-full h-full'}
-                                            style={useSideLayout ? undefined : {
-                                                maxWidth: embedDims?.width,
-                                                maxHeight: embedDims?.height,
-                                                aspectRatio: numericRatio,
-                                            }}
-                                        >
+                                        <div className="absolute inset-0">
                                             {renderEmbed()}
                                         </div>
                                     ) : (
@@ -444,6 +445,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             </div>
                         </div>
                     </motion.div>
+                    </div>
                 </div>
             )}
         </AnimatePresence>

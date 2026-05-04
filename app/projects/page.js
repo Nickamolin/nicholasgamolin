@@ -1,18 +1,8 @@
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-    title: "Nicholas Gamolin | Projects",
+    title: "Projects",
     description: "Work spanning art, animation, and software.",
-    openGraph: {
-        title: "Nicholas Gamolin | Projects",
-        description: "Work spanning art, animation, and software.",
-        type: "website",
-    },
-    twitter: {
-        card: "summary_large_image",
-        title: "Nicholas Gamolin | Projects",
-        description: "Work spanning art, animation, and software.",
-    },
 };
 
 import Projects from "@/components/projects/Projects";

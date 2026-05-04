@@ -1,20 +1,5 @@
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
-  title: "Nicholas Gamolin | Portfolio",
-  description: "A showcase of my work as a digital artist and full-stack software engineer.",
-  openGraph: {
-    title: "Nicholas Gamolin | Portfolio",
-    description: "A showcase of my work as a digital artist and full-stack software engineer.",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Nicholas Gamolin | Portfolio",
-    description: "A showcase of my work as a digital artist and full-stack software engineer.",
-  },
-};
-
 import Highlights from "@/components/projects/Highlights";
 import Button from "@/components/UI/Button";
 import ContactCard from "@/components/sections/ContactCard";

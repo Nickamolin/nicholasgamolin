@@ -1,6 +1,7 @@
 export type Project = {
     id: number;
     title: string;
+    slug: string;
     subtitle: string;
     thumbnail_url: string;
     date_published: string;

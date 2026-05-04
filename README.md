@@ -1,7 +1,7 @@
-<h1>Nicholas Gamolin Portfolio Website</h1>
+<h1 align="center">Nicholas Gamolin Portfolio Website</h1>
 
 <p align="center">
-  <img src="https://github.com/Nickamolin/nicholasgamolin/blob/main/public/icon-square.png" width="512">
+  <img src="https://github.com/Nickamolin/nicholasgamolin/blob/main/public/icon-square.png" width="512" style="border-radius: 40px;">
   <br />
   View the portfolio <a href="https://nicholasgamolin.com/">here</a>.
 </p>

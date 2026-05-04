@@ -224,7 +224,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
             <LoadingAnimation
                 isVisible={isLoading}
                 wrapperClassName="absolute inset-0 z-20 bg-black"
-                className="w-32 h-32 md:w-48 md:h-48"
+                className="w-24 h-24 md:w-36 md:h-36"
             />
 
             {embedType?.toLowerCase() === "riv" ? (

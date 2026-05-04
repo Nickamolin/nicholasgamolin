@@ -100,7 +100,7 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
         // Update URL to /projects/{slug} if on the projects page
         if (isOnProjectsPage() && project.slug) {
             window.history.pushState(null, '', `/projects/${project.slug}`);
-            document.title = project.title;
+            document.title = project.title + " | Nicholas Gamolin";
         }
     };
 
@@ -109,7 +109,7 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
         // Restore URL to /projects if on a project slug page
         if (isOnProjectsPage() && project.slug) {
             window.history.pushState(null, '', '/projects');
-            document.title = "Nicholas Gamolin | Projects";
+            document.title = "Projects | Nicholas Gamolin";
         }
     };
 
@@ -119,12 +119,12 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
             const onSlugPage = window.location.pathname === `/projects/${project.slug}`;
             if (onSlugPage && !isModalOpen) {
                 setIsModalOpen(true);
-                document.title = project.title;
+                document.title = project.title + " | Nicholas Gamolin";
             } else if (!onSlugPage && isModalOpen) {
                 setIsModalOpen(false);
                 // If we navigated back to the main projects page, restore its title
                 if (window.location.pathname.startsWith('/projects')) {
-                    document.title = "Nicholas Gamolin | Projects";
+                    document.title = "Projects | Nicholas Gamolin";
                 }
             }
         };

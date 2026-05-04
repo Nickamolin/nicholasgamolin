@@ -16,25 +16,23 @@ export async function generateMetadata({ params }) {
 
     if (!project) {
         return {
-            title: "Nicholas Gamolin | Projects",
+            title: "Projects",
             description: "Work spanning art, animation, and software.",
         };
     }
 
     return {
-        title: `${project.title}`,
+        title: project.title,
         description: project.subtitle || project.summary || "Work spanning art, animation, and software.",
         openGraph: {
-            title: `${project.title}`,
+            title: project.title,
             description: project.subtitle || project.summary || "Work spanning art, animation, and software.",
-            images: project.thumbnail_url ? [{ url: project.thumbnail_url }] : [],
-            type: "website",
+            images: project.thumbnail_url ? [{ url: project.thumbnail_url }] : undefined,
         },
         twitter: {
-            card: "summary_large_image",
-            title: `${project.title}`,
+            title: project.title,
             description: project.subtitle || project.summary || "Work spanning art, animation, and software.",
-            images: project.thumbnail_url ? [project.thumbnail_url] : [],
+            images: project.thumbnail_url ? [project.thumbnail_url] : undefined,
         },
     };
 }

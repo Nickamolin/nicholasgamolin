@@ -1,18 +1,8 @@
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-    title: "Nicholas Gamolin | About",
+    title: "About",
     description: "My background, professional experience, and tools.",
-    openGraph: {
-        title: "Nicholas Gamolin | About",
-        description: "My background, professional experience, and tools.",
-        type: "profile",
-    },
-    twitter: {
-        card: "summary_large_image",
-        title: "Nicholas Gamolin | About",
-        description: "My background, professional experience, and tools.",
-    },
 };
 
 import ContactCard from "@/components/sections/ContactCard";

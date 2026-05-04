@@ -29,8 +29,31 @@ const jetbrains_mono = JetBrains_Mono({
 
 
 export const metadata = {
-  title: "Nicholas Gamolin",
-  description: "Personal Portfolio",
+  title: {
+    default: "Nicholas Gamolin",
+    template: "%s | Nicholas Gamolin",
+  },
+  description: "A showcase of my work as a digital artist and full-stack software engineer.",
+  openGraph: {
+    title: "Nicholas Gamolin",
+    description: "A showcase of my work as a digital artist and full-stack software engineer.",
+    type: "website",
+    siteName: "Nicholas Gamolin",
+    images: [
+      {
+        url: "/android-chrome-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "Nicholas Gamolin Portfolio Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Nicholas Gamolin",
+    description: "A showcase of my work as a digital artist and full-stack software engineer.",
+    images: ["/android-chrome-512x512.png"],
+  },
 };
 
 export const viewport = {

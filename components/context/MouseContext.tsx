@@ -15,23 +15,36 @@ export const MouseProvider = ({ children }: { children: React.ReactNode }) => {
     const mouseY = useMotionValue(0);
 
     useEffect(() => {
+        const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
         const handleMouseMove = (event: MouseEvent) => {
             mouseX.set(event.clientX);
             mouseY.set(event.clientY);
         };
 
-        // Capture mouse position on any interaction to bootstrap the context
-        // Use capture phase to ensure we get coordinates even if propagation is stopped
+        // Capture mouse position on any interaction to bootstrap the context.
+        // Use capture phase to ensure we get coordinates even if propagation is stopped.
         window.addEventListener("mousemove", handleMouseMove, { capture: true });
         window.addEventListener("mouseover", handleMouseMove, { capture: true });
         window.addEventListener("mousedown", handleMouseMove, { capture: true });
+
+        // Only wire up wheel and scroll-sync on hover-capable devices.
+        // On touch-only devices (Android Chrome), the wheel event fires with clientX/Y=0
+        // which would overwrite mouse coordinates and cause phantom hover states.
+        if (!canHover) {
+            return () => {
+                window.removeEventListener("mousemove", handleMouseMove, { capture: true });
+                window.removeEventListener("mouseover", handleMouseMove, { capture: true });
+                window.removeEventListener("mousedown", handleMouseMove, { capture: true });
+            };
+        }
+
         // The wheel event guarantees we get mouse coordinates if the user's very first action is scrolling!
         window.addEventListener("wheel", handleMouseMove as EventListener, { capture: true, passive: true });
-        
+
         let rafId: number;
         let isScrolling = false;
         let scrollTimeout: NodeJS.Timeout;
-
         let lastTarget: Element | null = null;
 
         // Force browser and React to re-evaluate what element is under the mouse during scroll.
@@ -40,7 +53,7 @@ export const MouseProvider = ({ children }: { children: React.ReactNode }) => {
             if (!isScrolling) return;
             const x = mouseX.get();
             const y = mouseY.get();
-            
+
             // Only fire if we actually have a mouse position (don't fire at 0,0 implicitly)
             if (x !== 0 || y !== 0) {
                 const target = document.elementFromPoint(x, y);
@@ -59,15 +72,11 @@ export const MouseProvider = ({ children }: { children: React.ReactNode }) => {
         };
 
         const handleScroll = () => {
-            // Disable scroll-sync on mobile/touch devices to prevent "phantom cursor" hovers.
-            // On touch devices, there is no persistent cursor sitting on the screen during scroll.
-            if (!window.matchMedia("(hover: hover)").matches) return;
-
             if (!isScrolling) {
                 isScrolling = true;
                 rafId = requestAnimationFrame(syncHoverState);
             }
-            
+
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
                 isScrolling = false;

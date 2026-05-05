@@ -133,18 +133,21 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
                 href={project.embed_url ? undefined : (project.info_url || undefined)}
                 target={project.embed_url ? undefined : (project.info_url ? "_blank" : undefined)}
                 rel={project.embed_url ? undefined : (project.info_url ? "noopener noreferrer" : undefined)}
-                className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && !isModalOpen && hasInteracted ? "cursor-none" : ""}`}
+                className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${canHover && hasHoverText && !isModalOpen && hasInteracted ? "cursor-none" : ""}`}
                 onMouseEnter={(e) => {
+                    if (!canHover) return;
                     mouseX.set(e.clientX);
                     mouseY.set(e.clientY);
                     setHasInteracted(true);
                 }}
                 onMouseMove={(e) => {
+                    if (!canHover) return;
                     mouseX.set(e.clientX);
                     mouseY.set(e.clientY);
                     setHasInteracted(true);
                 }}
                 onMouseLeave={() => {
+                    if (!canHover) return;
                     setHasInteracted(false);
                 }}
                 onClick={(e) => {

@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useMousePosition } from "@/components/context/MouseContext";
+import { useCanHover } from "@/hooks/useCanHover";
 
 const RAINBOW = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#a855f7", "#ec4899"];
 
@@ -63,7 +64,7 @@ const MemoizedBio = React.memo(({
         ));
     };
     return (
-        <div className="text-lg md:text-xl text-left font-body font-medium text-gray-400 flex flex-col justify-center gap-8 cursor-text select-text">
+        <div className="text-lg md:text-xl text-left font-body font-normal text-gray-400 flex flex-col justify-center gap-8 cursor-text select-text">
             {content.map((section, pIdx) => (
                 <div key={pIdx} className="flex flex-col">
                     {section.header && (
@@ -95,27 +96,13 @@ export default function Blurb({
     const [ripples, setRipples] = useState<{ id: number; x: number; y: number; imgX: number; imgY: number; imgWidth: number; baseHue: number; startTime: number }[]>([]);
     const [isHovered, setIsHovered] = useState(false);
     const [isImageHovered, setIsImageHovered] = useState(false);
-    const [isTouchDevice, setIsTouchDevice] = useState(false);
-    const [hasHover, setHasHover] = useState(false);
     const [scalingRippleCount, setScalingRippleCount] = useState(0);
+    const canHover = useCanHover();
 
     const pointerDownPos = useRef({ x: 0, y: 0 });
     const pointerDownTime = useRef(0);
 
     const { mouseX, mouseY } = useMousePosition();
-
-    useEffect(() => {
-        const checkTouch = () => {
-            return (
-                'ontouchstart' in window ||
-                navigator.maxTouchPoints > 0 ||
-                window.matchMedia('(pointer: coarse)').matches
-            );
-        };
-        const isTouch = checkTouch();
-        setIsTouchDevice(isTouch);
-        setHasHover(!isTouch);
-    }, []);
 
     useEffect(() => {
         const calculatePositions = () => {
@@ -244,7 +231,7 @@ export default function Blurb({
     return (
         <div
             ref={containerRef}
-            className={`flex flex-col items-center w-full max-w-5xl relative group ${isHovered && !isTouchDevice ? 'cursor-none' : ''}`}
+            className={`flex flex-col items-center w-full max-w-5xl relative group ${isHovered && canHover ? 'cursor-none' : ''}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onPointerDown={handlePointerDown}
@@ -261,7 +248,7 @@ export default function Blurb({
                     >
                         <motion.div
                             animate={{
-                                scale: (isImageHovered && hasHover) || scalingRippleCount > 0 ? 1.05 : 1
+                                scale: (isImageHovered && canHover) || scalingRippleCount > 0 ? 1.05 : 1
                             }}
                             transition={{ duration: 0.7, ease: "easeOut" }}
                             className="relative w-full h-full"
@@ -353,7 +340,7 @@ export default function Blurb({
             </div>
 
             {/* Global Custom Cursor */}
-            {!isTouchDevice && (
+            {canHover && (
                 <motion.div
                     initial={false}
                     animate={{

@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { motion, type MotionProps } from "motion/react";
 import { useLoading } from "@/components/loading/LoadingProvider";
+import { useCanHover } from "@/hooks/useCanHover";
 
 interface ButtonProps {
   href?: string;
@@ -36,6 +37,7 @@ export default function Button({
 }: ButtonProps) {
   const { navigateWithTransition } = useLoading();
   const [isHovered, setIsHovered] = React.useState(false);
+  const canHover = useCanHover();
   const baseStyles =
     "inline-flex items-center justify-center font-subtitle tracking-[0.2em] uppercase text-xs md:text-sm whitespace-nowrap overflow-hidden transition-colors duration-300 cursor-pointer";
 
@@ -66,7 +68,7 @@ export default function Button({
     }
   };
   
-  const activeHover = isExternalHover !== undefined ? isExternalHover : isHovered;
+  const activeHover = canHover && (isExternalHover !== undefined ? isExternalHover : isHovered);
 
   const content = (
     <div className="relative overflow-hidden h-[1.2em]">
@@ -95,8 +97,6 @@ export default function Button({
       <motion.div
         initial="initial"
         animate={activeHover ? "hover" : "initial"}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         className="inline-block"
       >
         <MotionLink
@@ -106,6 +106,8 @@ export default function Button({
           target={target}
           download={download}
           whileTap={tapVariants[variant]}
+          onMouseEnter={() => { if (canHover) setIsHovered(true); }}
+          onMouseLeave={() => { if (canHover) setIsHovered(false); }}
         >
           {content}
         </MotionLink>
@@ -117,8 +119,8 @@ export default function Button({
     <motion.button
       initial="initial"
       animate={activeHover ? "hover" : "initial"}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => { if (canHover) setIsHovered(true); }}
+      onMouseLeave={() => { if (canHover) setIsHovered(false); }}
       whileTap={tapVariants[variant]}
       onClick={onClick}
       className={combinedClasses}

@@ -2,23 +2,12 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
+import { useCanHover } from "@/hooks/useCanHover";
 
 export default function TechIcon({ src, alt }: { src: string, alt: string }) {
     const [isActive, setIsActive] = React.useState(false);
     const [isHovered, setIsHovered] = React.useState(false);
-    const [canDrag, setCanDrag] = React.useState(false);
-
-    React.useEffect(() => {
-        const checkTouch = () => {
-            return (
-                'ontouchstart' in window ||
-                navigator.maxTouchPoints > 0 ||
-                window.matchMedia('(pointer: coarse)').matches
-            );
-        };
-        // Enable dragging only on non-touch (cursor) devices
-        setCanDrag(!checkTouch());
-    }, []);
+    const canHover = useCanHover();
 
     const handleTap = () => {
         if (isActive) return;
@@ -33,11 +22,11 @@ export default function TechIcon({ src, alt }: { src: string, alt: string }) {
             onMouseLeave={() => setIsHovered(false)}
             onClick={handleTap}
             // Physics-based Drag Configuration
-            drag={canDrag}
+            drag={canHover}
             dragSnapToOrigin
             dragElastic={0.15}
             dragTransition={{ bounceStiffness: 500, bounceDamping: 20 }}
-            whileHover={{ cursor: canDrag ? 'grab' : 'default' }}
+            whileHover={{ cursor: canHover ? 'grab' : 'default' }}
             whileDrag={{ scale: 1.15, cursor: 'grabbing', zIndex: 50 }}
             animate={{ scale: (isActive || isHovered) ? 1.1 : 1 }}
             transition={{ duration: 0.3 }}

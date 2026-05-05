@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useLayoutEffect, useRef } from "react";
+import { useCanHover } from "@/hooks/useCanHover";
 import Image from "next/image";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "motion/react";
 import type { Project } from "./types";
@@ -11,7 +12,7 @@ type ProjectCardProps = {
     initialOpen?: boolean;
 };
 
-const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted, isTouchDevice }: { text: string; cardRef: React.RefObject<HTMLAnchorElement | null>; isModalOpen: boolean; hasInteracted: boolean; isTouchDevice: boolean }) => {
+const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted, canHover }: { text: string; cardRef: React.RefObject<HTMLAnchorElement | null>; isModalOpen: boolean; hasInteracted: boolean; canHover: boolean }) => {
     const { mouseX, mouseY } = useMousePosition();
     const tooltipRef = React.useRef<HTMLDivElement>(null);
 
@@ -39,7 +40,7 @@ const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted, isTouchDe
             <motion.div
                 ref={tooltipRef}
                 className={`absolute pointer-events-none origin-center flex items-center justify-center -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300
-                    ${hasInteracted && !isTouchDevice ? 'opacity-100' : 'opacity-0'}`}
+                    ${hasInteracted && canHover ? 'opacity-100' : 'opacity-0'}`}
                 style={{
                     left: mouseX,
                     top: mouseY,
@@ -70,18 +71,7 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
     const cardRef = React.useRef<HTMLAnchorElement>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
-    const [isTouchDevice, setIsTouchDevice] = useState(false);
-
-    useEffect(() => {
-        const checkTouch = () => {
-            return (
-                'ontouchstart' in window ||
-                navigator.maxTouchPoints > 0 ||
-                window.matchMedia('(pointer: coarse)').matches
-            );
-        };
-        setIsTouchDevice(checkTouch());
-    }, []);
+    const canHover = useCanHover();
 
     // Auto-open modal when initialOpen is true (deep-linked slug)
     useEffect(() => {
@@ -143,18 +133,21 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
                 href={project.embed_url ? undefined : (project.info_url || undefined)}
                 target={project.embed_url ? undefined : (project.info_url ? "_blank" : undefined)}
                 rel={project.embed_url ? undefined : (project.info_url ? "noopener noreferrer" : undefined)}
-                className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${hasHoverText && !isModalOpen && hasInteracted ? "cursor-none" : ""}`}
+                className={`relative w-full aspect-square overflow-hidden group border-2 border-white/20 rounded-2xl block ${canHover && hasHoverText && !isModalOpen && hasInteracted ? "cursor-none" : ""}`}
                 onMouseEnter={(e) => {
+                    if (!canHover) return;
                     mouseX.set(e.clientX);
                     mouseY.set(e.clientY);
                     setHasInteracted(true);
                 }}
                 onMouseMove={(e) => {
+                    if (!canHover) return;
                     mouseX.set(e.clientX);
                     mouseY.set(e.clientY);
                     setHasInteracted(true);
                 }}
                 onMouseLeave={() => {
+                    if (!canHover) return;
                     setHasInteracted(false);
                 }}
                 onClick={(e) => {
@@ -173,15 +166,15 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
                         fill
                         draggable={false}
                         style={project.embed_type === 'pico8' ? { imageRendering: "pixelated" } : undefined}
-                        className={`object-cover transition-all duration-500 ${isTouchDevice ? 'saturate-100 scale-100' : (hasInteracted && !isModalOpen ? 'saturate-100 scale-105' : 'saturate-0 scale-100')}`}
+                        className={`object-cover transition-all duration-500 ${!canHover ? 'saturate-100 scale-100' : (hasInteracted && !isModalOpen ? 'saturate-100 scale-105' : 'saturate-0 scale-100')}`}
                     />
 
                     {/* Title Overlay */}
-                    <div className={`absolute inset-x-0 bottom-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end transition-all duration-500 ${isTouchDevice || (hasInteracted && !isModalOpen) ? 'opacity-100' : 'opacity-0'}`}>
-                        <h3 className={`text-white font-title font-bold text-xl sm:text-2xl text-shadow-md transition-transform duration-500 ${isTouchDevice || (hasInteracted && !isModalOpen) ? 'translate-y-0' : 'translate-y-2'}`}>
+                    <div className={`absolute inset-x-0 bottom-0 p-4 sm:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end transition-all duration-500 ${!canHover || (hasInteracted && !isModalOpen) ? 'opacity-100' : 'opacity-0'}`}>
+                        <h3 className={`text-white font-title font-bold text-xl sm:text-2xl text-shadow-md transition-transform duration-500 ${!canHover || (hasInteracted && !isModalOpen) ? 'translate-y-0' : 'translate-y-2'}`}>
                             {project.title}
                         </h3>
-                        <div className={`flex justify-between items-center w-full mt-1 transition-transform duration-500 delay-75 ${isTouchDevice || (hasInteracted && !isModalOpen) ? 'translate-y-0' : 'translate-y-2'}`}>
+                        <div className={`flex justify-between items-center w-full mt-1 transition-transform duration-500 delay-75 ${!canHover || (hasInteracted && !isModalOpen) ? 'translate-y-0' : 'translate-y-2'}`}>
                             {project.subtitle && (
                                 <p className="text-gray-200 font-subtitle text-xs sm:text-sm pr-4 uppercase tracking-wider">
                                     {project.subtitle}
@@ -202,7 +195,7 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
                         cardRef={cardRef}
                         isModalOpen={isModalOpen}
                         hasInteracted={hasInteracted}
-                        isTouchDevice={isTouchDevice}
+                        canHover={canHover}
                     />
                 )}
             </a>

@@ -9,6 +9,7 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
 import { useLoading } from "../loading/LoadingProvider";
+import { useCanHover } from "@/hooks/useCanHover";
 
 interface Head3DProps {
   className?: string;
@@ -23,6 +24,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
   const modelRef = useRef<THREE.Object3D | null>(null);
   const animationFrameIdRef = useRef<number | null>(null);
   const [isHovered, setIsHovered] = React.useState(false);
+  const canHover = useCanHover();
   const { registerLoadingItem, resolveLoadingItem } = useLoading();
   const hasRegisteredRef = useRef(false);
 
@@ -175,9 +177,9 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
   return (
     <div
       ref={containerRef}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`w-full h-full active:cursor-grabbing ${isHovered ? 'cursor-grab' : ''} ${className}`}
+      onMouseEnter={() => { if (canHover) setIsHovered(true); }}
+      onMouseLeave={() => { if (canHover) setIsHovered(false); }}
+      className={`w-full h-full select-none active:cursor-grabbing ${canHover && isHovered ? 'cursor-grab' : ''} ${className}`}
     />
   );
 };

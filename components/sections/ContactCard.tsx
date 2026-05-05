@@ -165,8 +165,7 @@ const FormInput = ({
     isTextarea?: boolean;
     rows?: number;
 }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const className = `w-full bg-white/5 border rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 transition-all duration-300 placeholder:text-gray-600 ${isHovered ? 'border-white/20' : 'border-white/10'}`;
+    const className = `w-full bg-white/5 border border-white/10 hover:border-white/20 focus:border-white/20 rounded-2xl px-4 py-4 text-white font-text focus:outline-none focus:ring-2 focus:ring-white/40 transition-all duration-300 placeholder:text-gray-600`;
 
     if (isTextarea) {
         return (
@@ -177,8 +176,6 @@ const FormInput = ({
                 value={value}
                 onChange={onChange}
                 required={required}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
                 className={`${className} resize-none`}
             />
         );
@@ -192,8 +189,6 @@ const FormInput = ({
             value={value}
             onChange={onChange}
             required={required}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
             className={className}
         />
     );

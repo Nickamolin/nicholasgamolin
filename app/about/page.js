@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-    title: "About",
     description: "My background, professional experience, and tools.",
 };
 

@@ -179,7 +179,7 @@ const Head3D: React.FC<Head3DProps> = ({ className = "" }) => {
       ref={containerRef}
       onMouseEnter={() => { if (canHover) setIsHovered(true); }}
       onMouseLeave={() => { if (canHover) setIsHovered(false); }}
-      className={`w-full h-full active:cursor-grabbing ${canHover && isHovered ? 'cursor-grab' : ''} ${className}`}
+      className={`w-full h-full select-none active:cursor-grabbing ${canHover && isHovered ? 'cursor-grab' : ''} ${className}`}
     />
   );
 };

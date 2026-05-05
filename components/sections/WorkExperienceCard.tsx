@@ -5,6 +5,7 @@ import { motion, useAnimation } from "motion/react";
 import Modal from "../projects/Modal";
 import type { Project } from "../projects/types";
 import Button from "../UI/Button";
+import { useCanHover } from "@/hooks/useCanHover";
 
 type WorkEntry = {
     id: number;
@@ -37,7 +38,7 @@ interface ExperienceContentProps {
     dateRange: string;
     isButtonHovered: boolean;
     onButtonHoverChange: (isHovered: boolean) => void;
-    onViewClick?: () => void;
+    onViewClick?: (e?: React.MouseEvent) => void;
 }
 
 const ExperienceContent = ({
@@ -94,6 +95,7 @@ const ExperienceContent = ({
                     <div
                         onMouseEnter={() => onButtonHoverChange(true)}
                         onMouseLeave={() => onButtonHoverChange(false)}
+                        onClick={(e) => e.stopPropagation()}
                         className="relative"
                     >
                         <Button
@@ -116,6 +118,7 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
     const [isHovered, setIsHovered] = useState(false);
     const [isButtonHovered, setIsButtonHovered] = useState(false);
     const cardRef = React.useRef<HTMLDivElement>(null);
+    const canHover = useCanHover();
 
     // Tracking the 'anchor' side of the clip-path:
     // 'left' uses inset(0 X% 0 0) - wipes from/to the left
@@ -142,12 +145,26 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
     };
 
     // Reset hover state when modal opens so it can be re-triggered on close
+    // Only on desktop — on touch, keep the card highlighted while the modal is open
     useEffect(() => {
-        if (isModalOpen) {
+        if (isModalOpen && canHover) {
             setIsHovered(false);
             setIsButtonHovered(false);
         }
-    }, [isModalOpen]);
+    }, [isModalOpen, canHover]);
+
+    // Touch: ensure only one card is highlighted at a time via custom event
+    useEffect(() => {
+        if (canHover) return;
+        const handler = (e: Event) => {
+            const detail = (e as CustomEvent).detail;
+            if (detail?.id !== work.id) {
+                setIsHovered(false);
+            }
+        };
+        window.addEventListener('work-card-tap', handler);
+        return () => window.removeEventListener('work-card-tap', handler);
+    }, [canHover, work.id]);
 
     useEffect(() => {
         if (isHovered) {
@@ -193,9 +210,21 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
             <div
                 ref={cardRef}
                 onMouseEnter={() => {
-                    setIsHovered(true);
+                    if (canHover) setIsHovered(true);
                 }}
-                onMouseLeave={() => setIsHovered(false)}
+                onMouseLeave={() => {
+                    if (canHover) setIsHovered(false);
+                }}
+                onClick={(e) => {
+                    // Touch: tap-to-toggle highlight, exclusive (one at a time)
+                    if (!canHover) {
+                        const willHighlight = !isHovered;
+                        if (willHighlight) {
+                            window.dispatchEvent(new CustomEvent('work-card-tap', { detail: { id: work.id } }));
+                        }
+                        setIsHovered(willHighlight);
+                    }
+                }}
                 className="group relative w-screen left-1/2 -translate-x-1/2 border-b border-white/10 last:border-b-0 transition-all duration-300 overflow-hidden"
             >
                 {/* Base Layer (Dimmed) */}
@@ -206,7 +235,10 @@ export default function WorkExperienceCard({ work, project }: WorkExperienceCard
                     dateRange={dateRange}
                     isButtonHovered={isButtonHovered}
                     onButtonHoverChange={setIsButtonHovered}
-                    onViewClick={() => setIsModalOpen(true)}
+                    onViewClick={(e) => {
+                        e?.stopPropagation();
+                        setIsModalOpen(true);
+                    }}
                 />
 
                 {/* Hover Reveal Layer (Soft Slate Effect) */}

@@ -1,17 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useLoading } from "@/components/loading/LoadingProvider";
+import { useCanHover } from "@/hooks/useCanHover";
 
 export default function Navbar() {
   const { navigateWithTransition } = useLoading();
   const pathname = usePathname();
+  const canHover = useCanHover();
   const [hoveredPath, setHoveredPath] = useState<string | null>(null);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const [isFullyGrown, setIsFullyGrown] = useState(false);
+
+  // On touch: dismiss underline when the new page actually loads
+  useEffect(() => {
+    if (!canHover) {
+      setHoveredPath(null);
+    }
+  }, [canHover, pathname]);
 
   // Reset pending path when pathname actually changes
   React.useEffect(() => {
@@ -46,12 +55,23 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={(e) => handleNav(e, link.href)}
+                onClick={(e) => {
+                  // On touch: show underline on the tapped link
+                  if (!canHover) {
+                    setHoveredPath(link.href);
+                    setIsFullyGrown(false);
+                  }
+                  handleNav(e, link.href);
+                }}
                 onMouseEnter={() => {
+                  if (!canHover) return;
                   setHoveredPath(link.href);
                   setIsFullyGrown(false);
                 }}
-                onMouseLeave={() => setHoveredPath(null)}
+                onMouseLeave={() => {
+                  if (!canHover) return;
+                  setHoveredPath(null);
+                }}
                 className="relative py-1 group"
               >
                 <span className={`transition-colors duration-300 ${isActive ? 'text-white' : 'text-white/60 group-hover:text-white'}`}>

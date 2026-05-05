@@ -496,6 +496,9 @@
 
 		var p8_touch_detected = false;
 		addEventListener("touchstart", function (event) {
+			if (!p8_touch_detected) {
+				window.parent.postMessage({ type: 'PICO8_TOUCH' }, '*');
+			}
 			p8_touch_detected = true;
 
 			// hide codo_textarea -- clipboard support on mobile is not feasible

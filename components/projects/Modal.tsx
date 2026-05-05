@@ -41,6 +41,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     const prevIsOpenRef = useRef<boolean>(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isGameActive, setIsGameActive] = useState(false);
+    const [hasReceivedTouch, setHasReceivedTouch] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
     // Desktop layout dimensions — computed via JS to size the modal tightly around the embed
@@ -54,6 +55,8 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                 setIsGameActive(true);
             } else if (event.data.type === 'PICO8_STOP') {
                 setIsGameActive(false);
+            } else if (event.data.type === 'PICO8_TOUCH') {
+                setHasReceivedTouch(true);
             }
         };
         window.addEventListener('message', handleMessage);
@@ -62,6 +65,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
 
     const handleClose = () => {
         setIsGameActive(false);
+        setHasReceivedTouch(false);
         onClose();
     };
 
@@ -73,8 +77,6 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
         prevUrlRef.current = cleanUrl;
     }
     prevIsOpenRef.current = isOpen;
-
-    const isTouchScreen = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
     // Parse aspect ratio string (e.g. "16/9") into a number, or null for responsive content
     const numericRatio = React.useMemo(() => {
@@ -216,7 +218,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     }, [isOpen, isMobile, numericRatio, useSideLayout, isResponsive]);
 
     // The fullscreen game override
-    const isFullscreenGame = isGameActive && isTouchScreen;
+    const isFullscreenGame = isGameActive && hasReceivedTouch;
 
     // --- Render embedded content (shared between layouts) ---
     const renderEmbed = () => (
@@ -329,7 +331,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     return (
         <AnimatePresence onExitComplete={onExitComplete}>
             {isOpen && (
-                <div className={`fixed inset-0 z-[100] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
+                <div className={`fixed inset-0 z-[100] ${isFullscreenGame ? 'overflow-hidden' : 'overflow-y-auto'} [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
                     {/* Background overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -343,8 +345,8 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                         onClick={handleClose}
                     />
 
-                    {/* Centering Wrapper */}
-                    <div className={`flex min-h-full items-center justify-center ${isMobile ? 'p-0' : 'p-4 md:p-8'}`}>
+                    {/* Centering Wrapper — becomes a full-height stretch container when game is fullscreen */}
+                    <div className={`flex ${isFullscreenGame ? 'h-full p-0' : `min-h-full items-center justify-center ${isMobile ? 'p-0' : 'p-4 md:p-8'}`}`}>
                         {/* Modal Container */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -362,11 +364,11 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                     ? 'w-full rounded-[1.5rem]'
                                     : 'overflow-hidden rounded-[2.5rem]'
                                 }
-                                ${isFullscreenGame ? 'fixed inset-0 z-[200] !rounded-none !border-none !w-full !h-full !my-0' : ''}`}
-                        style={!isMobile && !isFullscreenGame && modalStyle ? {
+                                ${isFullscreenGame ? 'flex-1 w-full !rounded-none !border-none' : ''}`}
+                        style={isFullscreenGame ? undefined : (!isMobile && modalStyle ? {
                             width: modalStyle.width,
                             height: modalStyle.height,
-                        } : undefined}
+                        } : undefined)}
                     >
                         {/* Header Bar */}
                         <div className={`flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 z-20 shrink-0 ${isFullscreenGame ? 'hidden' : 'flex'}`}>
@@ -413,8 +415,8 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                             ) : (
                                 /* Desktop fixed-ratio embed */
                                 <div
-                                    className="relative bg-black/20 select-none touch-none shrink-0 flex items-center justify-center"
-                                    style={embedDims ? { width: embedDims.width, height: embedDims.height } : undefined}
+                                    className={`relative bg-black/20 select-none touch-none flex items-center justify-center ${isFullscreenGame ? 'flex-1 w-full' : 'shrink-0'}`}
+                                    style={isFullscreenGame ? undefined : (embedDims ? { width: embedDims.width, height: embedDims.height } : undefined)}
                                 >
                                     {numericRatio ? (
                                         <div className="absolute inset-0">
@@ -439,7 +441,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                     ? 'border-l border-white/10 p-6'
                                     : ''
                                 }`}
-                                style={useSideLayout && detailsWidth ? { width: detailsWidth } : undefined}
+                                style={!isFullscreenGame && useSideLayout && detailsWidth ? { width: detailsWidth } : undefined}
                             >
                                 {renderDetails(useSideLayout)}
                             </div>

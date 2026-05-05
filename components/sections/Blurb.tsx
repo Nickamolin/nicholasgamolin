@@ -64,7 +64,7 @@ const MemoizedBio = React.memo(({
         ));
     };
     return (
-        <div className="text-lg md:text-xl text-left font-body font-medium text-gray-400 flex flex-col justify-center gap-8 cursor-text select-text">
+        <div className="text-lg md:text-xl text-left font-body font-normal text-gray-400 flex flex-col justify-center gap-8 cursor-text select-text">
             {content.map((section, pIdx) => (
                 <div key={pIdx} className="flex flex-col">
                     {section.header && (

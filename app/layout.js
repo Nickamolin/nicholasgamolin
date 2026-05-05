@@ -29,10 +29,8 @@ const jetbrains_mono = JetBrains_Mono({
 
 
 export const metadata = {
-  title: {
-    default: "Nicholas Gamolin",
-    template: "%s | Nicholas Gamolin",
-  },
+  metadataBase: new URL("https://nicholasgamolin.com"),
+  title: "Nicholas Gamolin",
   description: "A showcase of my work as a digital artist and full-stack software engineer.",
   openGraph: {
     title: "Nicholas Gamolin",

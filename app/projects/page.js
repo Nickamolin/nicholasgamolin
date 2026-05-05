@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-    title: "Projects",
     description: "Work spanning art, animation, and software.",
 };
 

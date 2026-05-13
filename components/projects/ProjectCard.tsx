@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState, useLayoutEffect, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useCanHover } from "@/hooks/useCanHover";
 import Image from "next/image";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "motion/react";
@@ -12,57 +13,43 @@ type ProjectCardProps = {
     initialOpen?: boolean;
 };
 
-const OptimizedTooltip = ({ text, cardRef, isModalOpen, hasInteracted, canHover }: { text: string; cardRef: React.RefObject<HTMLAnchorElement | null>; isModalOpen: boolean; hasInteracted: boolean; canHover: boolean }) => {
+const OptimizedTooltip = ({ text, isModalOpen, hasInteracted, canHover }: { text: string; isModalOpen: boolean; hasInteracted: boolean; canHover: boolean }) => {
     const { mouseX, mouseY } = useMousePosition();
-    const tooltipRef = React.useRef<HTMLDivElement>(null);
+    const [mounted, setMounted] = React.useState(false);
+    React.useEffect(() => { setMounted(true); }, []);
 
-    // Sync tooltip offset perfectly, even during CSS scale transitions and scroll
-    useLayoutEffect(() => {
-        if (!hasInteracted) return;
+    if (!mounted) return null;
 
-        let rafId: number;
-        const updateOffset = () => {
-            if (tooltipRef.current && cardRef.current) {
-                const r = cardRef.current.getBoundingClientRect();
-                tooltipRef.current.style.marginLeft = `${-r.left}px`;
-                tooltipRef.current.style.marginTop = `${-r.top}px`;
-            }
-            rafId = requestAnimationFrame(updateOffset);
-        };
+    const isVisible = hasInteracted && canHover && !isModalOpen;
 
-        updateOffset();
+    return createPortal(
+        <motion.div
+            className="fixed pointer-events-none origin-center flex items-center justify-center -translate-x-1/2 -translate-y-1/2 z-[9999]"
+            initial={false}
+            animate={isVisible ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+                left: mouseX,
+                top: mouseY,
+            }}
+        >
+            <div className="relative shadow-2xl whitespace-nowrap overflow-visible">
+                {/* Premium Glass Background Layer */}
+                <div className="absolute inset-0 bg-zinc-950/40 border border-white/10" />
 
-        return () => cancelAnimationFrame(rafId);
-    }, [cardRef, hasInteracted]);
+                {/* Content Layer */}
+                <div className="relative z-10 px-6 py-2 text-xs sm:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-white antialiased">
+                    {/* Viewfinder Brackets */}
+                    <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white" />
+                    <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white" />
+                    <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white" />
+                    <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white" />
 
-    return (
-        <div className={`absolute inset-0 overflow-hidden pointer-events-none rounded-2xl z-[100] ${isModalOpen ? 'hidden' : 'block'}`}>
-            <motion.div
-                ref={tooltipRef}
-                className={`absolute pointer-events-none origin-center flex items-center justify-center -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300
-                    ${hasInteracted && canHover ? 'opacity-100' : 'opacity-0'}`}
-                style={{
-                    left: mouseX,
-                    top: mouseY,
-                }}
-            >
-                <div className="relative shadow-2xl whitespace-nowrap overflow-visible">
-                    {/* Premium Glass Background Layer */}
-                    <div className="absolute inset-0 bg-zinc-950/40 border border-white/10" />
-
-                    {/* Content Layer */}
-                    <div className="relative z-10 px-6 py-2 text-xs sm:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-white antialiased">
-                        {/* Viewfinder Brackets */}
-                        <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-white" />
-                        <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-white" />
-                        <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-white" />
-                        <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-white" />
-
-                        {text}
-                    </div>
+                    {text}
                 </div>
-            </motion.div>
-        </div>
+            </div>
+        </motion.div>,
+        document.body
     );
 };
 
@@ -192,7 +179,6 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
                 {hasHoverText && (
                     <OptimizedTooltip
                         text={project.hover_text!}
-                        cardRef={cardRef}
                         isModalOpen={isModalOpen}
                         hasInteracted={hasInteracted}
                         canHover={canHover}

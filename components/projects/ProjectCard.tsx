@@ -209,6 +209,7 @@ export default function ProjectCard({ project, initialOpen = false }: ProjectCar
                 embedUrl={project.embed_url}
                 embedType={project.embed_type}
                 embedAspectRatio={project.embed_aspect_ratio}
+                mobileAspectRatio={project.mobile_aspect_ratio}
                 summary={project.summary}
                 role={project.role}
                 tools_used={project.tools_used}

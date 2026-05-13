@@ -16,6 +16,7 @@ type ModalProps = {
     embedUrl: string;
     embedType: string;
     embedAspectRatio: string;
+    mobileAspectRatio: string;
     summary: string;
     role: string;
     tools_used: string;
@@ -35,7 +36,7 @@ function RiveWrapper({ url, onLoaded }: { url: string; onLoaded: () => void }) {
     return <RiveComponent className="w-full h-full" />;
 }
 
-export default function Modal({ isOpen, onClose, onExitComplete, title, year, infoUrl, embedUrl, embedType, embedAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
+export default function Modal({ isOpen, onClose, onExitComplete, title, year, infoUrl, embedUrl, embedType, embedAspectRatio, mobileAspectRatio, summary, role, tools_used, action_button_text }: ModalProps) {
     const [isLoading, setIsLoading] = useState(true);
     const prevUrlRef = useRef<string>("");
     const prevIsOpenRef = useRef<boolean>(false);
@@ -237,7 +238,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                 <div className={`absolute inset-0 transition-opacity duration-700 overflow-hidden ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                     <video
                         ref={videoRef}
-                        className="absolute inset-0 w-full h-full object-contain"
+                        className="absolute inset-0 w-full h-full object-cover"
                         src={cleanUrl}
                         autoPlay
                         muted
@@ -401,7 +402,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                                     className={`relative w-full bg-black/20 select-none touch-none ${
                                         isFullscreenGame ? 'flex-1' : isResponsive ? 'aspect-square min-h-[350px]' : ''
                                     }`}
-                                    style={!isResponsive && !isFullscreenGame ? { aspectRatio: numericRatio! } : undefined}
+                                    style={!isResponsive && !isFullscreenGame ? { aspectRatio: mobileAspectRatio || numericRatio! } : undefined}
                                 >
                                     {renderEmbed()}
                                 </div>

@@ -1,9 +1,9 @@
 const cacheName = "Nicholas Gamolin-Calc Vision-0.1";
 const contentToCache = [
-    "Build/PWA_Build.loader.js",
-    "Build/PWA_Build.framework.js.gz",
-    "Build/PWA_Build.data.gz",
-    "Build/PWA_Build.wasm.gz",
+    "Build/PWA_Build2.loader.js",
+    "Build/PWA_Build2.framework.js.gz",
+    "Build/PWA_Build2.data.gz",
+    "Build/PWA_Build2.wasm.gz",
     "TemplateData/style.css"
 
 ];

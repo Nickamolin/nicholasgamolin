@@ -1,9 +1,9 @@
 const cacheName = "Drakonic-Endangered Cake Museum-1.0";
 const contentToCache = [
-    "Build/responsive_UI_build.loader.js",
-    "Build/responsive_UI_build.framework.js.br",
-    "Build/responsive_UI_build.data.br",
-    "Build/responsive_UI_build.wasm.br",
+    "Build/Visual_Queues_Update.loader.js",
+    "Build/Visual_Queues_Update.framework.js.br",
+    "Build/Visual_Queues_Update.data.br",
+    "Build/Visual_Queues_Update.wasm.br",
     "TemplateData/style.css"
 
 ];

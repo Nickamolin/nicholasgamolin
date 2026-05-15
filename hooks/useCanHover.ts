@@ -16,14 +16,28 @@ import { useState, useEffect } from "react";
  * The returned value updates automatically if the input situation changes
  * (e.g. a trackpad is connected or disconnected).
  */
+
+// Cache the value so dynamically mounted components initialize synchronously 
+// and avoid a flash of the default 'false' state.
+let cachedCanHover: boolean | null = null;
+
 export function useCanHover(): boolean {
-    const [canHover, setCanHover] = useState(false);
+    const [canHover, setCanHover] = useState(() => {
+        if (cachedCanHover !== null) return cachedCanHover;
+        return false;
+    });
 
     useEffect(() => {
         const mql = window.matchMedia("(hover: hover) and (pointer: fine)");
-        setCanHover(mql.matches);
+        
+        const updateHover = (matches: boolean) => {
+            cachedCanHover = matches;
+            setCanHover(matches);
+        };
 
-        const handler = (e: MediaQueryListEvent) => setCanHover(e.matches);
+        updateHover(mql.matches);
+
+        const handler = (e: MediaQueryListEvent) => updateHover(e.matches);
         mql.addEventListener("change", handler);
         return () => mql.removeEventListener("change", handler);
     }, []);

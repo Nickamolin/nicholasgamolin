@@ -1,9 +1,9 @@
-const cacheName = "Drakonic-Endangered Cake Museum-1.0";
+const cacheName = "Drakonic-Endangered Cake Museum-1.1";
 const contentToCache = [
     "Build/Touch_Controls_v6.loader.js",
-    "Build/Touch_Controls_v6.framework.js.br",
-    "Build/Touch_Controls_v6.data.br",
-    "Build/Touch_Controls_v6.wasm.br",
+    "Build/Touch_Controls_v6.framework.js",
+    "Build/Touch_Controls_v6.data",
+    "Build/Touch_Controls_v6.wasm",
     "TemplateData/style.css"
 
 ];

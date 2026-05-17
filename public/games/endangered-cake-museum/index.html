@@ -7,6 +7,44 @@
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
     <link rel="manifest" href="manifest.webmanifest">
+    <style>
+      /* Overlay button controls */
+      #game-controls {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        display: none; /* hidden until game loads */
+        gap: 6px;
+        z-index: 100;
+      }
+
+      .game-btn {
+        width: 32px;
+        height: 32px;
+        padding: 4px;
+        background: rgba(0, 0, 0, 0.45);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .game-btn:hover {
+        opacity: 1;
+      }
+
+      .game-btn img {
+        width: 100%;
+        height: 100%;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        pointer-events: none;
+      }
+    </style>
   </head>
   <body>
     <div id="unity-container">
@@ -18,6 +56,16 @@
         </div>
       </div>
       <div id="unity-warning"> </div>
+
+      <!-- Overlay controls (mute + fullscreen) -->
+      <div id="game-controls">
+        <button id="mute-btn" class="game-btn" title="Toggle Sound">
+          <img id="mute-icon" src="/icons/buttons/play.png" alt="Sound">
+        </button>
+        <button id="fullscreen-btn" class="game-btn" title="Toggle Fullscreen">
+          <img id="fullscreen-icon" src="/icons/buttons/fullscreen.png" alt="Fullscreen">
+        </button>
+      </div>
     </div>
     <script>
       window.addEventListener("load", function () {
@@ -57,11 +105,11 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/Visual_Queues_Update.loader.js";
+      var loaderUrl = buildUrl + "/Touch_Controls_v6.loader.js";
       var config = {
-        dataUrl: buildUrl + "/Visual_Queues_Update.data",
-        frameworkUrl: buildUrl + "/Visual_Queues_Update.framework.js",
-        codeUrl: buildUrl + "/Visual_Queues_Update.wasm",
+        dataUrl: buildUrl + "/Touch_Controls_v6.data",
+        frameworkUrl: buildUrl + "/Touch_Controls_v6.framework.js",
+        codeUrl: buildUrl + "/Touch_Controls_v6.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "Drakonic",
         productName: "Endangered Cake Museum",
@@ -86,13 +134,92 @@
 
       loadingBar.style.display = "block";
 
+      // --- Control state ---
+      var gameInstance = null;
+      var isMuted = false;
+      var isMobileFullscreen = false;
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      var controlsEl = document.getElementById("game-controls");
+      var muteBtn = document.getElementById("mute-btn");
+      var muteIcon = document.getElementById("mute-icon");
+      var fullscreenBtn = document.getElementById("fullscreen-btn");
+      var fullscreenIcon = document.getElementById("fullscreen-icon");
+
+      // --- Mute logic ---
+      muteBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (!gameInstance) return;
+        isMuted = !isMuted;
+        muteIcon.src = isMuted ? "/icons/buttons/mute.png" : "/icons/buttons/play.png";
+        gameInstance.SendMessage("AudioManager", "ToggleMute");
+      });
+
+      // --- Fullscreen logic ---
+      fullscreenBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        toggleFullscreen();
+      });
+
+      function toggleFullscreen() {
+        if (isMobile) {
+          // Mobile: tell parent Modal to expand/collapse iframe
+          if (isMobileFullscreen) {
+            isMobileFullscreen = false;
+            fullscreenIcon.src = "/icons/buttons/fullscreen.png";
+            window.parent.postMessage({ type: 'UNITY_GAME_EXIT_FULLSCREEN' }, '*');
+          } else {
+            isMobileFullscreen = true;
+            fullscreenIcon.src = "/icons/buttons/close.png";
+            window.parent.postMessage({ type: 'UNITY_GAME_FULLSCREEN' }, '*');
+          }
+        } else {
+          // Desktop: use native Fullscreen API
+          var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+          if (isFs) {
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            else if (document.msExitFullscreen) document.msExitFullscreen();
+          } else {
+            if (container.requestFullscreen) container.requestFullscreen();
+            else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
+            else if (container.msRequestFullscreen) container.msRequestFullscreen();
+          }
+        }
+      }
+
+      // Keep fullscreen icon in sync when user exits fullscreen via Escape key
+      document.addEventListener("fullscreenchange", updateFullscreenIcon);
+      document.addEventListener("webkitfullscreenchange", updateFullscreenIcon);
+
+      function updateFullscreenIcon() {
+        var isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+        fullscreenIcon.src = isFs ? "/icons/buttons/close.png" : "/icons/buttons/fullscreen.png";
+      }
+
+      // --- Mobile: tap canvas to fullscreen ---
+      if (isMobile) {
+        canvas.addEventListener("touchstart", function () {
+          if (!gameInstance) return;
+          if (!isMobileFullscreen) {
+            isMobileFullscreen = true;
+            fullscreenIcon.src = "/icons/buttons/close.png";
+            window.parent.postMessage({ type: 'UNITY_GAME_FULLSCREEN' }, '*');
+          }
+        }, { passive: true });
+      }
+
+      // --- Load Unity ---
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           progressBarFull.style.width = 100 * progress + "%";
         }).then((unityInstance) => {
+          gameInstance = unityInstance;
           loadingBar.style.display = "none";
+          // Show controls once game is loaded
+          controlsEl.style.display = "flex";
         }).catch((message) => {
           alert(message);
         });

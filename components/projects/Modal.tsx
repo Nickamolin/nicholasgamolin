@@ -43,6 +43,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isGameActive, setIsGameActive] = useState(false);
     const [hasReceivedTouch, setHasReceivedTouch] = useState(false);
+    const [isUnityFullscreen, setIsUnityFullscreen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
     // Desktop layout dimensions — computed via JS to size the modal tightly around the embed
@@ -58,6 +59,10 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
                 setIsGameActive(false);
             } else if (event.data.type === 'PICO8_TOUCH') {
                 setHasReceivedTouch(true);
+            } else if (event.data.type === 'UNITY_GAME_FULLSCREEN') {
+                setIsUnityFullscreen(true);
+            } else if (event.data.type === 'UNITY_GAME_EXIT_FULLSCREEN') {
+                setIsUnityFullscreen(false);
             }
         };
         window.addEventListener('message', handleMessage);
@@ -67,6 +72,7 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
     const handleClose = () => {
         setIsGameActive(false);
         setHasReceivedTouch(false);
+        setIsUnityFullscreen(false);
         onClose();
     };
 
@@ -218,8 +224,8 @@ export default function Modal({ isOpen, onClose, onExitComplete, title, year, in
         return () => window.removeEventListener('resize', compute);
     }, [isOpen, isMobile, numericRatio, useSideLayout, isResponsive]);
 
-    // The fullscreen game override
-    const isFullscreenGame = isGameActive && hasReceivedTouch;
+    // The fullscreen game override (PICO-8 touch or Unity game fullscreen)
+    const isFullscreenGame = (isGameActive && hasReceivedTouch) || isUnityFullscreen;
 
     // --- Render embedded content (shared between layouts) ---
     const renderEmbed = () => (

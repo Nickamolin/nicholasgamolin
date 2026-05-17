@@ -1,4 +1,4 @@
-const cacheName = "Drakonic-Endangered Cake Museum-1.1";
+const cacheName = "Drakonic-Endangered Cake Museum-1.2";
 const contentToCache = [
     "Build/Touch_Controls_v6.loader.js",
     "Build/Touch_Controls_v6.framework.js",

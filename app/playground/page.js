@@ -21,7 +21,7 @@ export default function PlaygroundPage() {
             <div className="flex flex-col items-center w-full max-w-sm h-[350px] mx-auto">
 
                 <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-gray-400 mb-2">refracting cube</span>
-                <Cube image="/photos/TimesSquare.jpeg" className="w-full h-full" />
+                <Cube image="https://zvajkoxglyawliuigirq.supabase.co/storage/v1/object/public/art/watcher.PNG" className="w-full h-full" />
 
             </div>
 

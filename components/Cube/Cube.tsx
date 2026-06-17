@@ -19,6 +19,7 @@ export interface CubeProps {
   glassColor?: string;
   glassOpacity?: number;
   size?: number;
+  texture?: THREE.Texture | null;
 }
 
 // ─── Vertex Shader ────────────────────────────────────────────────────────────
@@ -126,6 +127,7 @@ const Cube = forwardRef<CubeHandle, CubeProps>(({
   glassColor = "#e0f2fe",
   glassOpacity = 0.1,
   size = 1.5,
+  texture = null,
 }, ref) => {
   const containerRef  = useRef<HTMLDivElement>(null);
   const materialRef   = useRef<THREE.ShaderMaterial | null>(null);
@@ -148,20 +150,32 @@ const Cube = forwardRef<CubeHandle, CubeProps>(({
     },
   }));
 
-  // ── Image loader ─────────────────────────────────────────────────────────────
+  // ── Image or Texture loader ──────────────────────────────────────────────────
   useEffect(() => {
+    if (texture) {
+      texture.minFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
+      textureRef.current = texture;
+      if (materialRef.current) {
+        materialRef.current.uniforms.uImageTex.value = texture;
+        materialRef.current.uniforms.uImageAspect.value = texture.image ? texture.image.width / texture.image.height : 1.0;
+        materialRef.current.uniforms.uHasImage.value = true;
+      }
+      return;
+    }
+
     if (!image) return;
     let isMounted = true;
     new THREE.TextureLoader().load(
       image,
-      (texture) => {
-        if (!isMounted) { texture.dispose(); return; }
-        texture.minFilter      = THREE.LinearFilter;
-        texture.generateMipmaps = false;
-        textureRef.current = texture;
+      (loadedTexture) => {
+        if (!isMounted) { loadedTexture.dispose(); return; }
+        loadedTexture.minFilter      = THREE.LinearFilter;
+        loadedTexture.generateMipmaps = false;
+        textureRef.current = loadedTexture;
         if (materialRef.current) {
-          materialRef.current.uniforms.uImageTex.value    = texture;
-          materialRef.current.uniforms.uImageAspect.value = texture.image.width / texture.image.height;
+          materialRef.current.uniforms.uImageTex.value    = loadedTexture;
+          materialRef.current.uniforms.uImageAspect.value = loadedTexture.image.width / loadedTexture.image.height;
           materialRef.current.uniforms.uHasImage.value    = true;
         }
       },
@@ -169,7 +183,7 @@ const Cube = forwardRef<CubeHandle, CubeProps>(({
       (err) => console.error("[Cube] Failed to load image:", err)
     );
     return () => { isMounted = false; };
-  }, [image]);
+  }, [image, texture]);
 
   // ── Uniform-only updates (no scene rebuild) ───────────────────────────────
   useEffect(() => {

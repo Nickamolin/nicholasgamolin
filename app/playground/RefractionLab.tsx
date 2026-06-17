@@ -4,6 +4,7 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import Cube, { CubeHandle } from "@/components/Cube/Cube";
 import CubeClassic, { CubeClassicHandle } from "@/components/Cube/CubeClassic";
 import CubePlain, { CubePlainHandle } from "@/components/Cube/CubePlain";
+import CubeHtmlToImageRefraction from "@/components/Cube/CubeHtmlToImageRefraction";
 
 const IMAGE = "https://zvajkoxglyawliuigirq.supabase.co/storage/v1/object/public/art/watcher.PNG";
 
@@ -51,9 +52,10 @@ interface DebugPanelProps {
   values: Record<string, number>;
   onChange: (key: string, value: number) => void;
   isResetting?: boolean;
+  children?: React.ReactNode;
 }
 
-function DebugPanel({ sliders, values, onChange, isResetting }: DebugPanelProps) {
+function DebugPanel({ sliders, values, onChange, isResetting, children }: DebugPanelProps) {
   return (
     <div
       className="w-full mt-3 rounded-xl px-4 py-3 flex flex-col gap-2.5"
@@ -107,6 +109,7 @@ function DebugPanel({ sliders, values, onChange, isResetting }: DebugPanelProps)
           </div>
         );
       })}
+      {children}
     </div>
   );
 }
@@ -141,16 +144,22 @@ function lerpProps(
 
 // ─── PlaygroundClient ─────────────────────────────────────────────────────────
 
-export default function PlaygroundClient() {
+export default function RefractionLab() {
   const cubeRef    = useRef<CubeHandle>(null);
   const classicRef = useRef<CubeClassicHandle>(null);
   const plainRef   = useRef<CubePlainHandle>(null);
+  const domRef     = useRef<CubeHandle>(null);
 
   const [cubeProps,    setCubeProps]    = useState(CUBE_DEFAULTS);
   const [classicProps, setClassicProps] = useState(CLASSIC_DEFAULTS);
   const [plainProps,   setPlainProps]   = useState(PLAIN_DEFAULTS);
+  const [domProps,     setDomProps]     = useState(CUBE_DEFAULTS);
+  const [htmlText,     setHtmlText]     = useState("TEXT");
   const [spinning,     setSpinning]     = useState(false);
   const [isResetting,  setIsResetting]  = useState(false);
+
+  const [domSpinning,    setDomSpinning]    = useState(false);
+  const [isDomResetting, setIsDomResetting] = useState(false);
 
   // Refs for the animated reset rAF loop
   const resetRafRef      = useRef<number | null>(null);
@@ -158,6 +167,10 @@ export default function PlaygroundClient() {
   const resetFromCube    = useRef<Record<string, number>>(CUBE_DEFAULTS);
   const resetFromClassic = useRef<Record<string, number>>(CLASSIC_DEFAULTS);
   const resetFromPlain   = useRef<Record<string, number>>(PLAIN_DEFAULTS);
+
+  const resetDomRafRef   = useRef<number | null>(null);
+  const resetDomStartRef = useRef<number>(0);
+  const resetFromDom     = useRef<Record<string, number>>(CUBE_DEFAULTS);
 
   const handleReset = useCallback(() => {
     // Cancel any in-flight reset
@@ -203,16 +216,49 @@ export default function PlaygroundClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cubeProps, classicProps, plainProps]);
 
+  const handleDomReset = useCallback(() => {
+    if (resetDomRafRef.current !== null) cancelAnimationFrame(resetDomRafRef.current);
+
+    resetFromDom.current = { ...domProps };
+    resetDomStartRef.current = performance.now();
+
+    domRef.current?.resetRotation();
+    setDomSpinning(true);
+    setIsDomResetting(true);
+
+    const tick = () => {
+      const elapsed = performance.now() - resetDomStartRef.current;
+      const rawT    = Math.min(elapsed / RESET_DURATION_MS, 1);
+      const t       = easeOutCubic(rawT);
+
+      setDomProps(lerpProps(resetFromDom.current, CUBE_DEFAULTS, t));
+
+      if (rawT < 1) {
+        resetDomRafRef.current = requestAnimationFrame(tick);
+      } else {
+        setDomProps(CUBE_DEFAULTS);
+        setHtmlText("TEXT");
+        resetDomRafRef.current = null;
+        setDomSpinning(false);
+        setIsDomResetting(false);
+      }
+    };
+    resetDomRafRef.current = requestAnimationFrame(tick);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [domProps]);
+
   // Clean up rAF on unmount
   useEffect(() => {
     return () => {
       if (resetRafRef.current !== null) cancelAnimationFrame(resetRafRef.current);
+      if (resetDomRafRef.current !== null) cancelAnimationFrame(resetDomRafRef.current);
     };
   }, []);
 
   const patchCube    = (k: string, v: number) => setCubeProps(p => ({ ...p, [k]: v }));
   const patchClassic = (k: string, v: number) => setClassicProps(p => ({ ...p, [k]: v }));
   const patchPlain   = (k: string, v: number) => setPlainProps(p => ({ ...p, [k]: v }));
+  const patchDom     = (k: string, v: number) => setDomProps(p => ({ ...p, [k]: v }));
 
   return (
     <div className="flex flex-col items-center w-full max-w-5xl">
@@ -320,6 +366,79 @@ export default function PlaygroundClient() {
         </div>
 
       </div>
+
+      {/* Second Row: html-to-image Refraction */}
+      <div className="flex flex-row items-start justify-center w-full gap-4 mt-12">
+        <div className="flex flex-col items-center w-full">
+          <div className="w-full h-[280px]">
+            <CubeHtmlToImageRefraction
+              ref={domRef}
+              className="w-full h-full"
+              dispersion={domProps.dispersion}
+              refractionStrength={domProps.refractionStrength}
+              viewScale={domProps.viewScale}
+              glassOpacity={domProps.glassOpacity}
+              size={domProps.size}
+            >
+              <h1 className="text-white text-6xl md:text-8xl font-bold tracking-widest uppercase" style={{ textShadow: "0 4px 12px rgba(0,0,0,0.5)" }}>
+                {htmlText}
+              </h1>
+            </CubeHtmlToImageRefraction>
+          </div>
+          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400">
+            html-to-image Refraction
+          </span>
+          <DebugPanel sliders={CUBE_SLIDERS} values={domProps} onChange={patchDom} isResetting={isDomResetting}>
+            <div className="flex flex-col gap-1 mt-2">
+              <span className="text-[10px] font-subtitle font-medium tracking-[0.12em] uppercase text-gray-500">
+                Text content
+              </span>
+              <input
+                type="text"
+                value={htmlText}
+                onChange={(e) => setHtmlText(e.target.value)}
+                className="w-full bg-transparent border-b border-gray-600 text-sm font-mono text-gray-300 py-1 focus:outline-none focus:border-gray-400"
+              />
+            </div>
+            
+            {/* DOM Reset Button */}
+            <div className="flex justify-center mt-3 pt-4 border-t border-gray-800">
+              <button
+                onClick={handleDomReset}
+                title="Reset DOM refraction"
+                className="group flex flex-col items-center gap-2 cursor-pointer"
+                style={{ background: "none", border: "none", padding: 0 }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+                  style={{
+                    background:    "rgba(255,255,255,0.06)",
+                    border:        "1px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  <img
+                    src="/icons/buttons/refresh.svg"
+                    alt="Reset"
+                    className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-all invert"
+                    style={{
+                      transform:  domSpinning ? "rotate(-360deg)" : "rotate(0deg)",
+                      transition: domSpinning ? "transform 0.65s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease, filter 0.2s ease" : "transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease",
+                    }}
+                  />
+                </div>
+                <span className="text-[9px] font-subtitle font-medium tracking-[0.14em] uppercase text-gray-600 group-hover:text-gray-400 transition-colors">
+                  Reset
+                </span>
+              </button>
+            </div>
+          </DebugPanel>
+        </div>
+        <div className="w-full hidden md:block" />
+        <div className="w-full hidden md:block" />
+        {/* Placeholder for spacing to match the top row */}
+        <div className="flex-shrink-0 flex flex-col items-center justify-center w-10 opacity-0 pointer-events-none" />
+      </div>
+
     </div>
   );
 }

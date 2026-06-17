@@ -5,6 +5,8 @@ import Cube, { CubeHandle } from "@/components/Cube/Cube";
 import CubeClassic, { CubeClassicHandle } from "@/components/Cube/CubeClassic";
 import CubePlain, { CubePlainHandle } from "@/components/Cube/CubePlain";
 import CubeHtmlToImageRefraction from "@/components/Cube/CubeHtmlToImageRefraction";
+import LoadingAnimation3D, { LoadingAnimation3DHandle } from "@/components/3D/LoadingAnimation3D";
+import LoadingAnimation from "@/components/loading/LoadingAnimation";
 
 const IMAGE = "https://zvajkoxglyawliuigirq.supabase.co/storage/v1/object/public/art/watcher.PNG";
 
@@ -45,23 +47,55 @@ const PLAIN_SLIDERS: SliderDef[] = [
   { label: "Size",       key: "size",      min: 0.5, max: 3.0, step: 0.1,  defaultValue: 1.5,  format: fmt1 },
 ];
 
+const GLB_SLIDERS: SliderDef[] = [
+  { label: "Framerate", key: "targetFps", min: 12, max: 60, step: 1, defaultValue: 60, format: (v) => v >= 60 ? "SMOOTH" : v.toFixed(0) },
+  { label: "Speed", key: "playbackSpeed", min: 0, max: 2, step: 0.1, defaultValue: 1.0, format: fmt2 },
+  { label: "Scale", key: "modelScale", min: 0.5, max: 2.0, step: 0.05, defaultValue: 1.0, format: fmt2 },
+  { label: "Ortho Blend", key: "orthoBlend", min: 0, max: 1, step: 0.01, defaultValue: 1.0, format: fmt2 }
+];
+
+interface SelectDef {
+  label: string;
+  key: string;
+  options: { value: string | number; label: string }[];
+  defaultValue: string | number;
+}
+
+const GLB_SELECTS: SelectDef[] = [
+  {
+    label: "Material",
+    key: "materialType",
+    defaultValue: "default",
+    options: [
+      { value: "default", label: "Default" },
+      { value: "wireframe", label: "Wireframe" },
+      { value: "normal", label: "Normal Map" }
+    ]
+  }
+];
+
+function makeSelectDefaults(selects: SelectDef[]): Record<string, any> {
+  return Object.fromEntries(selects.map((s) => [s.key, s.defaultValue]));
+}
+
 // ─── DebugPanel ──────────────────────────────────────────────────────────────
 
 interface DebugPanelProps {
-  sliders: SliderDef[];
-  values: Record<string, number>;
-  onChange: (key: string, value: number) => void;
+  sliders?: SliderDef[];
+  selects?: SelectDef[];
+  values: Record<string, any>;
+  onChange: (key: string, value: any) => void;
   isResetting?: boolean;
   children?: React.ReactNode;
 }
 
-function DebugPanel({ sliders, values, onChange, isResetting, children }: DebugPanelProps) {
+function DebugPanel({ sliders, selects, values, onChange, isResetting, children }: DebugPanelProps) {
   return (
     <div
       className="w-full mt-3 rounded-xl px-4 py-3 flex flex-col gap-2.5"
       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
     >
-      {sliders.map((s) => {
+      {sliders && sliders.map((s) => {
         const val = values[s.key] ?? s.defaultValue;
         const pct = ((val - s.min) / (s.max - s.min)) * 100;
         return (
@@ -109,6 +143,39 @@ function DebugPanel({ sliders, values, onChange, isResetting, children }: DebugP
           </div>
         );
       })}
+      {selects && selects.map((s) => (
+        <div key={s.key} className="flex flex-col gap-1">
+          <div className="flex justify-between items-baseline mb-1">
+            <span className="text-[10px] font-subtitle font-medium tracking-[0.12em] uppercase text-gray-500">
+              {s.label}
+            </span>
+          </div>
+          <div className="relative">
+            <select
+              value={values[s.key] ?? s.defaultValue}
+              onChange={(e) => onChange(s.key, e.target.value)}
+              className="w-full rounded-md text-[11px] font-mono text-gray-300 px-2 py-1.5 focus:outline-none cursor-pointer appearance-none transition-colors"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                WebkitAppearance: 'none',
+                MozAppearance: 'none'
+              }}
+            >
+              {s.options.map(opt => (
+                <option key={opt.value} value={opt.value} className="bg-gray-900 text-white font-mono text-[11px]">
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-400">
+              <svg className="w-3 h-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      ))}
       {children}
     </div>
   );
@@ -123,6 +190,12 @@ function makeDefaults(sliders: SliderDef[]): Record<string, number> {
 const CUBE_DEFAULTS    = makeDefaults(CUBE_SLIDERS);
 const CLASSIC_DEFAULTS = makeDefaults(CLASSIC_SLIDERS);
 const PLAIN_DEFAULTS   = makeDefaults(PLAIN_SLIDERS);
+const GLB_DEFAULTS     = { ...makeDefaults(GLB_SLIDERS), ...makeSelectDefaults(GLB_SELECTS) };
+
+const PRE_RENDERED_SLIDERS: SliderDef[] = [
+  { label: "Speed", key: "playbackSpeed", min: 0.1, max: 2.0, step: 0.1, defaultValue: 1.0, format: fmt2 }
+];
+const PRE_RENDERED_DEFAULTS = makeDefaults(PRE_RENDERED_SLIDERS);
 
 // ─── Animated reset helpers ───────────────────────────────────────────────────
 
@@ -131,13 +204,21 @@ const RESET_DURATION_MS = 650;
 function easeOutCubic(t: number) { return 1 - Math.pow(1 - t, 3); }
 
 function lerpProps(
-  from: Record<string, number>,
-  to: Record<string, number>,
+  from: Record<string, any>,
+  to: Record<string, any>,
   t: number
-): Record<string, number> {
-  const result: Record<string, number> = {};
+): Record<string, any> {
+  const result: Record<string, any> = {};
   for (const key of Object.keys(to)) {
-    result[key] = (from[key] ?? to[key]) + ((to[key] - (from[key] ?? to[key])) * t);
+    const fromVal = from[key] ?? to[key];
+    const toVal = to[key];
+    
+    if (typeof toVal === 'number' && typeof fromVal === 'number') {
+      result[key] = fromVal + ((toVal - fromVal) * t);
+    } else {
+      // Snap non-number properties (like strings/booleans) to their target immediately
+      result[key] = toVal;
+    }
   }
   return result;
 }
@@ -149,6 +230,7 @@ export default function RefractionLab() {
   const classicRef = useRef<CubeClassicHandle>(null);
   const plainRef   = useRef<CubePlainHandle>(null);
   const domRef     = useRef<CubeHandle>(null);
+  const glbRef     = useRef<LoadingAnimation3DHandle>(null);
 
   const [cubeProps,    setCubeProps]    = useState(CUBE_DEFAULTS);
   const [classicProps, setClassicProps] = useState(CLASSIC_DEFAULTS);
@@ -161,6 +243,15 @@ export default function RefractionLab() {
   const [domSpinning,    setDomSpinning]    = useState(false);
   const [isDomResetting, setIsDomResetting] = useState(false);
 
+  const [glbProps,       setGlbProps]       = useState(GLB_DEFAULTS);
+  const [glbSpinning,    setGlbSpinning]    = useState(false);
+  const [isGlbResetting, setIsGlbResetting] = useState(false);
+  const [isGlbPaused, setIsGlbPaused]       = useState(false);
+
+  const [preRenderedProps,       setPreRenderedProps]       = useState(PRE_RENDERED_DEFAULTS);
+  const [isPreRenderedPaused,    setIsPreRenderedPaused]    = useState(false);
+  const patchPreRendered = (k: string, v: number) => setPreRenderedProps(p => ({ ...p, [k]: v }));
+
   // Refs for the animated reset rAF loop
   const resetRafRef      = useRef<number | null>(null);
   const resetStartRef    = useRef<number>(0);
@@ -171,6 +262,10 @@ export default function RefractionLab() {
   const resetDomRafRef   = useRef<number | null>(null);
   const resetDomStartRef = useRef<number>(0);
   const resetFromDom     = useRef<Record<string, number>>(CUBE_DEFAULTS);
+
+  const resetGlbRafRef   = useRef<number | null>(null);
+  const resetGlbStartRef = useRef<number>(0);
+  const resetFromGlb     = useRef<Record<string, number>>(GLB_DEFAULTS);
 
   const handleReset = useCallback(() => {
     // Cancel any in-flight reset
@@ -247,11 +342,42 @@ export default function RefractionLab() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [domProps]);
 
+  const handleGlbReset = useCallback(() => {
+    if (resetGlbRafRef.current !== null) cancelAnimationFrame(resetGlbRafRef.current);
+
+    resetFromGlb.current = { ...glbProps };
+    resetGlbStartRef.current = performance.now();
+
+    glbRef.current?.resetRotation();
+    setGlbSpinning(true);
+    setIsGlbResetting(true);
+
+    const tick = () => {
+      const elapsed = performance.now() - resetGlbStartRef.current;
+      const rawT    = Math.min(elapsed / RESET_DURATION_MS, 1);
+      const t       = easeOutCubic(rawT);
+
+      setGlbProps(lerpProps(resetFromGlb.current, GLB_DEFAULTS, t));
+
+      if (rawT < 1) {
+        resetGlbRafRef.current = requestAnimationFrame(tick);
+      } else {
+        setGlbProps(GLB_DEFAULTS);
+        resetGlbRafRef.current = null;
+        setGlbSpinning(false);
+        setIsGlbResetting(false);
+      }
+    };
+    resetGlbRafRef.current = requestAnimationFrame(tick);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [glbProps]);
+
   // Clean up rAF on unmount
   useEffect(() => {
     return () => {
       if (resetRafRef.current !== null) cancelAnimationFrame(resetRafRef.current);
       if (resetDomRafRef.current !== null) cancelAnimationFrame(resetDomRafRef.current);
+      if (resetGlbRafRef.current !== null) cancelAnimationFrame(resetGlbRafRef.current);
     };
   }, []);
 
@@ -259,6 +385,7 @@ export default function RefractionLab() {
   const patchClassic = (k: string, v: number) => setClassicProps(p => ({ ...p, [k]: v }));
   const patchPlain   = (k: string, v: number) => setPlainProps(p => ({ ...p, [k]: v }));
   const patchDom     = (k: string, v: number) => setDomProps(p => ({ ...p, [k]: v }));
+  const patchGlb     = (k: string, v: number) => setGlbProps(p => ({ ...p, [k]: v }));
 
   return (
     <div className="flex flex-col items-center w-full max-w-5xl">
@@ -433,8 +560,121 @@ export default function RefractionLab() {
             </div>
           </DebugPanel>
         </div>
-        <div className="w-full hidden md:block" />
-        <div className="w-full hidden md:block" />
+        {/* LoadingAnimation3D GLB component */}
+        <div className="flex flex-col items-center w-full">
+          <div className="w-full h-[280px]">
+            <LoadingAnimation3D
+              ref={glbRef}
+              className="w-full h-full"
+              playbackSpeed={glbProps.playbackSpeed}
+              modelScale={glbProps.modelScale}
+              targetFps={glbProps.targetFps}
+              orthoBlend={glbProps.orthoBlend}
+              materialType={glbProps.materialType}
+              isPaused={isGlbPaused}
+            />
+          </div>
+          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400">
+            Animated GLB Model
+          </span>
+          <DebugPanel sliders={GLB_SLIDERS} selects={GLB_SELECTS} values={glbProps} onChange={patchGlb} isResetting={isGlbResetting}>
+            {/* GLB Reset & Play Buttons */}
+            <div className="flex justify-center gap-6 mt-3 pt-4 border-t border-gray-800">
+              <button
+                onClick={() => setIsGlbPaused(!isGlbPaused)}
+                title={isGlbPaused ? "Play" : "Pause"}
+                className="group flex flex-col items-center gap-2 cursor-pointer"
+                style={{ background: "none", border: "none", padding: 0 }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+                  style={{
+                    background:    "rgba(255,255,255,0.06)",
+                    border:        "1px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  <img
+                    src={isGlbPaused ? "/icons/buttons/play.svg" : "/icons/buttons/pause.svg"}
+                    alt={isGlbPaused ? "Play" : "Pause"}
+                    className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-all invert"
+                  />
+                </div>
+                <span className="text-[9px] font-subtitle font-medium tracking-[0.14em] uppercase text-gray-600 group-hover:text-gray-400 transition-colors">
+                  {isGlbPaused ? "Play" : "Pause"}
+                </span>
+              </button>
+              <button
+                onClick={handleGlbReset}
+                title="Reset GLB Model"
+                className="group flex flex-col items-center gap-2 cursor-pointer"
+                style={{ background: "none", border: "none", padding: 0 }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+                  style={{
+                    background:    "rgba(255,255,255,0.06)",
+                    border:        "1px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  <img
+                    src="/icons/buttons/refresh.svg"
+                    alt="Reset"
+                    className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-all invert"
+                    style={{
+                      transform:  glbSpinning ? "rotate(-360deg)" : "rotate(0deg)",
+                      transition: glbSpinning ? "transform 0.65s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease, filter 0.2s ease" : "transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease",
+                    }}
+                  />
+                </div>
+                <span className="text-[9px] font-subtitle font-medium tracking-[0.14em] uppercase text-gray-600 group-hover:text-gray-400 transition-colors">
+                  Reset
+                </span>
+              </button>
+            </div>
+          </DebugPanel>
+        </div>
+
+        {/* Pre-rendered Loading Animation Component */}
+        <div className="flex flex-col items-center w-full">
+          <div className="w-full h-[280px] flex items-center justify-center">
+            <LoadingAnimation 
+              className="w-32 h-32 md:w-48 md:h-48"
+              playbackSpeed={preRenderedProps.playbackSpeed}
+              isPaused={isPreRenderedPaused}
+            />
+          </div>
+          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400">
+            Pre-rendered Reference
+          </span>
+          <DebugPanel sliders={PRE_RENDERED_SLIDERS} values={preRenderedProps} onChange={patchPreRendered}>
+            <div className="flex justify-center mt-3 pt-4 border-t border-gray-800">
+              <button
+                onClick={() => setIsPreRenderedPaused(!isPreRenderedPaused)}
+                title={isPreRenderedPaused ? "Play" : "Pause"}
+                className="group flex flex-col items-center gap-2 cursor-pointer"
+                style={{ background: "none", border: "none", padding: 0 }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+                  style={{
+                    background:    "rgba(255,255,255,0.06)",
+                    border:        "1px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  <img
+                    src={isPreRenderedPaused ? "/icons/buttons/play.svg" : "/icons/buttons/pause.svg"}
+                    alt={isPreRenderedPaused ? "Play" : "Pause"}
+                    className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-all invert"
+                  />
+                </div>
+                <span className="text-[9px] font-subtitle font-medium tracking-[0.14em] uppercase text-gray-600 group-hover:text-gray-400 transition-colors">
+                  {isPreRenderedPaused ? "Play" : "Pause"}
+                </span>
+              </button>
+            </div>
+          </DebugPanel>
+        </div>
+
         {/* Placeholder for spacing to match the top row */}
         <div className="flex-shrink-0 flex flex-col items-center justify-center w-10 opacity-0 pointer-events-none" />
       </div>

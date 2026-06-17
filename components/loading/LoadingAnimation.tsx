@@ -7,12 +7,16 @@ type LoadingAnimationProps = {
     isVisible?: boolean;
     className?: string;         // Classes for the video element itself (sizing)
     wrapperClassName?: string;  // Classes for the container (positioning/background)
+    playbackSpeed?: number;
+    isPaused?: boolean;
 };
 
 export default function LoadingAnimation({
     isVisible = true,
     className = "w-48 h-48",
-    wrapperClassName = ""
+    wrapperClassName = "",
+    playbackSpeed = 1.0,
+    isPaused = false
 }: LoadingAnimationProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -27,16 +31,27 @@ export default function LoadingAnimation({
     useEffect(() => {
         if (hasMounted && videoRef.current) {
             const video = videoRef.current;
-            // Explicitly try to play to handle browser restrictions
-            video.play()
-                .then(() => {
-                    // rely on onPlaying event for smoother transition
-                })
-                .catch(() => {
-                    setIsVideoPlaying(false);
-                });
+            if (isPaused) {
+                video.pause();
+            } else {
+                // Explicitly try to play to handle browser restrictions
+                video.play()
+                    .then(() => {
+                        // rely on onPlaying event for smoother transition
+                    })
+                    .catch(() => {
+                        setIsVideoPlaying(false);
+                    });
+            }
         }
-    }, [hasMounted]);
+    }, [hasMounted, isPaused]);
+
+    // Handle playback speed dynamically
+    useEffect(() => {
+        if (hasMounted && videoRef.current) {
+            videoRef.current.playbackRate = playbackSpeed;
+        }
+    }, [hasMounted, playbackSpeed]);
 
     return (
         <div className={`flex items-center justify-center transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'} ${wrapperClassName}`}>

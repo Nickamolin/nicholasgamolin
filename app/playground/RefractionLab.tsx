@@ -390,14 +390,6 @@ export default function RefractionLab() {
   return (
     <div className="flex flex-col items-center w-full max-w-5xl">
 
-      {/* Header */}
-      <div className="flex flex-col items-center gap-(--spacing-header-gap) mb-(--spacing-header-mb) md:mt-(--spacing-page-top)">
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-title font-bold">Playground</h1>
-        <span className="text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase text-gray-400">
-          Some interactions I&apos;m testing out.
-        </span>
-      </div>
-
       {/* Cube row + reset button */}
       <div className="flex flex-row items-start justify-center w-full gap-4">
 

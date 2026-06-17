@@ -91,7 +91,7 @@ const fragmentShader = `
       r = texture2D(uImageTex, clamp(uvR, 0.001, 0.999)).r;
       g = texture2D(uImageTex, clamp(uvG, 0.001, 0.999)).g;
       b = texture2D(uImageTex, clamp(uvB, 0.001, 0.999)).b;
-      imgAlpha = 0.95 * edgeFade;
+      imgAlpha = edgeFade;
     }
 
     vec3 imageColor = vec3(r, g, b);
@@ -103,9 +103,10 @@ const fragmentShader = `
     float fresnel   = pow(1.0 - max(dot(normal, vec3(0.0, 0.0, 1.0)), 0.0), 3.5);
     vec3  edgeGlow  = vec3(1.0) * fresnel * 0.55;
 
-    vec3  baseGlass = uGlassColor * uGlassOpacity;
-    vec3  color     = mix(baseGlass, imageColor, imgAlpha) + specular + edgeGlow;
-    float alpha     = max(imgAlpha, uGlassOpacity) + spec * 0.45 + fresnel * 0.35;
+    vec3  refractedColor = mix(imageColor, uGlassColor, uGlassOpacity);
+    vec3  baseGlass      = uGlassColor * uGlassOpacity;
+    vec3  color          = mix(baseGlass, refractedColor, imgAlpha) + specular + edgeGlow;
+    float alpha          = max(imgAlpha, uGlassOpacity) + spec * 0.45 + fresnel * 0.35;
 
     gl_FragColor = vec4(color, clamp(alpha, 0.0, 1.0));
   }

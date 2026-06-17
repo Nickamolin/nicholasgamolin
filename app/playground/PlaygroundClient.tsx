@@ -23,7 +23,6 @@ function fmt2(v: number) { return v.toFixed(2); }
 function fmt1(v: number) { return v.toFixed(1); }
 
 const CUBE_SLIDERS: SliderDef[] = [
-  { label: "IOR",        key: "ior",                min: 1.0, max: 2.5,  step: 0.01, defaultValue: 1.8,  format: fmt2 },
   { label: "Dispersion", key: "dispersion",          min: 0,   max: 0.20, step: 0.005,defaultValue: 0.04, format: fmt2 },
   { label: "Refraction", key: "refractionStrength",  min: 0,   max: 0.5,  step: 0.01, defaultValue: 0.18, format: fmt2 },
   { label: "View Scale", key: "viewScale",            min: 0.5, max: 2.0,  step: 0.05, defaultValue: 1.05, format: fmt2 },
@@ -236,7 +235,6 @@ export default function PlaygroundClient() {
               ref={cubeRef}
               image={IMAGE}
               className="w-full h-full"
-              ior={cubeProps.ior}
               dispersion={cubeProps.dispersion}
               refractionStrength={cubeProps.refractionStrength}
               viewScale={cubeProps.viewScale}

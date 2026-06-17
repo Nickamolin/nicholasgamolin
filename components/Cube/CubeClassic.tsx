@@ -102,9 +102,10 @@ const fragmentShader = `
     float fresnel  = pow(1.0 - max(dot(normal, vec3(0.0, 0.0, 1.0)), 0.0), 3.5);
     vec3  edgeGlow = vec3(1.0) * fresnel * 0.6;
 
-    vec3  baseGlass = uGlassColor * uGlassOpacity;
-    vec3  color     = mix(baseGlass, imageColor, imageAlpha) + specular + edgeGlow;
-    float alpha     = max(imageAlpha, uGlassOpacity) + spec * 0.5 + fresnel * 0.4;
+    vec3  refractedColor = mix(imageColor, uGlassColor, uGlassOpacity);
+    vec3  baseGlass      = uGlassColor * uGlassOpacity;
+    vec3  color          = mix(baseGlass, refractedColor, imageAlpha) + specular + edgeGlow;
+    float alpha          = max(imageAlpha, uGlassOpacity) + spec * 0.5 + fresnel * 0.4;
 
     gl_FragColor = vec4(color, clamp(alpha, 0.0, 1.0));
   }

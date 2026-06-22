@@ -11,12 +11,12 @@ export interface ExperimentTheme {
 export const EXPERIMENT_THEMES: ExperimentTheme[] = [
   {
     slug: "refraction",
-    label: "Refraction",
+    label: "Refraction Techniques",
     description: "Screen-space, virtual-plane, and html-to-image refraction",
   },
   {
     slug: "animation",
-    label: "Animation",
-    description: "GLB animation and pre-rendered sprite playback",
+    label: "Real-Time vs Pre-Rendered",
+    description: "GLB animation vs pre-rendered video",
   },
 ];

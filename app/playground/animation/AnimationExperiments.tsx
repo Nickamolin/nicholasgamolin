@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
-import LoadingAnimation3D, { LoadingAnimation3DHandle } from "@/components/3D/LoadingAnimation3D";
+import LoadingAnimation3D, { LoadingAnimation3DHandle } from "./_components/3D/LoadingAnimation3D";
 import LoadingAnimation from "@/components/loading/LoadingAnimation";
 import { useState } from "react";
 import { DebugPanel, fmt2, makeDefaults, makeSelectDefaults, SelectDef, SliderDef } from "../_components/DebugPanel";

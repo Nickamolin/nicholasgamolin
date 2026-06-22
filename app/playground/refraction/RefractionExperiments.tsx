@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useRef } from "react";
-import Cube, { CubeHandle } from "@/components/Cube/Cube";
-import CubeClassic, { CubeClassicHandle } from "@/components/Cube/CubeClassic";
-import CubePlain, { CubePlainHandle } from "@/components/Cube/CubePlain";
-import CubeHtmlToImageRefraction from "@/components/Cube/CubeHtmlToImageRefraction";
+import Cube, { CubeHandle } from "./_components/Cube/Cube";
+import CubeClassic, { CubeClassicHandle } from "./_components/Cube/CubeClassic";
+import CubePlain, { CubePlainHandle } from "./_components/Cube/CubePlain";
+import CubeHtmlToImageRefraction from "./_components/Cube/CubeHtmlToImageRefraction";
 import { useState } from "react";
 import { DebugPanel, fmt1, fmt2, makeDefaults, SliderDef } from "../_components/DebugPanel";
 import { ResetButton } from "../_components/ResetButton";

@@ -176,7 +176,7 @@ export default function LiquidGlassExperiments() {
 
         {/* Description + unified 2-column controls */}
         <div className="w-full max-w-4xl">
-          <p className="mt-5 mb-1 text-sm text-gray-500 text-center max-w-lg mx-auto">
+          <p className="mt-5 mb-4 text-sm text-gray-500 text-center max-w-lg mx-auto">
             On the left is the refracted result, on the right the map that drives it.
           </p>
           <DebugPanel
@@ -216,7 +216,7 @@ export default function LiquidGlassExperiments() {
           <span className="mt-4 mb-2 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400">
             Image Refraction
           </span>
-          <p className="text-xs text-gray-500 text-center mb-4 max-w-xs">
+          <p className="text-sm text-gray-500 text-center mb-4 max-w-xs">
             Drag the lens over the image. The displacement map creates a classic refraction effect.
           </p>
           <DebugPanel
@@ -253,7 +253,7 @@ export default function LiquidGlassExperiments() {
           <span className="mt-4 mb-2 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400">
             Live HTML Refraction
           </span>
-          <p className="text-xs text-gray-500 text-center mb-4 max-w-xs">
+          <p className="text-sm text-gray-500 text-center mb-4 max-w-xs">
             The SVG filter bends live DOM text without rasterization. The text remains fully selectable.
           </p>
           <DebugPanel
@@ -302,7 +302,7 @@ export default function LiquidGlassExperiments() {
           <span className="mt-4 mb-2 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400">
             UI Refraction
           </span>
-          <p className="text-xs text-gray-500 text-center mb-4 max-w-xs">
+          <p className="text-sm text-gray-500 text-center mb-4 max-w-xs">
             Refracting standard CSS gradients and rounded borders, adding tactile depth to flat UI components.
           </p>
           <DebugPanel

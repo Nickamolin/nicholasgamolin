@@ -13,10 +13,10 @@ export default function LiquidGlassPage() {
         title="Liquid Glass"
         subtitle="SVG displacement map glass refraction on live HTML"
       />
-      <p className="text-[11px] text-gray-600 text-center -mt-4 mb-8">
+      <p className="text-sm text-gray-500 text-center -mt-4 mb-8">
         Inspired by{" "}
         <a
-          href="https://developer.apple.com/design/human-interface-guidelines/liquid-glass"
+          href="https://developer.apple.com/documentation/technologyoverviews/liquid-glass"
           target="_blank"
           rel="noopener noreferrer"
           className="underline underline-offset-2 hover:text-gray-400 transition-colors"

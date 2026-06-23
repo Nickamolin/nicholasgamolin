@@ -1,4 +1,5 @@
 import RefractionExperiments from "./RefractionExperiments";
+import { ExperimentHeader } from "../_components/ExperimentHeader";
 
 export const metadata = {
   title: "Refraction Techniques — Playground",
@@ -6,5 +7,13 @@ export const metadata = {
 };
 
 export default function RefractionPage() {
-  return <RefractionExperiments />;
+  return (
+    <>
+      <ExperimentHeader
+        title="Refraction Techniques"
+        subtitle="Screen-space, virtual-plane, and html-to-image refraction"
+      />
+      <RefractionExperiments />
+    </>
+  );
 }

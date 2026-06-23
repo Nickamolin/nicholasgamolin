@@ -79,7 +79,7 @@ export default function RefractionExperiments() {
     <div className="flex flex-col items-center w-full max-w-5xl">
 
       {/* Row 1: Comparison cubes */}
-      <div className="flex flex-row items-start justify-center w-full gap-4">
+      <div className="relative w-full flex flex-row items-start justify-center gap-4">
 
         {/* Screen-space */}
         <div className="flex flex-col items-center w-full">
@@ -139,8 +139,11 @@ export default function RefractionExperiments() {
           <DebugPanel sliders={PLAIN_SLIDERS} values={plain.props} onChange={plain.patch} isResetting={plain.isResetting} />
         </div>
 
-        {/* Shared reset — vertically centred against the canvases */}
-        <div className="flex-shrink-0 flex flex-col items-center justify-center" style={{ height: "280px" }}>
+        {/* Shared reset — in the right margin, vertically centred against the 280px canvases */}
+        <div
+          className="hidden md:flex flex-col items-center justify-center"
+          style={{ position: "absolute", right: "-6rem", top: "140px", transform: "translateY(-50%)" }}
+        >
           <ResetButton onClick={handleSharedReset} spinning={sharedSpinning} />
         </div>
 
@@ -190,10 +193,9 @@ export default function RefractionExperiments() {
           </DebugPanel>
         </div>
 
-        {/* Invisible placeholders to match the 3-column + reset-btn layout above */}
+        {/* Invisible placeholders match the 3-column width so row 2 aligns with row 1 */}
         <div className="w-full opacity-0 pointer-events-none" />
         <div className="w-full opacity-0 pointer-events-none" />
-        <div className="flex-shrink-0 w-10 opacity-0 pointer-events-none" />
 
       </div>
 

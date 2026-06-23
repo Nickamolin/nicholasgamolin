@@ -13,9 +13,9 @@ export function PlaygroundSidebar() {
       style={{
         background: "rgba(255,255,255,0.04)",
         border: "1px solid rgba(255,255,255,0.08)",
-        alignSelf: "flex-start",
-        position: "sticky",
+        position: "fixed",
         top: "50vh",
+        left: "var(--spacing-page-x, 1.5rem)",
         transform: "translateY(-50%)",
       }}
     >

@@ -45,14 +45,16 @@ interface DebugPanelProps {
   onChange: (key: string, value: any) => void;
   isResetting?: boolean;
   children?: React.ReactNode;
+  columns?: 1 | 2;
 }
 
-export function DebugPanel({ sliders, selects, values, onChange, isResetting, children }: DebugPanelProps) {
+export function DebugPanel({ sliders, selects, values, onChange, isResetting, children, columns = 1 }: DebugPanelProps) {
   return (
     <div
       className="w-full mt-3 rounded-xl px-4 py-3 flex flex-col gap-2.5"
       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
     >
+      <div className={columns === 2 ? "grid grid-cols-2 gap-x-6 gap-y-2.5" : "flex flex-col gap-2.5"}>
       {sliders && sliders.map((s) => {
         const val = values[s.key] ?? s.defaultValue;
         const pct = ((val - s.min) / (s.max - s.min)) * 100;
@@ -101,6 +103,7 @@ export function DebugPanel({ sliders, selects, values, onChange, isResetting, ch
           </div>
         );
       })}
+      </div>
       {selects && selects.map((s) => (
         <div key={s.key} className="flex flex-col gap-1">
           <div className="flex justify-between items-baseline mb-1">

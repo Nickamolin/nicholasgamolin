@@ -10,6 +10,11 @@ export interface ExperimentTheme {
 
 export const EXPERIMENT_THEMES: ExperimentTheme[] = [
   {
+    slug: "liquid-glass",
+    label: "Liquid Glass",
+    description: "SVG displacement map glass refraction on live HTML",
+  },
+  {
     slug: "refraction",
     label: "Refraction Techniques",
     description: "Screen-space, virtual-plane, and html-to-image refraction",

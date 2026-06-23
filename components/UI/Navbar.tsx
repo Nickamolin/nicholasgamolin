@@ -39,6 +39,9 @@ export default function Navbar() {
     { name: "About", href: "/about" },
   ];
 
+  // Playground pages have their own navigation — hide the global nav there.
+  if (pathname.startsWith("/playground")) return null;
+
   return (
     <div className="fixed bottom-8 left-0 z-[100] w-full flex justify-center pointer-events-none md:sticky md:top-6 md:bottom-auto">
       <nav className="flex flex-row items-center justify-center p-4 px-8 text-white bg-black/80 backdrop-blur-md border border-white/10 rounded-full pointer-events-auto">

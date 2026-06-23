@@ -116,12 +116,23 @@ const LoadingAnimation3D = forwardRef<LoadingAnimation3DHandle, LoadingAnimation
     // Load Model
     const loader = new GLTFLoader();
     const clock = new THREE.Clock();
-    
+
+    // Guard against stale callbacks: when the GLB is browser-cached the
+    // loader.load() callback fires almost synchronously on remount, which
+    // can race with the previous mount's callback and run TWO animate loops
+    // simultaneously (= 2× playback speed). This flag aborts any callback
+    // that fires after cleanup.
+    let isCleanedUp = false;
     let rafId: number;
 
     loader.load(
       "/models/LoadingAnimation.glb",
       (gltf) => {
+        // Abort if the component was unmounted while the GLB was loading.
+        // Without this, a cached GLB fires the callback nearly synchronously
+        // on remount, starting a second animate() loop alongside the new one.
+        if (isCleanedUp) return;
+
         const model = gltf.scene;
         
         // Cache original materials and apply initial material
@@ -218,6 +229,10 @@ const LoadingAnimation3D = forwardRef<LoadingAnimation3DHandle, LoadingAnimation
         const perspMat = new THREE.Matrix4();
         const orthoMat = new THREE.Matrix4();
 
+        // Drain any time the clock accumulated during async model load,
+        // so the first animation delta starts near zero.
+        clock.getDelta();
+
         let accumulatedTime = 0;
 
         // Animation Loop
@@ -295,6 +310,8 @@ const LoadingAnimation3D = forwardRef<LoadingAnimation3DHandle, LoadingAnimation
     resizeObserver.observe(container);
 
     return () => {
+      // Mark as cleaned up first so any in-flight loader callback is dropped.
+      isCleanedUp = true;
       cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
       if (controlsRef.current) controlsRef.current.dispose();
@@ -302,7 +319,7 @@ const LoadingAnimation3D = forwardRef<LoadingAnimation3DHandle, LoadingAnimation
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
-      
+
       // Dispose materials
       Object.values(customMaterialsRef.current).forEach(mat => mat.dispose());
     };

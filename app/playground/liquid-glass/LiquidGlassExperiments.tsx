@@ -17,12 +17,15 @@ interface MapPreviewProps {
   splay: number;
   lensX: number;
   lensY: number;
+  renderScale?: number;
   onLensMove: (x: number, y: number) => void;
 }
 
 function MapPreview({
-  lensWidth, lensHeight, borderRadius, depth, curvature, splay, lensX, lensY, onLensMove,
+  lensWidth, lensHeight, borderRadius, depth, curvature, splay, lensX, lensY, renderScale = 1, onLensMove,
 }: MapPreviewProps) {
+  const rw = lensWidth * renderScale;
+  const rh = lensHeight * renderScale;
   const [mapUrl, setMapUrl] = useState("");
   const boxRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -30,8 +33,8 @@ function MapPreview({
 
   useEffect(() => {
     const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
-    setMapUrl(generateDisplacementMap(lensWidth, lensHeight, borderRadius, depth, curvature, splay, dpr));
-  }, [lensWidth, lensHeight, borderRadius, depth, curvature, splay]);
+    setMapUrl(generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, dpr));
+  }, [rw, rh, borderRadius, depth, curvature, splay]);
 
   const onDown = (e: React.PointerEvent) => {
     e.preventDefault();
@@ -64,10 +67,10 @@ function MapPreview({
           onPointerDown={onDown}
           style={{
             position: "absolute",
-            width: lensWidth,
-            height: lensHeight,
-            left: `calc(${lensX * 100}% - ${lensWidth / 2}px)`,
-            top: `calc(${lensY * 100}% - ${lensHeight / 2}px)`,
+            width: rw,
+            height: rh,
+            left: `calc(${lensX * 100}% - ${rw / 2}px)`,
+            top: `calc(${lensY * 100}% - ${rh / 2}px)`,
             cursor: "grab",
             touchAction: "none",
           }}
@@ -84,18 +87,18 @@ const IMAGE = "https://zvajkoxglyawliuigirq.supabase.co/storage/v1/object/public
 // ─── Slider configs ───────────────────────────────────────────────────────────
 
 const GLASS_SLIDERS: SliderDef[] = [
-  { label: "Width",          key: "lensWidth",     min: 20,  max: 280, step: 1,    defaultValue: 70,   format: fmt1 },
-  { label: "Height",         key: "lensHeight",    min: 20,  max: 280, step: 1,    defaultValue: 60,   format: fmt1 },
-  { label: "BorderRadius",   key: "borderRadius",  min: 0,   max: 100, step: 1,    defaultValue: 28,   format: fmt1 },
-  { label: "Scale",          key: "scale",         min: 0.0, max: 0.2, step: 0.005,defaultValue: 0.1,  format: (v) => v.toFixed(3) },
-  { label: "Depth",          key: "depth",         min: 1,   max: 60,  step: 1,    defaultValue: 10,   format: fmt1 },
-  { label: "Curvature",      key: "curvature",     min: 0,   max: 80,  step: 1,    defaultValue: 40,   format: fmt1 },
-  { label: "Splay",          key: "splay",         min: 0.0, max: 2.0, step: 0.05, defaultValue: 1.0,  format: fmt2 },
-  { label: "Chroma",         key: "chroma",        min: 0.0, max: 1.0, step: 0.01, defaultValue: 0.2,  format: fmt2 },
-  { label: "Blur",           key: "blur",          min: 0.0, max: 10,  step: 0.5,  defaultValue: 0.0,  format: fmt1 },
-  { label: "Glow",           key: "glow",          min: 0.0, max: 0.5, step: 0.01, defaultValue: 0.1,  format: fmt2 },
+  { label: "Width", key: "lensWidth", min: 20, max: 280, step: 1, defaultValue: 70, format: fmt1 },
+  { label: "Height", key: "lensHeight", min: 20, max: 280, step: 1, defaultValue: 60, format: fmt1 },
+  { label: "BorderRadius", key: "borderRadius", min: 0, max: 100, step: 1, defaultValue: 28, format: fmt1 },
+  { label: "Scale", key: "scale", min: 0.0, max: 0.2, step: 0.005, defaultValue: 0.1, format: (v) => v.toFixed(3) },
+  { label: "Depth", key: "depth", min: 1, max: 60, step: 1, defaultValue: 10, format: fmt1 },
+  { label: "Curvature", key: "curvature", min: 0, max: 80, step: 1, defaultValue: 40, format: fmt1 },
+  { label: "Splay", key: "splay", min: 0.0, max: 2.0, step: 0.05, defaultValue: 1.0, format: fmt2 },
+  { label: "Chroma", key: "chroma", min: 0.0, max: 1.0, step: 0.01, defaultValue: 0.2, format: fmt2 },
+  { label: "Blur", key: "blur", min: 0.0, max: 10, step: 0.5, defaultValue: 0.0, format: fmt1 },
+  { label: "Glow", key: "glow", min: 0.0, max: 0.5, step: 0.01, defaultValue: 0.1, format: fmt2 },
   { label: "Edge Highlight", key: "edgeHighlight", min: 0.0, max: 1.0, step: 0.01, defaultValue: 0.25, format: fmt2 },
-  { label: "Specular Angle", key: "specularAngle", min: 0,   max: 360, step: 1,    defaultValue: 45,   format: fmt1 },
+  { label: "Specular Angle", key: "specularAngle", min: 0, max: 360, step: 1, defaultValue: 45, format: fmt1 },
 ];
 
 const GLASS_DEFAULTS = makeDefaults(GLASS_SLIDERS);
@@ -115,8 +118,8 @@ export default function LiquidGlassExperiments() {
   };
 
   const imageExp = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 150, lensHeight: 170, borderRadius: 40, scale: 0.12, lensX: 0.5, lensY: 0.5 });
-  const textExp  = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 230, lensHeight: 130, borderRadius: 40, scale: 0.07, chroma: 0.15, blur: 0, lensX: 0.5, lensY: 0.5 });
-  const cardExp  = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 180, lensHeight: 210, borderRadius: 32, scale: 0.12, lensX: 0.5, lensY: 0.5 });
+  const textExp = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 230, lensHeight: 130, borderRadius: 40, scale: 0.07, chroma: 0.15, blur: 0, lensX: 0.5, lensY: 0.5 });
+  const cardExp = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 180, lensHeight: 210, borderRadius: 32, scale: 0.12, lensX: 0.5, lensY: 0.5 });
 
   const [htmlText, setHtmlText] = useState("GLASS");
 
@@ -144,6 +147,7 @@ export default function LiquidGlassExperiments() {
               <LiquidGlass
                 className="w-full h-full"
                 {...sbs.props}
+                renderScale={2}
                 onLensMove={moveSbsLens}
               >
                 <div
@@ -168,6 +172,7 @@ export default function LiquidGlassExperiments() {
                 splay={sbs.props.splay}
                 lensX={sbs.props.lensX}
                 lensY={sbs.props.lensY}
+                renderScale={2}
                 onLensMove={moveSbsLens}
               />
             </div>

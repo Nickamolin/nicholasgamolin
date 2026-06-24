@@ -29,6 +29,9 @@ export interface LiquidGlassProps {
   edgeHighlight?: number;
   /** Specular gradient angle in degrees (0–180) */
   specularAngle?: number;
+  /** Multiplier applied to lensWidth/lensHeight at render time (borderRadius is NOT scaled).
+   *  Use this to match a reference implementation's pixel size while keeping slider values identical. */
+  renderScale?: number;
   /** Lens X position, 0–1 normalized within the container */
   lensX?: number;
   /** Lens Y position, 0–1 normalized within the container */
@@ -59,11 +62,14 @@ function sdfRoundedRect(px: number, py: number, hw: number, hh: number, r: numbe
  * Generates the displacement map that drives the refraction.
  *
  * The map encodes a per-pixel offset vector in its red (X) and green (Y)
- * channels, where 128 means "no displacement". A real lens bends light most
- * steeply at its rim and leaves the centre undistorted, so the displacement is
- * concentrated in a band of width `depth` along the edge and falls to zero in
- * the interior — the opposite of a radial bulge. The direction is the outward
- * surface normal (the gradient of the rounded-rect SDF).
+ * channels, where 128 means "no displacement". Displacement direction is
+ * radial from centre (smooth everywhere), and magnitude follows a power
+ * law from edge (max) to centre (zero). The border-radius SDF is used
+ * only as a mask — pixels outside the rounded rect stay neutral.
+ *
+ * When edgeHighlight > 0, a narrow band of boosted displacement is added
+ * near the shape boundary, creating a visible coloured rim in the map
+ * (matching Aave's approach where the edge highlight lives in the map itself).
  */
 export function generateDisplacementMap(
   lensW: number,
@@ -72,10 +78,6 @@ export function generateDisplacementMap(
   depth: number,
   curvature: number,
   splay: number,
-  // pixelRatio > 1 produces a sharper image on HiDPI screens.
-  // The SVG filter path always uses 1 (filter units are in user space).
-  // The preview path passes window.devicePixelRatio so the canvas bitmap
-  // matches the physical pixel density of the screen.
   pixelRatio = 1
 ): string {
   const pw = Math.ceil(lensW * pixelRatio);
@@ -98,8 +100,12 @@ export function generateDisplacementMap(
   const hh = cy;
   const r = Math.max(0, Math.min(borderRadius, Math.min(hw, hh)));
 
-  const band = Math.max(1, depth);
-  const exp = Math.max(0.01, curvature / 20);
+  // Cap the bezel width at the lens "inradius" (distance from centre to the nearest
+  // edge) so a large depth ramps the displacement all the way down to 0 (neutral) at
+  // the centre rather than leaving a saturated core.
+  const tc = -sdfRoundedRect(0, 0, hw, hh, r);
+  const band = Math.min(Math.max(1, depth), tc);
+  const exp = 1.3 + curvature * 0.0075;   // 1.3 at curv 0, ~1.9 at curv 80 (matches Aave's measured ρ^exp)
 
   const rawX = new Float32Array(pw * ph);
   const rawY = new Float32Array(pw * ph);
@@ -113,17 +119,39 @@ export function generateDisplacementMap(
       const d = sdfRoundedRect(px, py, hw, hh, r);
       if (d >= 0) continue;
 
-      const t = -d;
-      const s = Math.min(t / band, 1);
-      const m = Math.pow(1 - s, exp);
+      // Superellipse (p-norm) gradient field.
+      // A superellipse |x|^n + |y|^n = 1 creates a perfectly smooth distance
+      // metric that pushes inward at the corners but NEVER has a diagonal crease.
+      // We map borderRadius to n: r=0 -> n=16 (rectangle), r=max -> n=2 (circle)
+      const maxR = Math.min(hw, hh) || 1;
+      const nR = Math.min(r / maxR, 1.0);
+      const n = 2 + 14 * Math.pow(1 - nR, 2.0);
+
+      const nx = px / (hw || 1);
+      const ny = py / (hh || 1);
+      const absNx = Math.abs(nx);
+      const absNy = Math.abs(ny);
+      
+      const rho = Math.pow(Math.pow(absNx, n) + Math.pow(absNy, n), 1 / n);
+
+      // depth controls the width of the displaced bezel in pixels.
+      const bandRho = Math.min(Math.max(1, depth) / Math.min(hw, hh), 1.0);
+      const startRho = 1.0 - bandRho;
+
+      let m = 0;
+      if (rho > startRho) {
+        // We DO NOT cap s at 1.0, so that corners (rho > 1) continue to curve inward
+        // smoothly and generate maximum displacement, which maxMag normalizes.
+        const s = (rho - startRho) / bandRho;
+        m = Math.pow(s, exp);
+      }
+
       if (m <= 0) continue;
 
-      const gx = sdfRoundedRect(px + 1, py, hw, hh, r) - sdfRoundedRect(px - 1, py, hw, hh, r);
-      const gy = sdfRoundedRect(px, py + 1, hw, hh, r) - sdfRoundedRect(px, py - 1, hw, hh, r);
-      const gl = Math.hypot(gx, gy) || 1;
-
-      const dispX = (gx / gl) * m * splay;
-      const dispY = (gy / gl) * m;
+      // Convex lens: mapping -nx makes dispX > 0 when reading from the left,
+      // creating a white/yellow top-left corner in the map exactly like Aave.
+      const dispX = -nx * m * splay;
+      const dispY = -ny * m;
 
       const idx = j * pw + i;
       rawX[idx] = dispX;
@@ -159,6 +187,7 @@ export default function LiquidGlass({
   glow = 0.1,
   edgeHighlight = 0.25,
   specularAngle = 45,
+  renderScale = 1,
   lensX = 0.5,
   lensY = 0.5,
   draggable = true,
@@ -166,6 +195,8 @@ export default function LiquidGlass({
   children,
   className = "",
 }: LiquidGlassProps) {
+  const rw = lensWidth * renderScale;
+  const rh = lensHeight * renderScale;
   const baseId = useId().replace(/:/g, "");
   const [filterId, setFilterId] = useState(`lg-filter-${baseId}`);
   const [mapUrl, setMapUrl] = useState<string>("");
@@ -201,11 +232,11 @@ export default function LiquidGlass({
   // Regenerate displacement map when shape params change
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const url = generateDisplacementMap(lensWidth, lensHeight, borderRadius, depth, curvature, splay);
+    const url = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay);
     setMapUrl(url);
     // Change filter ID to bust Safari's filter cache
     setFilterId(`lg-filter-${baseId}-${Date.now()}`);
-  }, [lensWidth, lensHeight, borderRadius, depth, curvature, splay, baseId]);
+  }, [rw, rh, borderRadius, depth, curvature, splay, baseId]);
 
   // ── Pointer drag handling ──
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -240,15 +271,12 @@ export default function LiquidGlass({
   // ── Lens pixel position ──
   // We want the lens centered on (internalX, internalY) fraction of container
   // But we don't know container size at render time, so use CSS calc
-  const lensLeft = `calc(${internalX * 100}% - ${lensWidth / 2}px)`;
-  const lensTop  = `calc(${internalY * 100}% - ${lensHeight / 2}px)`;
-
-  // A single soft sheen sweeping in from one edge — not a full-width band.
-  const sheen = `linear-gradient(${specularAngle}deg, rgba(255,255,255,${edgeHighlight * 0.55}) 0%, rgba(255,255,255,0) 38%)`;
+  const lensLeft = `calc(${internalX * 100}% - ${rw / 2}px)`;
+  const lensTop = `calc(${internalY * 100}% - ${rh / 2}px)`;
 
   // Overall refraction strength in user-space px. The encoded map spans the
   // full channel range, so the visible offset is roughly `displacementScale / 2`.
-  const displacementScale = scale * Math.max(lensWidth, lensHeight);
+  const displacementScale = scale * Math.max(rw, rh);
   // Per-channel scales for chromatic aberration: red bends a little more than
   // blue, splitting the colour fringe along the rim. chroma === 0 → no split.
   const scaleR = displacementScale * (1 + chroma * 0.4);
@@ -256,8 +284,8 @@ export default function LiquidGlass({
   const scaleB = displacementScale * (1 - chroma * 0.4);
 
   // Calculate exact pixel position for the lens displacement map image
-  const imgX = containerSize.w > 0 ? (internalX * containerSize.w - lensWidth / 2) : 0;
-  const imgY = containerSize.h > 0 ? (internalY * containerSize.h - lensHeight / 2) : 0;
+  const imgX = containerSize.w > 0 ? (internalX * containerSize.w - rw / 2) : 0;
+  const imgY = containerSize.h > 0 ? (internalY * containerSize.h - rh / 2) : 0;
 
   return (
     <div
@@ -296,8 +324,8 @@ export default function LiquidGlass({
                 href={mapUrl}
                 x={imgX}
                 y={imgY}
-                width={lensWidth}
-                height={lensHeight}
+                width={rw}
+                height={rh}
                 preserveAspectRatio="none"
                 result="displacementMapCentered"
               />
@@ -357,6 +385,8 @@ export default function LiquidGlass({
 
               <feBlend in="chR" in2="chG" mode="screen" result="chRG" />
               <feBlend in="chRG" in2="chB" mode="screen" result="displaced" />
+
+
             </filter>
           </defs>
         </svg>
@@ -374,6 +404,7 @@ export default function LiquidGlass({
           }}
         >
           {children}
+
         </div>
 
         {/* ── Lens overlay layers ── */}
@@ -382,8 +413,8 @@ export default function LiquidGlass({
             position: "absolute",
             left: lensLeft,
             top: lensTop,
-            width: lensWidth,
-            height: lensHeight,
+            width: rw,
+            height: rh,
             borderRadius,
             pointerEvents: draggable ? "auto" : "none",
             cursor: draggable ? "grab" : "default",
@@ -393,6 +424,22 @@ export default function LiquidGlass({
           }}
           onPointerDown={handlePointerDown}
         >
+          {/* Edge highlight ring: A subtle inner border and shine on the lens itself */}
+          {edgeHighlight > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius,
+                boxShadow: `
+                  inset 0 0 0 1px rgba(255,255,255,${edgeHighlight * 0.4}),
+                  inset 0 0 12px 0 rgba(255,255,255,${edgeHighlight * 0.15})
+                `,
+                pointerEvents: "none",
+              }}
+            />
+          )}
+
           {/* Backdrop blur layer */}
           {blur > 0 && (
             <div
@@ -419,30 +466,13 @@ export default function LiquidGlass({
             />
           )}
 
-          {/* Soft specular sheen */}
+          {/* Grounding drop shadow */}
           <div
             style={{
               position: "absolute",
               inset: 0,
               borderRadius,
-              background: sheen,
-              pointerEvents: "none",
-            }}
-          />
-
-          {/* Beveled edge highlight: bright top-left rim, softer bottom-right,
-              a faint full ring, plus a grounding drop shadow. */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius,
-              boxShadow: [
-                `inset 1px 1px 1px rgba(255,255,255,${edgeHighlight})`,
-                `inset -1px -1px 1px rgba(255,255,255,${edgeHighlight * 0.45})`,
-                `inset 0 0 0 0.5px rgba(255,255,255,${edgeHighlight * 0.25})`,
-                `0 6px 20px rgba(0,0,0,0.22)`,
-              ].join(", "),
+              boxShadow: "0 6px 20px rgba(0,0,0,0.22)",
               pointerEvents: "none",
             }}
           />

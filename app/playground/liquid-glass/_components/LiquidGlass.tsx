@@ -135,23 +135,32 @@ export function generateDisplacementMap(
       const rho = Math.pow(Math.pow(absNx, n) + Math.pow(absNy, n), 1 / n);
 
       // depth controls the width of the displaced bezel in pixels.
-      const bandRho = Math.min(Math.max(1, depth) / Math.min(hw, hh), 1.0);
+      // We multiply by 2 because Aave's depth scale maps to a wider physical band 
+      // (a depth of 10 in Aave corresponds to ~20 pixels of penetration).
+      const bandRho = Math.min((Math.max(0.001, depth) * 2) / Math.min(hw, hh), 1.0);
       const startRho = 1.0 - bandRho;
 
       let m = 0;
       if (rho > startRho) {
-        // We DO NOT cap s at 1.0, so that corners (rho > 1) continue to curve inward
-        // smoothly and generate maximum displacement, which maxMag normalizes.
-        const s = (rho - startRho) / bandRho;
+        // We MUST cap s at 1.0. Otherwise, corners (where rho can slightly exceed 1.0) 
+        // will massively inflate maxMag at low depth values, crushing the gradient
+        // intensity everywhere else and making the map look faintly grey / invisible.
+        const s = Math.min((rho - startRho) / bandRho, 1.0);
         m = Math.pow(s, exp);
       }
 
       if (m <= 0) continue;
 
-      // Convex lens: mapping -nx makes dispX > 0 when reading from the left,
+      // Normalize the direction vector so the displacement magnitude exactly equals m.
+      // Without this division by rho, the magnitude would be m * rho, effectively
+      // making the gradient profile rho^(exp+1) which is way too shallow/flat.
+      const dirX = rho > 0 ? nx / rho : 0;
+      const dirY = rho > 0 ? ny / rho : 0;
+
+      // Convex lens: mapping -dirX makes dispX > 0 when reading from the left,
       // creating a white/yellow top-left corner in the map exactly like Aave.
-      const dispX = -nx * m * splay;
-      const dispY = -ny * m;
+      const dispX = -dirX * m * splay;
+      const dispY = -dirY * m;
 
       const idx = j * pw + i;
       rawX[idx] = dispX;

@@ -285,7 +285,9 @@ export default function LiquidGlass({
 
   // Overall refraction strength in user-space px. The encoded map spans the
   // full channel range, so the visible offset is roughly `displacementScale / 2`.
-  const displacementScale = scale * Math.max(rw, rh);
+  // Aave's scale slider maps to a much larger displacement than lens dimensions alone —
+  // multiplying by 1000 gives ~200px at scale=0.2, matching Aave's strong magnification.
+  const displacementScale = scale * 400;
   // Per-channel scales for chromatic aberration: red bends a little more than
   // blue, splitting the colour fringe along the rim. chroma === 0 → no split.
   const scaleR = displacementScale * (1 + chroma * 0.4);

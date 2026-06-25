@@ -67,9 +67,11 @@ function sdfRoundedRect(px: number, py: number, hw: number, hh: number, r: numbe
  * law from edge (max) to centre (zero). The border-radius SDF is used
  * only as a mask — pixels outside the rounded rect stay neutral.
  *
- * When edgeHighlight > 0, a narrow band of boosted displacement is added
- * near the shape boundary, creating a visible coloured rim in the map
- * (matching Aave's approach where the edge highlight lives in the map itself).
+ * The BLUE channel is an independent specular shine field (edgeHighlight +
+ * glow, steered by specularAngle). feDisplacementMap reads only R/G, so blue
+ * never affects the refraction; a separate filter pass extracts it as a rim
+ * highlight. This is Aave's approach — the edge/shine lives in the map itself
+ * rather than being a white border stamped on afterwards.
  */
 export function generateDisplacementMap(
   lensW: number,
@@ -78,6 +80,9 @@ export function generateDisplacementMap(
   depth: number,
   curvature: number,
   splay: number,
+  glow = 0,
+  edgeHighlight = 0,
+  specularAngle = 45,
   pixelRatio = 1
 ): string {
   const pw = Math.ceil(lensW * pixelRatio);
@@ -109,7 +114,15 @@ export function generateDisplacementMap(
 
   const rawX = new Float32Array(pw * ph);
   const rawY = new Float32Array(pw * ph);
+  const rawB = new Float32Array(pw * ph); // specular shine field → blue channel, 0..1
   let maxMag = 1e-6;
+
+  // Light direction for the specular term. The rim is brightest where its
+  // outward normal faces this direction, and dims (down to an ambient floor)
+  // on the opposite side — which is what `specularAngle` visibly sweeps.
+  const La = (specularAngle * Math.PI) / 180;
+  const Lx = Math.cos(La);
+  const Ly = Math.sin(La);
 
   for (let j = 0; j < ph; j++) {
     for (let i = 0; i < pw; i++) {
@@ -133,16 +146,41 @@ export function generateDisplacementMap(
       const absNy = Math.abs(ny);
       
       const rho = Math.pow(Math.pow(absNx, n) + Math.pow(absNy, n), 1 / n);
+      const idx = j * pw + i;
+
+      // Outward normal of the bezel (radial). Used by BOTH the displacement
+      // direction and the directional specular term below.
+      const dirX = rho > 0 ? nx / rho : 0;
+      const dirY = rho > 0 ? ny / rho : 0;
+
+      // ── Specular shine field (→ blue channel) ──
+      // Two profiles of the same rim, both peaking at the boundary (rho→1) and
+      // ~0 in the flat centre (rho→0):
+      //   • edgeHighlight: a thin, sharp band hugging the boundary → reads as a border
+      //   • glow:          a broad, soft brightening across the whole bezel
+      // The directional weight uses |normal·light|, so the shine appears on BOTH
+      // sides aligned with the light axis (a real lens glints on near AND far rim),
+      // which is what Aave shows. Edge stays mostly uniform so it looks like a
+      // border; glow is strongly two-sided.
+      const edgeProfile = Math.pow(rho, 24);
+      const glowProfile = Math.pow(rho, 6);
+      const twoSided = Math.pow(Math.abs(dirX * Lx + dirY * Ly), 1.5);
+      const glowDir = 0.2 + 0.8 * twoSided;
+      const edgeDir = 0.7 + 0.3 * twoSided;
+      rawB[idx] = Math.min(
+        edgeHighlight * edgeProfile * edgeDir + glow * glowProfile * glowDir,
+        1
+      );
 
       // depth controls the width of the displaced bezel in pixels.
-      // We multiply by 2 because Aave's depth scale maps to a wider physical band 
+      // We multiply by 2 because Aave's depth scale maps to a wider physical band
       // (a depth of 10 in Aave corresponds to ~20 pixels of penetration).
       const bandRho = Math.min((Math.max(0.001, depth) * 2) / Math.min(hw, hh), 1.0);
       const startRho = 1.0 - bandRho;
 
       let m = 0;
       if (rho > startRho) {
-        // We MUST cap s at 1.0. Otherwise, corners (where rho can slightly exceed 1.0) 
+        // We MUST cap s at 1.0. Otherwise, corners (where rho can slightly exceed 1.0)
         // will massively inflate maxMag at low depth values, crushing the gradient
         // intensity everywhere else and making the map look faintly grey / invisible.
         const s = Math.min((rho - startRho) / bandRho, 1.0);
@@ -151,29 +189,27 @@ export function generateDisplacementMap(
 
       if (m <= 0) continue;
 
-      // Normalize the direction vector so the displacement magnitude exactly equals m.
-      // Without this division by rho, the magnitude would be m * rho, effectively
-      // making the gradient profile rho^(exp+1) which is way too shallow/flat.
-      const dirX = rho > 0 ? nx / rho : 0;
-      const dirY = rho > 0 ? ny / rho : 0;
-
       // Convex lens: mapping -dirX makes dispX > 0 when reading from the left,
       // creating a white/yellow top-left corner in the map exactly like Aave.
       const dispX = -dirX * m * splay;
       const dispY = -dirY * m;
 
-      const idx = j * pw + i;
       rawX[idx] = dispX;
       rawY[idx] = dispY;
       maxMag = Math.max(maxMag, Math.abs(dispX), Math.abs(dispY));
     }
   }
 
+  // The specular shine (edgeHighlight + glow, directional) lives in the BLUE
+  // channel. feDisplacementMap reads R (x) and G (y) exclusively, so blue never
+  // touches the refraction — a later filter pass extracts it as a rim highlight.
+  // This is why, on Aave, these sliders visibly change the map (right panel)
+  // without moving the refracted result (left panel).
   for (let k = 0; k < pw * ph; k++) {
     const idx = k * 4;
     data[idx + 0] = 128 + (rawX[k] / maxMag) * 127;
     data[idx + 1] = 128 + (rawY[k] / maxMag) * 127;
-    data[idx + 2] = 128;
+    data[idx + 2] = Math.round(128 + rawB[k] * 127);
     data[idx + 3] = 255;
   }
 
@@ -241,11 +277,11 @@ export default function LiquidGlass({
   // Regenerate displacement map when shape params change
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const url = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay);
+    const url = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle);
     setMapUrl(url);
     // Change filter ID to bust Safari's filter cache
     setFilterId(`lg-filter-${baseId}-${Date.now()}`);
-  }, [rw, rh, borderRadius, depth, curvature, splay, baseId]);
+  }, [rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, baseId]);
 
   // ── Pointer drag handling ──
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -397,6 +433,25 @@ export default function LiquidGlass({
               <feBlend in="chR" in2="chG" mode="screen" result="chRG" />
               <feBlend in="chRG" in2="chB" mode="screen" result="displaced" />
 
+              {/* ── Specular rim highlight ──
+                  The map's blue channel holds the shine field (edgeHighlight +
+                  glow, weighted by specularAngle). We build a SOLID WHITE image
+                  whose ALPHA is the shine: RGB = white (constant), A = 0.8·B − 0.4.
+                  Neutral B=0.5 → alpha 0 (fully transparent, leaves the glass
+                  alone — no black mask), bright rim → alpha up to 0.4 (capped, so
+                  it never fully whites-out the colours below). Screened over the
+                  refracted glass, only the rim brightens. */}
+              {(glow > 0 || edgeHighlight > 0) && (
+                <>
+                  <feColorMatrix
+                    in="displacementMapCentered"
+                    type="matrix"
+                    values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0.8 0 -0.4"
+                    result="specularField"
+                  />
+                  <feBlend in="displaced" in2="specularField" mode="screen" result="glassWithSpec" />
+                </>
+              )}
 
             </filter>
           </defs>
@@ -435,21 +490,6 @@ export default function LiquidGlass({
           }}
           onPointerDown={handlePointerDown}
         >
-          {/* Edge highlight ring: A subtle inner border and shine on the lens itself */}
-          {edgeHighlight > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                borderRadius,
-                boxShadow: `
-                  inset 0 0 0 1px rgba(255,255,255,${edgeHighlight * 0.4}),
-                  inset 0 0 12px 0 rgba(255,255,255,${edgeHighlight * 0.15})
-                `,
-                pointerEvents: "none",
-              }}
-            />
-          )}
 
           {/* Backdrop blur layer */}
           {blur > 0 && (
@@ -464,18 +504,6 @@ export default function LiquidGlass({
             />
           )}
 
-          {/* White glow/fill */}
-          {glow > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                borderRadius,
-                background: `rgba(255,255,255,${glow})`,
-                pointerEvents: "none",
-              }}
-            />
-          )}
 
           {/* Grounding drop shadow */}
           <div

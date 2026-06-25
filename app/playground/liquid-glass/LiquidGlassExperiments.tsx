@@ -15,6 +15,9 @@ interface MapPreviewProps {
   depth: number;
   curvature: number;
   splay: number;
+  glow: number;
+  edgeHighlight: number;
+  specularAngle: number;
   lensX: number;
   lensY: number;
   renderScale?: number;
@@ -22,7 +25,7 @@ interface MapPreviewProps {
 }
 
 function MapPreview({
-  lensWidth, lensHeight, borderRadius, depth, curvature, splay, lensX, lensY, renderScale = 1, onLensMove,
+  lensWidth, lensHeight, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, lensX, lensY, renderScale = 1, onLensMove,
 }: MapPreviewProps) {
   const rw = lensWidth * renderScale;
   const rh = lensHeight * renderScale;
@@ -33,8 +36,8 @@ function MapPreview({
 
   useEffect(() => {
     const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
-    setMapUrl(generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, dpr));
-  }, [rw, rh, borderRadius, depth, curvature, splay]);
+    setMapUrl(generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, dpr));
+  }, [rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle]);
 
   const onDown = (e: React.PointerEvent) => {
     e.preventDefault();
@@ -117,9 +120,13 @@ export default function LiquidGlassExperiments() {
     sbs.patch("lensY", y);
   };
 
-  const imageExp = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 150, lensHeight: 170, borderRadius: 40, scale: 0.12, lensX: 0.5, lensY: 0.5 });
-  const textExp = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 230, lensHeight: 130, borderRadius: 40, scale: 0.07, chroma: 0.15, blur: 0, lensX: 0.5, lensY: 0.5 });
-  const cardExp = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 180, lensHeight: 210, borderRadius: 32, scale: 0.12, lensX: 0.5, lensY: 0.5 });
+  // Base lens dims are kept within the slider constraints (width ≤120, height ≤80)
+  // and scaled up at render time via renderScale — same pattern as the side-by-side
+  // demo above. borderRadius is NOT scaled and the map is generated from
+  // lensWidth×renderScale, so the rendered result is identical to the old literal sizes.
+  const imageExp = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 60, lensHeight: 68, borderRadius: 40, scale: 0.12, lensX: 0.5, lensY: 0.5 }); // ×2.5 → 150×170
+  const textExp = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 92, lensHeight: 52, borderRadius: 40, scale: 0.07, chroma: 0.15, blur: 0, lensX: 0.5, lensY: 0.5 }); // ×2.5 → 230×130
+  const cardExp = useAnimatedReset({ ...GLASS_DEFAULTS, lensWidth: 60, lensHeight: 70, borderRadius: 32, scale: 0.12, lensX: 0.5, lensY: 0.5 }); // ×3 → 180×210
 
   const [htmlText, setHtmlText] = useState("GLASS");
 
@@ -170,6 +177,9 @@ export default function LiquidGlassExperiments() {
                 depth={sbs.props.depth}
                 curvature={sbs.props.curvature}
                 splay={sbs.props.splay}
+                glow={sbs.props.glow}
+                edgeHighlight={sbs.props.edgeHighlight}
+                specularAngle={sbs.props.specularAngle}
                 lensX={sbs.props.lensX}
                 lensY={sbs.props.lensY}
                 renderScale={2}
@@ -181,9 +191,14 @@ export default function LiquidGlassExperiments() {
 
         {/* Description + unified 2-column controls */}
         <div className="w-full max-w-4xl">
-          <p className="mt-5 mb-4 text-sm text-gray-500 text-center max-w-lg mx-auto">
-            On the left is the refracted result, on the right the map that drives it.
-          </p>
+          <div className="mt-5 mb-4 text-sm text-gray-500 text-center max-w-xl mx-auto space-y-1">
+            <p>On the left is the refracted result, on the right the map that drives it.</p>
+            <p>
+              <span className="font-bold text-red-400">Red</span> and{" "}
+              <span className="font-bold text-green-400">green</span> encode per-pixel displacement — how far each pixel bends horizontally and vertically. A neutral 50% grey means no bend.{" "}
+              <span className="font-bold text-blue-400">Blue</span> is a specular shine field that a second filter pass lifts it into a rim highlight.
+            </p>
+          </div>
           <DebugPanel
             sliders={GLASS_SLIDERS}
             values={sbs.props}
@@ -213,6 +228,7 @@ export default function LiquidGlassExperiments() {
             <LiquidGlass
               className="w-full h-full"
               {...imageExp.props}
+              renderScale={2.5}
               onLensMove={(x, y) => { imageExp.patch("lensX", x); imageExp.patch("lensY", y); }}
             >
               <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${IMAGE})` }} />
@@ -243,6 +259,7 @@ export default function LiquidGlassExperiments() {
             <LiquidGlass
               className="w-full h-full"
               {...textExp.props}
+              renderScale={2.5}
               onLensMove={(x, y) => { textExp.patch("lensX", x); textExp.patch("lensY", y); }}
             >
               <div className="w-full h-full flex items-center justify-center">
@@ -286,13 +303,14 @@ export default function LiquidGlassExperiments() {
 
         {/* 3. UI Component Refraction */}
         <div className="flex flex-col items-center w-full max-w-sm">
-          <div className="w-full h-[320px] rounded-xl overflow-hidden border border-gray-800 bg-gray-950 flex items-center justify-center relative p-8">
+          <div className="w-full h-[320px] rounded-xl overflow-hidden border border-gray-800 bg-gray-950 flex items-center justify-center relative">
             <LiquidGlass
               className="w-full h-full"
               {...cardExp.props}
+              renderScale={3}
               onLensMove={(x, y) => { cardExp.patch("lensX", x); cardExp.patch("lensY", y); }}
             >
-              <div className="absolute inset-8 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-6 flex flex-col justify-between shadow-2xl">
+              <div className="absolute inset-16 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-6 flex flex-col justify-between shadow-2xl">
                 <div className="flex justify-between items-start">
                   <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md" />
                   <div className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-medium text-white">Pro</div>

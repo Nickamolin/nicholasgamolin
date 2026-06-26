@@ -17,7 +17,7 @@ export interface LiquidGlassProps {
   depth?: number;
   /** Curvature — controls the falloff exponent (0–80) */
   curvature?: number;
-  /** Splay — ratio of X to Y displacement (0–1) */
+  /** Splay — fans the refraction direction from axis-aligned/mitered (0) to radial/smooth (1) */
   splay?: number;
   /** Chromatic aberration strength (0–1) */
   chroma?: number;
@@ -115,6 +115,7 @@ export function generateDisplacementMap(
   const rawX = new Float32Array(pw * ph);
   const rawY = new Float32Array(pw * ph);
   const rawB = new Float32Array(pw * ph); // specular shine field → blue channel, 0..1
+  const rawFade = new Float32Array(pw * ph); // anti-aliased boundary fade, 0..1
   let maxMag = 1e-6;
 
   // Light direction for the specular term. The rim is brightest where its
@@ -131,6 +132,15 @@ export function generateDisplacementMap(
       const py = j / pixelRatio - cy + 0.5 / pixelRatio;
       const d = sdfRoundedRect(px, py, hw, hh, r);
       if (d >= 0) continue;
+
+      // Smooth anti-aliased fade over 4 logical pixels at the boundary using a
+      // smoothstep curve (zero derivative at both ends), so the displacement
+      // and blur mask ramp up without a visible kink. 4px gives enough range
+      // that even non-Retina screens have several samples across the fade zone.
+      // Previously this was a linear ramp over only 2px, which was too thin.
+      const t = Math.min(1, -d / 4);
+      const edgeFade = t * t * (3 - 2 * t);  // smoothstep
+      rawFade[j * pw + i] = edgeFade;
 
       // Superellipse (p-norm) gradient field.
       // A superellipse |x|^n + |y|^n = 1 creates a perfectly smooth distance
@@ -153,25 +163,6 @@ export function generateDisplacementMap(
       const dirX = rho > 0 ? nx / rho : 0;
       const dirY = rho > 0 ? ny / rho : 0;
 
-      // ── Specular shine field (→ blue channel) ──
-      // Two profiles of the same rim, both peaking at the boundary (rho→1) and
-      // ~0 in the flat centre (rho→0):
-      //   • edgeHighlight: a thin, sharp band hugging the boundary → reads as a border
-      //   • glow:          a broad, soft brightening across the whole bezel
-      // The directional weight uses |normal·light|, so the shine appears on BOTH
-      // sides aligned with the light axis (a real lens glints on near AND far rim),
-      // which is what Aave shows. Edge stays mostly uniform so it looks like a
-      // border; glow is strongly two-sided.
-      const edgeProfile = Math.pow(rho, 24);
-      const glowProfile = Math.pow(rho, 6);
-      const twoSided = Math.pow(Math.abs(dirX * Lx + dirY * Ly), 1.5);
-      const glowDir = 0.2 + 0.8 * twoSided;
-      const edgeDir = 0.7 + 0.3 * twoSided;
-      rawB[idx] = Math.min(
-        edgeHighlight * edgeProfile * edgeDir + glow * glowProfile * glowDir,
-        1
-      );
-
       // depth controls the width of the displaced bezel in pixels.
       // We multiply by 2 because Aave's depth scale maps to a wider physical band
       // (a depth of 10 in Aave corresponds to ~20 pixels of penetration).
@@ -187,12 +178,69 @@ export function generateDisplacementMap(
         m = Math.pow(s, exp);
       }
 
+      // ── Specular shine field (→ blue channel) ──
+      //   • edgeHighlight: a TRUE fixed-width rim measured by the signed-distance
+      //     field (`-d` = logical px inside the boundary). Because the SDF gives
+      //     exact Euclidean distance to the edge, the band is exactly `borderPx`
+      //     wide everywhere — straight sides AND rounded corners — independent of
+      //     lens size or aspect. The previous version measured width in
+      //     superellipse `rho`-space, whose isolines bunch up unevenly, so the rim
+      //     ballooned into thick blobs at the corners along the light axis (and got
+      //     thicker as the lens was stretched). It is still DIRECTIONAL — only the
+      //     two ends aligned with the specular angle light up — but now with a
+      //     constant, pixel-thin width.
+      //   • glow: tied to the displacement magnitude `m`, so blue is only added
+      //     where pixels are actually refracting. This matches Aave — glow
+      //     brightens displaced pixels rather than painting a flat radial gradient
+      //     that ignores the displacement map. Its width follows `depth`.
+      const borderPx = 1.5;
+      const distEdge = -d; // d<0 inside the shape, so -d is the distance from the rim
+      // Brightest right at the rim (distEdge→0), falling off over `borderPx`. The
+      // sqrt keeps it near-full across the thin band so it reads as a crisp border
+      // rather than a soft inward gradient. NOT multiplied by `edgeFade` — that
+      // ramp is zero at the very edge and would kill the brightest part of the rim.
+      const edgeProfile = distEdge < borderPx
+        ? Math.sqrt(1 - distEdge / borderPx)
+        : 0;
+      const glowProfile = m;
+      const dot = Math.abs(dirX * Lx + dirY * Ly);
+      // Edge: a sharp two-ended glint along the light axis (no shine on the
+      // perpendicular ends), so it reads as a directional border segment.
+      const edgeDir = Math.pow(dot, 4);
+      // Glow: follows the specular angle just like the edge, but with a softer,
+      // broader falloff (dot² vs the edge's dot⁴) so it reads as a diffuse shine
+      // on the two light-facing ends rather than a tight glint. A small ambient
+      // floor keeps it from cutting off to nothing on the perpendicular ends.
+      const glowDir = 0.1 + 0.9 * Math.pow(dot, 2);
+      rawB[idx] = Math.min(
+        edgeHighlight * edgeProfile * edgeDir + edgeFade * glow * glowProfile * glowDir,
+        1
+      );
+
       if (m <= 0) continue;
 
-      // Convex lens: mapping -dirX makes dispX > 0 when reading from the left,
+      // ── Displacement direction, morphed by `splay` ──
+      // splay fans the refraction vectors between two regimes (matching Aave):
+      //   • splay = 1 → RADIAL: vectors point straight out from the centre, so the
+      //     hues rotate smoothly with no creases (Aave's map at splay 1).
+      //   • splay = 0 → BOXY: vectors align toward the nearest edge, giving a
+      //     squared-off bevel (Aave's map at splay 0) — but the CORNERS STAY SOFT.
+      // The trick is to take the gradient of a p-norm and raise its exponent as
+      // splay drops, rather than hard-picking the nearest edge. A p-norm gradient
+      // rotates *continuously* across the diagonal (both components stay comparable
+      // there), so the corner transition is smooth at every splay — no harsh miter
+      // seam like a `nearest-edge` selection produces.
+      const pDir = 2 + (1 - splay) * 6;  // splay 1 → p=2 (round), splay 0 → p=8 (boxy)
+      const gx = Math.sign(nx) * Math.pow(absNx, pDir - 1);
+      const gy = Math.sign(ny) * Math.pow(absNy, pDir - 1);
+      const gLen = Math.hypot(gx, gy) || 1;
+      const ddx = gx / gLen;
+      const ddy = gy / gLen;
+
+      // Convex lens: the leading minus makes dispX > 0 when reading from the left,
       // creating a white/yellow top-left corner in the map exactly like Aave.
-      const dispX = -dirX * m * splay;
-      const dispY = -dirY * m;
+      const dispX = -ddx * m;
+      const dispY = -ddy * m;
 
       rawX[idx] = dispX;
       rawY[idx] = dispY;
@@ -207,10 +255,23 @@ export function generateDisplacementMap(
   // without moving the refracted result (left panel).
   for (let k = 0; k < pw * ph; k++) {
     const idx = k * 4;
-    data[idx + 0] = 128 + (rawX[k] / maxMag) * 127;
-    data[idx + 1] = 128 + (rawY[k] / maxMag) * 127;
+    const fade = rawFade[k];
+    // R/G store full displacement (NOT pre-multiplied by fade). The feMerge
+    // "over"-composites the PNG (alpha=fade) on top of the neutral flood (128),
+    // naturally producing: 128 + disp*fade — a correct linear blend. Pre-
+    // multiplying here too caused a double-fade (disp*fade²), which made the
+    // edge transition appear sharp and produced jagged, pixelated lens borders.
+    data[idx + 0] = Math.round(128 + (rawX[k] / maxMag) * 127);
+    data[idx + 1] = Math.round(128 + (rawY[k] / maxMag) * 127);
     data[idx + 2] = Math.round(128 + rawB[k] * 127);
-    data[idx + 3] = 255;
+    // ALPHA encodes the rounded-rect lens coverage (anti-aliased at the rim).
+    // The SVG filter uses this as the mask that confines the backdrop blur to the
+    // lens interior — the blur lives in the filter pipeline now, not a CSS
+    // backdrop-filter, because a sibling element carrying a CSS `filter` is
+    // excluded from a backdrop-filter's backdrop in Chromium. R/G already fade to
+    // neutral at the rim, so dropping alpha outside the shape changes nothing about
+    // the refraction; it just gives us a clean coverage mask for free.
+    data[idx + 3] = Math.round(255 * fade);
   }
 
   ctx.putImageData(imageData, 0, 0);
@@ -244,6 +305,10 @@ export default function LiquidGlass({
   const rh = lensHeight * renderScale;
   const baseId = useId().replace(/:/g, "");
   const [filterId, setFilterId] = useState(`lg-filter-${baseId}`);
+  // Static filter that turns the map's blue channel into a white rim highlight
+  // with shine-based alpha. It's applied to a DOM layer that sits ON TOP of the
+  // backdrop blur, so the highlight stays sharp while the refraction blurs.
+  const specFilterId = `lg-spec-${baseId}`;
   const [mapUrl, setMapUrl] = useState<string>("");
   const containerRef = useRef<HTMLDivElement>(null);
   // The stage spans the full inner box regardless of any padding on the
@@ -277,7 +342,8 @@ export default function LiquidGlass({
   // Regenerate displacement map when shape params change
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const url = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle);
+    const dpr = window.devicePixelRatio || 1;
+    const url = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, dpr);
     setMapUrl(url);
     // Change filter ID to bust Safari's filter cache
     setFilterId(`lg-filter-${baseId}-${Date.now()}`);
@@ -433,26 +499,40 @@ export default function LiquidGlass({
               <feBlend in="chR" in2="chG" mode="screen" result="chRG" />
               <feBlend in="chRG" in2="chB" mode="screen" result="displaced" />
 
-              {/* ── Specular rim highlight ──
-                  The map's blue channel holds the shine field (edgeHighlight +
-                  glow, weighted by specularAngle). We build a SOLID WHITE image
-                  whose ALPHA is the shine: RGB = white (constant), A = 0.8·B − 0.4.
-                  Neutral B=0.5 → alpha 0 (fully transparent, leaves the glass
-                  alone — no black mask), bright rim → alpha up to 0.4 (capped, so
-                  it never fully whites-out the colours below). Screened over the
-                  refracted glass, only the rim brightens. */}
-              {(glow > 0 || edgeHighlight > 0) && (
-                <>
-                  <feColorMatrix
-                    in="displacementMapCentered"
-                    type="matrix"
-                    values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0.8 0 -0.4"
-                    result="specularField"
-                  />
-                  <feBlend in="displaced" in2="specularField" mode="screen" result="glassWithSpec" />
-                </>
-              )}
+              {/* Backdrop blur — done HERE in the filter, not via CSS
+                  backdrop-filter, because a sibling element that carries a CSS
+                  `filter` is excluded from a backdrop-filter's backdrop in Chromium
+                  (so the CSS approach silently did nothing). We blur the whole
+                  refracted result, then confine it to the lens using the map's
+                  alpha as a rounded-rect mask, and lay the sharp (unblurred)
+                  surroundings back underneath. At blur=0 this is an exact identity. */}
+              <feGaussianBlur in="displaced" stdDeviation={blur} edgeMode="duplicate" result="blurredFull" />
+              <feComposite in="blurredFull" in2="displacementMapCentered" operator="in" result="blurredInLens" />
+              <feComposite in="displaced" in2="displacementMapCentered" operator="out" result="sharpOutsideLens" />
+              {/* Combine with arithmetic ADD, not a feMerge. feMerge does `over`
+                  compositing, and at the anti-aliased rim (mask alpha ≈ 0.5) that
+                  yields alpha = a + (1−a)² = 0.75 — a translucent ring that let the
+                  background bleed through as a faint dark halo. Adding the two
+                  pre-masked halves (blurred·a + sharp·(1−a)) is a true linear
+                  cross-fade and keeps alpha at 1 everywhere. */}
+              <feComposite in="blurredInLens" in2="sharpOutsideLens" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" />
 
+            </filter>
+
+            {/* ── Specular rim highlight (separate filter, applied to a DOM layer
+                on top of the blur so the highlight stays sharp) ──
+                Turns the map's blue channel into a solid white image whose ALPHA
+                is the shine: RGB = white (constant), A = 2·B − 1. The blue channel
+                runs 0.5 (neutral) → 1.0 (fully lit), so this maps that to alpha
+                0 → 1.0. The ×2 slope matters: a plain B − 0.5 caps alpha at 0.5, so
+                even a maxed rim was only half-opacity white and screen-blended to a
+                muddy grey. Reaching full alpha lets a maxed edge screen to pure
+                white, while mid values still lift the refraction translucently. */}
+            <filter id={specFilterId} colorInterpolationFilters="sRGB">
+              <feColorMatrix
+                type="matrix"
+                values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 2.0 0 -1.0"
+              />
             </filter>
           </defs>
         </svg>
@@ -491,19 +571,33 @@ export default function LiquidGlass({
           onPointerDown={handlePointerDown}
         >
 
-          {/* Backdrop blur layer */}
-          {blur > 0 && (
-            <div
+          {/* The backdrop blur is applied inside the SVG filter (feGaussianBlur,
+              masked to the lens) rather than as a CSS backdrop-filter here: a
+              sibling element carrying a CSS `filter` is excluded from a
+              backdrop-filter's backdrop in Chromium, so the CSS version blurred
+              nothing. Doing it in the filter also keeps it below the specular
+              highlight automatically, so the highlight stays sharp. */}
+
+          {/* Specular rim highlight — the map's blue channel turned into a sharp
+              white shine via specFilterId, screened over the (possibly blurred)
+              refraction. Sits on top of the blur layer, so blur never touches it. */}
+          {(glow > 0 || edgeHighlight > 0) && mapUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={mapUrl}
+              alt=""
               style={{
                 position: "absolute",
                 inset: 0,
+                width: rw,
+                height: rh,
                 borderRadius,
-                backdropFilter: `blur(${blur}px)`,
-                WebkitBackdropFilter: `blur(${blur}px)`,
+                filter: `url(#${specFilterId})`,
+                mixBlendMode: "screen",
+                pointerEvents: "none",
               }}
             />
           )}
-
 
           {/* Grounding drop shadow */}
           <div

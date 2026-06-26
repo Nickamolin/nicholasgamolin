@@ -84,7 +84,7 @@ export function generateDisplacementMap(
   edgeHighlight = 0,
   specularAngle = 45,
   pixelRatio = 1
-): { dispUrl: string; specUrl: string } {
+): { dispUrl: string; specUrl: string; previewUrl: string } {
   const pw = Math.ceil(lensW * pixelRatio);
   const ph = Math.ceil(lensH * pixelRatio);
 
@@ -283,16 +283,36 @@ export function generateDisplacementMap(
   specCanvas.width = pw;
   specCanvas.height = ph;
   const specCtx = specCanvas.getContext("2d");
-  if (!specCtx) return { dispUrl: "", specUrl: "" };
+  if (!specCtx) return { dispUrl: "", specUrl: "", previewUrl: "" };
   const specData = specCtx.createImageData(pw, ph);
   const sd = specData.data;
+
+  // ── Preview canvas ─────────────────────────────────────────────────────────
+  // A fully-opaque version of the displacement map for the UI preview.
+  // The disp PNG uses alpha=edgeFade (needed by the SVG filter for blur masking),
+  // which creates a soft semi-transparent edge and crushes the blue-channel edge
+  // highlight to near-invisible when composited over the grey background.
+  // The preview canvas writes alpha=255 everywhere: neutral grey (128,128,128)
+  // outside the lens, actual R/G/B values inside, so the map is rendered crisply
+  // with the full specular field visible.
+  const prevCanvas = document.createElement("canvas");
+  prevCanvas.width = pw;
+  prevCanvas.height = ph;
+  const prevCtx = prevCanvas.getContext("2d");
+  if (!prevCtx) return { dispUrl: "", specUrl: "", previewUrl: "" };
+  const prevData = prevCtx.createImageData(pw, ph);
+  const pd = prevData.data;
 
   for (let k = 0; k < pw * ph; k++) {
     const idx = k * 4;
     const fade = rawFade[k];
-    data[idx + 0] = Math.round(128 + (rawX[k] / maxMag) * 127);
-    data[idx + 1] = Math.round(128 + (rawY[k] / maxMag) * 127);
-    data[idx + 2] = Math.round(128 + rawB[k] * 127); // specular field — visible in map preview
+    const r = Math.round(128 + (rawX[k] / maxMag) * 127);
+    const g = Math.round(128 + (rawY[k] / maxMag) * 127);
+    const b = Math.round(128 + rawB[k] * 127);
+    // Displacement canvas: alpha=edgeFade (used by the SVG filter for masking)
+    data[idx + 0] = r;
+    data[idx + 1] = g;
+    data[idx + 2] = b;
     data[idx + 3] = Math.round(255 * fade);
     // Specular canvas: solid white, alpha = rawB (no edgeFade premultiplication).
     // Pixels outside the lens are left as RGBA(0,0,0,0) (canvas default).
@@ -302,13 +322,20 @@ export function generateDisplacementMap(
       sd[idx + 2] = 255;
       sd[idx + 3] = Math.round(rawB[k] * 255);
     }
+    // Preview canvas: fully opaque. Neutral grey outside, actual values inside.
+    pd[idx + 0] = fade > 0 ? r : 128;
+    pd[idx + 1] = fade > 0 ? g : 128;
+    pd[idx + 2] = fade > 0 ? b : 128;
+    pd[idx + 3] = 255;
   }
 
   ctx.putImageData(imageData, 0, 0);
   specCtx.putImageData(specData, 0, 0);
+  prevCtx.putImageData(prevData, 0, 0);
   return {
     dispUrl: canvas.toDataURL("image/png"),
     specUrl: specCanvas.toDataURL("image/png"),
+    previewUrl: prevCanvas.toDataURL("image/png"),
   };
 }
 

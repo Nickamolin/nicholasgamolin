@@ -36,8 +36,8 @@ function MapPreview({
 
   useEffect(() => {
     const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
-    const { dispUrl } = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, dpr);
-    setMapUrl(dispUrl);
+    const { previewUrl } = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, dpr);
+    setMapUrl(previewUrl);
   }, [rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle]);
 
   const onDown = (e: React.PointerEvent) => {

@@ -193,12 +193,15 @@ export function generateDisplacementMap(
       //     where pixels are actually refracting. This matches Aave — glow
       //     brightens displaced pixels rather than painting a flat radial gradient
       //     that ignores the displacement map. Its width follows `depth`.
+      // borderPx controls the width of the edge highlight band.
+      // 1.5px keeps it as a crisp, pixel-thin rim glint.
+      // The gap between the highlight and the glow zone is closed below by
+      // letting glow appear wherever m>0 (no edgeFade suppression).
       const borderPx = 1.5;
       const distEdge = -d; // d<0 inside the shape, so -d is the distance from the rim
       // Brightest right at the rim (distEdge→0), falling off over `borderPx`. The
       // sqrt keeps it near-full across the thin band so it reads as a crisp border
-      // rather than a soft inward gradient. NOT multiplied by `edgeFade` — that
-      // ramp is zero at the very edge and would kill the brightest part of the rim.
+      // rather than a soft inward gradient.
       const edgeProfile = distEdge < borderPx
         ? Math.sqrt(1 - distEdge / borderPx)
         : 0;
@@ -213,7 +216,13 @@ export function generateDisplacementMap(
       // floor keeps it from cutting off to nothing on the perpendicular ends.
       const glowDir = 0.1 + 0.9 * Math.pow(dot, 2);
       rawB[idx] = Math.min(
-        edgeHighlight * edgeProfile * edgeDir + edgeFade * glow * glowProfile * glowDir,
+        // edgeHighlight: sharp rim glint (SDF-width band, directional).
+        edgeHighlight * edgeProfile * edgeDir
+        // glow: brightens the displaced bezel wherever m>0. No edgeFade
+        // multiplier — glow appears right from the rim so it naturally bridges
+        // the gap left by the 1.5px highlight band. The specular canvas already
+        // clips to inside pixels, so no boundary bleed is possible.
+        + glow * glowProfile * glowDir,
         1
       );
 
@@ -230,7 +239,7 @@ export function generateDisplacementMap(
       // rotates *continuously* across the diagonal (both components stay comparable
       // there), so the corner transition is smooth at every splay — no harsh miter
       // seam like a `nearest-edge` selection produces.
-      const pDir = 2 + (1 - splay) * 6;  // splay 1 → p=2 (round), splay 0 → p=8 (boxy)
+      const pDir = 2 + (1 - splay) * 3;  // splay 1 → p=2 (round), splay 0 → p=5 (boxy but smooth corners)
       const gx = Math.sign(nx) * Math.pow(absNx, pDir - 1);
       const gy = Math.sign(ny) * Math.pow(absNy, pDir - 1);
       const gLen = Math.hypot(gx, gy) || 1;
@@ -248,34 +257,55 @@ export function generateDisplacementMap(
     }
   }
 
-  // The specular shine (edgeHighlight + glow, directional) lives in the BLUE
-  // channel. feDisplacementMap reads R (x) and G (y) exclusively, so blue never
-  // touches the refraction — a later filter pass extracts it as a rim highlight.
-  // This is why, on Aave, these sliders visibly change the map (right panel)
-  // without moving the refracted result (left panel).
+  // ── Write displacement map pixels ──────────────────────────────────────────
+  // R/G store full displacement (NOT pre-multiplied by fade). The feMerge
+  // "over"-composites the PNG (alpha=fade) on top of the neutral flood (128),
+  // naturally producing: 128 + disp*fade — a correct linear blend.
+  // ALPHA encodes the rounded-rect coverage (anti-aliased at the rim) so the
+  // SVG filter can use it as a mask for the backdrop blur.
+  // BLUE stays at the neutral 128 (not used by feDisplacementMap and keeping
+  // it neutral means the map preview looks correctly grey rather than brown).
+  //
+  // ── Specular canvas ────────────────────────────────────────────────────────
+  // SVG filter primitives work in PRE-MULTIPLIED alpha. If we encoded rawB in
+  // the disp PNG's blue channel, feColorMatrix would see
+  //   B_premul = rawB × edgeFade
+  // and at the rim (edgeFade → 0) the edge highlight would be crushed to zero
+  // even when rawB = 1 — producing a dark rim between the highlight and glow.
+  // Fix: use a SECOND canvas whose alpha = rawB directly, with alpha=255
+  // everywhere inside the shape. The feImage that loads it is NOT pre-multiplied
+  // by edgeFade, so the highlight appears at full amplitude right at the rim.
+  const specCanvas = document.createElement("canvas");
+  specCanvas.width = pw;
+  specCanvas.height = ph;
+  const specCtx = specCanvas.getContext("2d");
+  if (!specCtx) return { dispUrl: "", specUrl: "" };
+  const specData = specCtx.createImageData(pw, ph);
+  const sd = specData.data;
+
   for (let k = 0; k < pw * ph; k++) {
     const idx = k * 4;
     const fade = rawFade[k];
-    // R/G store full displacement (NOT pre-multiplied by fade). The feMerge
-    // "over"-composites the PNG (alpha=fade) on top of the neutral flood (128),
-    // naturally producing: 128 + disp*fade — a correct linear blend. Pre-
-    // multiplying here too caused a double-fade (disp*fade²), which made the
-    // edge transition appear sharp and produced jagged, pixelated lens borders.
     data[idx + 0] = Math.round(128 + (rawX[k] / maxMag) * 127);
     data[idx + 1] = Math.round(128 + (rawY[k] / maxMag) * 127);
-    data[idx + 2] = Math.round(128 + rawB[k] * 127);
-    // ALPHA encodes the rounded-rect lens coverage (anti-aliased at the rim).
-    // The SVG filter uses this as the mask that confines the backdrop blur to the
-    // lens interior — the blur lives in the filter pipeline now, not a CSS
-    // backdrop-filter, because a sibling element carrying a CSS `filter` is
-    // excluded from a backdrop-filter's backdrop in Chromium. R/G already fade to
-    // neutral at the rim, so dropping alpha outside the shape changes nothing about
-    // the refraction; it just gives us a clean coverage mask for free.
+    data[idx + 2] = Math.round(128 + rawB[k] * 127); // specular field — visible in map preview
     data[idx + 3] = Math.round(255 * fade);
+    // Specular canvas: solid white, alpha = rawB (no edgeFade premultiplication).
+    // Pixels outside the lens are left as RGBA(0,0,0,0) (canvas default).
+    if (fade > 0) {
+      sd[idx + 0] = 255;
+      sd[idx + 1] = 255;
+      sd[idx + 2] = 255;
+      sd[idx + 3] = Math.round(rawB[k] * 255);
+    }
   }
 
   ctx.putImageData(imageData, 0, 0);
-  return canvas.toDataURL("image/png");
+  specCtx.putImageData(specData, 0, 0);
+  return {
+    dispUrl: canvas.toDataURL("image/png"),
+    specUrl: specCanvas.toDataURL("image/png"),
+  };
 }
 
 // ─── LiquidGlass component ────────────────────────────────────────────────────
@@ -305,11 +335,11 @@ export default function LiquidGlass({
   const rh = lensHeight * renderScale;
   const baseId = useId().replace(/:/g, "");
   const [filterId, setFilterId] = useState(`lg-filter-${baseId}`);
-  // Static filter that turns the map's blue channel into a white rim highlight
-  // with shine-based alpha. It's applied to a DOM layer that sits ON TOP of the
-  // backdrop blur, so the highlight stays sharp while the refraction blurs.
-  const specFilterId = `lg-spec-${baseId}`;
-  const [mapUrl, setMapUrl] = useState<string>("");
+  // dispUrl drives the displacement / blur-mask feImage.
+  // specUrl drives a separate feImage for the specular highlight — kept separate
+  // so its alpha (rawB) is NOT premultiplied by edgeFade in the filter pipeline.
+  const [dispUrl, setDispUrl] = useState<string>("");
+  const [specUrl, setSpecUrl] = useState<string>("");
   const containerRef = useRef<HTMLDivElement>(null);
   // The stage spans the full inner box regardless of any padding on the
   // container, so the filtered content, the displacement map and the lens
@@ -339,12 +369,13 @@ export default function LiquidGlass({
   useEffect(() => { setInternalX(lensX); }, [lensX]);
   useEffect(() => { setInternalY(lensY); }, [lensY]);
 
-  // Regenerate displacement map when shape params change
+  // Regenerate displacement + specular maps when shape params change
   useEffect(() => {
     if (typeof window === "undefined") return;
     const dpr = window.devicePixelRatio || 1;
-    const url = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, dpr);
-    setMapUrl(url);
+    const { dispUrl: du, specUrl: su } = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, dpr);
+    setDispUrl(du);
+    setSpecUrl(su);
     // Change filter ID to bust Safari's filter cache
     setFilterId(`lg-filter-${baseId}-${Date.now()}`);
   }, [rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, baseId]);
@@ -409,7 +440,7 @@ export default function LiquidGlass({
       onPointerLeave={handlePointerUp}
     >
       {/* ── Hidden SVG filter definition ── */}
-      {mapUrl && (
+      {dispUrl && (
         <svg
           viewBox="0 0 0 0"
           width="0"
@@ -431,10 +462,10 @@ export default function LiquidGlass({
               {/* Flood with neutral displacement (128 = 0.5 for no displacement) */}
               <feFlood floodColor="#808080" floodOpacity="1" result="neutral" />
 
-              {/* The displacement map image */}
+              {/* Displacement map image (R=dispX, G=dispY, B=128 neutral, A=edgeFade) */}
               <feImage
                 id={`${filterId}-img`}
-                href={mapUrl}
+                href={dispUrl}
                 x={imgX}
                 y={imgY}
                 width={rw}
@@ -499,40 +530,37 @@ export default function LiquidGlass({
               <feBlend in="chR" in2="chG" mode="screen" result="chRG" />
               <feBlend in="chRG" in2="chB" mode="screen" result="displaced" />
 
-              {/* Backdrop blur — done HERE in the filter, not via CSS
-                  backdrop-filter, because a sibling element that carries a CSS
-                  `filter` is excluded from a backdrop-filter's backdrop in Chromium
-                  (so the CSS approach silently did nothing). We blur the whole
-                  refracted result, then confine it to the lens using the map's
-                  alpha as a rounded-rect mask, and lay the sharp (unblurred)
-                  surroundings back underneath. At blur=0 this is an exact identity. */}
+              {/* Backdrop blur — masked to the lens interior using the map's alpha.
+                  blur=0 collapses to an identity (feGaussianBlur with stdDeviation=0
+                  passes through unchanged, feComposite in/out split and add back up). */}
               <feGaussianBlur in="displaced" stdDeviation={blur} edgeMode="duplicate" result="blurredFull" />
               <feComposite in="blurredFull" in2="displacementMapCentered" operator="in" result="blurredInLens" />
               <feComposite in="displaced" in2="displacementMapCentered" operator="out" result="sharpOutsideLens" />
-              {/* Combine with arithmetic ADD, not a feMerge. feMerge does `over`
-                  compositing, and at the anti-aliased rim (mask alpha ≈ 0.5) that
-                  yields alpha = a + (1−a)² = 0.75 — a translucent ring that let the
-                  background bleed through as a faint dark halo. Adding the two
-                  pre-masked halves (blurred·a + sharp·(1−a)) is a true linear
-                  cross-fade and keeps alpha at 1 everywhere. */}
-              <feComposite in="blurredInLens" in2="sharpOutsideLens" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" />
+              {/* Arithmetic add instead of feMerge to keep a true linear cross-fade.
+                  feMerge "over" at the anti-aliased rim (alpha≈0.5) yields
+                  a + (1−a)² = 0.75 — a translucent ring and dark halo. Adding the two
+                  pre-masked halves (blurred·a + sharp·(1−a)) keeps alpha at 1 everywhere. */}
+              <feComposite in="blurredInLens" in2="sharpOutsideLens" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="refracted" />
 
-            </filter>
+              {/* ── Specular rim highlight ──
+                  A separate feImage loads the specular canvas (RGBA white, alpha=rawB).
+                  Because this PNG has alpha=255 everywhere inside the lens (NOT edgeFade),
+                  the filter sees the straight rawB value — no premultiplication by edgeFade.
+                  This means the edge highlight appears at full brightness right at the
+                  rim (where edgeFade≈0 would have crushed it in the disp PNG). */}
+              {specUrl && (
+                <feImage
+                  href={specUrl}
+                  x={imgX}
+                  y={imgY}
+                  width={rw}
+                  height={rh}
+                  preserveAspectRatio="none"
+                  result="specularMap"
+                />
+              )}
+              <feBlend in="specularMap" in2="refracted" mode="screen" />
 
-            {/* ── Specular rim highlight (separate filter, applied to a DOM layer
-                on top of the blur so the highlight stays sharp) ──
-                Turns the map's blue channel into a solid white image whose ALPHA
-                is the shine: RGB = white (constant), A = 2·B − 1. The blue channel
-                runs 0.5 (neutral) → 1.0 (fully lit), so this maps that to alpha
-                0 → 1.0. The ×2 slope matters: a plain B − 0.5 caps alpha at 0.5, so
-                even a maxed rim was only half-opacity white and screen-blended to a
-                muddy grey. Reaching full alpha lets a maxed edge screen to pure
-                white, while mid values still lift the refraction translucently. */}
-            <filter id={specFilterId} colorInterpolationFilters="sRGB">
-              <feColorMatrix
-                type="matrix"
-                values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 2.0 0 -1.0"
-              />
             </filter>
           </defs>
         </svg>
@@ -545,7 +573,7 @@ export default function LiquidGlass({
           style={{
             position: "absolute",
             inset: 0,
-            filter: (mapUrl && containerSize.w > 0) ? `url(#${filterId})` : undefined,
+            filter: (dispUrl && containerSize.w > 0) ? `url(#${filterId})` : undefined,
             willChange: "filter",
           }}
         >
@@ -571,33 +599,11 @@ export default function LiquidGlass({
           onPointerDown={handlePointerDown}
         >
 
-          {/* The backdrop blur is applied inside the SVG filter (feGaussianBlur,
-              masked to the lens) rather than as a CSS backdrop-filter here: a
-              sibling element carrying a CSS `filter` is excluded from a
-              backdrop-filter's backdrop in Chromium, so the CSS version blurred
-              nothing. Doing it in the filter also keeps it below the specular
-              highlight automatically, so the highlight stays sharp. */}
-
-          {/* Specular rim highlight — the map's blue channel turned into a sharp
-              white shine via specFilterId, screened over the (possibly blurred)
-              refraction. Sits on top of the blur layer, so blur never touches it. */}
-          {(glow > 0 || edgeHighlight > 0) && mapUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={mapUrl}
-              alt=""
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: rw,
-                height: rh,
-                borderRadius,
-                filter: `url(#${specFilterId})`,
-                mixBlendMode: "screen",
-                pointerEvents: "none",
-              }}
-            />
-          )}
+          {/* Backdrop blur + specular rim highlight are both handled inside the SVG
+              filter pipeline — no DOM layers needed for either. The specular is
+              extracted from displacementMapCentered inside the filter graph, so it
+              is anti-aliased by the map's alpha rather than a CSS border-radius clip
+              (which Chromium doesn't anti-alias on CSS-filtered elements). */}
 
           {/* Grounding drop shadow */}
           <div

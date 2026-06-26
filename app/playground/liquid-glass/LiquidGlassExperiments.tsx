@@ -142,6 +142,10 @@ export default function LiquidGlassExperiments() {
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl gap-16 pb-16">
+      <style>{`
+        @keyframes lgBarUp   { 0%,100% { transform: scaleY(0.5) } 50% { transform: scaleY(1) } }
+        @keyframes lgBarDown { 0%,100% { transform: scaleY(1)   } 50% { transform: scaleY(0.4) } }
+      `}</style>
 
       {/* ── Side-by-Side Demo ────────────────────────────────────────────────── */}
       {/* Wrapper is full-width + position:relative so the right-margin button   */}
@@ -316,6 +320,20 @@ export default function LiquidGlassExperiments() {
                   <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md" />
                   <div className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-medium text-white">Pro</div>
                 </div>
+                {/* Animated sparkline — demonstrates live DOM refraction */}
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 36 }}>
+                  {(["U","D","U","D","U","D","U"] as const).map((dir, i) => (
+                    <div key={i} style={{
+                      flex: 1,
+                      height: "100%",
+                      background: "rgba(255,255,255,0.4)",
+                      borderRadius: "2px 2px 0 0",
+                      transformOrigin: "bottom",
+                      animation: `${dir === "U" ? "lgBarUp" : "lgBarDown"} 2.8s ease-in-out infinite`,
+                      animationDelay: `${i * 0.22}s`,
+                    }} />
+                  ))}
+                </div>
                 <div>
                   <div className="text-white/80 font-mono text-xs mb-1">BALANCE</div>
                   <div className="text-white font-bold text-3xl font-mono tracking-tight">$12,450.00</div>
@@ -327,7 +345,7 @@ export default function LiquidGlassExperiments() {
             UI Refraction
           </span>
           <p className="text-sm text-gray-500 text-center mb-4 max-w-xs">
-            Refracting standard CSS gradients and rounded borders, adding tactile depth to flat UI components.
+            Animated sparklines demonstrate real-time refraction on CSS gradients.
           </p>
           <DebugPanel
             sliders={GLASS_SLIDERS}

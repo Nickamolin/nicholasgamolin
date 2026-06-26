@@ -105,17 +105,13 @@ export function generateDisplacementMap(
   const hh = cy;
   const r = Math.max(0, Math.min(borderRadius, Math.min(hw, hh)));
 
-  // Cap the bezel width at the lens "inradius" (distance from centre to the nearest
-  // edge) so a large depth ramps the displacement all the way down to 0 (neutral) at
-  // the centre rather than leaving a saturated core.
-  const tc = -sdfRoundedRect(0, 0, hw, hh, r);
-  const band = Math.min(Math.max(1, depth), tc);
   const exp = 1.3 + curvature * 0.0075;   // 1.3 at curv 0, ~1.9 at curv 80 (matches Aave's measured ρ^exp)
 
   const rawX = new Float32Array(pw * ph);
   const rawY = new Float32Array(pw * ph);
   const rawB = new Float32Array(pw * ph); // specular shine field → blue channel, 0..1
-  const rawFade = new Float32Array(pw * ph); // anti-aliased boundary fade, 0..1
+  const rawFade = new Float32Array(pw * ph); // soft 4px fade for preview / specular conditions
+  const rawClip = new Float32Array(pw * ph); // hard 1px clip for the displacement PNG alpha
   let maxMag = 1e-6;
 
   // Light direction for the specular term. The rim is brightest where its
@@ -133,14 +129,18 @@ export function generateDisplacementMap(
       const d = sdfRoundedRect(px, py, hw, hh, r);
       if (d >= 0) continue;
 
-      // Smooth anti-aliased fade over 4 logical pixels at the boundary using a
-      // smoothstep curve (zero derivative at both ends), so the displacement
-      // and blur mask ramp up without a visible kink. 4px gives enough range
-      // that even non-Retina screens have several samples across the fade zone.
-      // Previously this was a linear ramp over only 2px, which was too thin.
+      // Soft 4px smoothstep fade — used for the preview canvas and specular conditions.
       const t = Math.min(1, -d / 4);
       const edgeFade = t * t * (3 - 2 * t);  // smoothstep
       rawFade[j * pw + i] = edgeFade;
+      // Hard 1px linear clip — used as the displacement PNG alpha so that the
+      // displacement reaches full strength immediately at the SDF boundary.
+      // This prevents the "dark gap" artifact: with a soft fade, edgeFade≈0 at
+      // the rim causes feMerge to produce nearly-neutral displacement, making
+      // feDisplacementMap sample from the original pixel position (which may be
+      // the dark background behind the content). With the hard clip, even boundary
+      // pixels get near-full displacement and sample from the interior instead.
+      rawClip[j * pw + i] = Math.min(1, -d);
 
       // Superellipse (p-norm) gradient field.
       // A superellipse |x|^n + |y|^n = 1 creates a perfectly smooth distance
@@ -164,18 +164,18 @@ export function generateDisplacementMap(
       const dirY = rho > 0 ? ny / rho : 0;
 
       // depth controls the width of the displaced bezel in pixels.
-      // We multiply by 2 because Aave's depth scale maps to a wider physical band
-      // (a depth of 10 in Aave corresponds to ~20 pixels of penetration).
-      const bandRho = Math.min((Math.max(0.001, depth) * 2) / Math.min(hw, hh), 1.0);
-      const startRho = 1.0 - bandRho;
+      // Using the SDF distance (-d) gives a physically uniform bezel width everywhere —
+      // straight edges AND corners. The old rho-space approach made the bezel thinner
+      // at corners (rho isolines bunch together there), leaving undisplaced pixels
+      // between the refraction and the visible lens edge (the "corner gap" artifact).
+      // The superellipse is still used for displacement DIRECTION (smooth normals).
+      const bandPx = Math.max(1, depth) * 2;
+      const distInside = -d; // 0 at boundary, positive inside
 
       let m = 0;
-      if (rho > startRho) {
-        // We MUST cap s at 1.0. Otherwise, corners (where rho can slightly exceed 1.0)
-        // will massively inflate maxMag at low depth values, crushing the gradient
-        // intensity everywhere else and making the map look faintly grey / invisible.
-        const s = Math.min((rho - startRho) / bandRho, 1.0);
-        m = Math.pow(s, exp);
+      if (distInside < bandPx) {
+        const s = distInside / bandPx; // 0 at rim → 1 at inner boundary
+        m = Math.pow(1 - s, exp);      // 1 at rim → 0 at inner boundary
       }
 
       // ── Specular shine field (→ blue channel) ──
@@ -263,12 +263,14 @@ export function generateDisplacementMap(
 
   // ── Write displacement map pixels ──────────────────────────────────────────
   // R/G store full displacement (NOT pre-multiplied by fade). The feMerge
-  // "over"-composites the PNG (alpha=fade) on top of the neutral flood (128),
-  // naturally producing: 128 + disp*fade — a correct linear blend.
-  // ALPHA encodes the rounded-rect coverage (anti-aliased at the rim) so the
-  // SVG filter can use it as a mask for the backdrop blur.
-  // BLUE stays at the neutral 128 (not used by feDisplacementMap and keeping
-  // it neutral means the map preview looks correctly grey rather than brown).
+  // "over"-composites the PNG (alpha=rawClip, hard 1px clip) on top of the
+  // neutral flood (128), producing full displacement immediately at the boundary.
+  // Using a hard clip instead of a soft edgeFade prevents the "dark gap" artifact:
+  // a soft fade would leave edgeFade≈0 at the rim, causing feMerge to produce
+  // nearly-neutral displacement, making feDisplacementMap sample from the original
+  // pixel position (dark background) instead of the displaced interior content.
+  // ALPHA = rawClip (hard 1px clip at SDF boundary for crisp displacement onset).
+  // BLUE stays at the neutral 128 (not used by feDisplacementMap).
   //
   // ── Specular canvas ────────────────────────────────────────────────────────
   // SVG filter primitives work in PRE-MULTIPLIED alpha. If we encoded rawB in
@@ -289,9 +291,8 @@ export function generateDisplacementMap(
 
   // ── Preview canvas ─────────────────────────────────────────────────────────
   // A fully-opaque version of the displacement map for the UI preview.
-  // The disp PNG uses alpha=edgeFade (needed by the SVG filter for blur masking),
-  // which creates a soft semi-transparent edge and crushes the blue-channel edge
-  // highlight to near-invisible when composited over the grey background.
+  // The disp PNG uses alpha=rawClip (hard 1px clip), which creates a sharp
+  // transparent edge and would not render well over the grey preview background.
   // The preview canvas writes alpha=255 everywhere: neutral grey (128,128,128)
   // outside the lens, actual R/G/B values inside, so the map is rendered crisply
   // with the full specular field visible.
@@ -306,15 +307,17 @@ export function generateDisplacementMap(
   for (let k = 0; k < pw * ph; k++) {
     const idx = k * 4;
     const fade = rawFade[k];
+    const clip = rawClip[k];
     const r = Math.round(128 + (rawX[k] / maxMag) * 127);
     const g = Math.round(128 + (rawY[k] / maxMag) * 127);
     const b = Math.round(128 + rawB[k] * 127);
-    // Displacement canvas: alpha=edgeFade (used by the SVG filter for masking)
+    // Displacement canvas: alpha=rawClip (hard 1px clip so displacement is
+    // at full strength immediately at the boundary — no slow fade-in).
     data[idx + 0] = r;
     data[idx + 1] = g;
     data[idx + 2] = b;
-    data[idx + 3] = Math.round(255 * fade);
-    // Specular canvas: solid white, alpha = rawB (no edgeFade premultiplication).
+    data[idx + 3] = Math.round(255 * clip);
+    // Specular canvas: solid white, alpha = rawB (no fade premultiplication).
     // Pixels outside the lens are left as RGBA(0,0,0,0) (canvas default).
     if (fade > 0) {
       sd[idx + 0] = 255;

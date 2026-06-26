@@ -99,7 +99,7 @@ const GLASS_SLIDERS: SliderDef[] = [
   { label: "Curvature", key: "curvature", min: 0, max: 80, step: 1, defaultValue: 40, format: fmt1 },
   { label: "Splay", key: "splay", min: 0.0, max: 1.0, step: 0.05, defaultValue: 1.0, format: fmt2 },
   { label: "Chroma", key: "chroma", min: 0.0, max: 1.0, step: 0.01, defaultValue: 0.2, format: fmt2 },
-  { label: "Blur", key: "blur", min: 0.0, max: 2.0, step: 0.1, defaultValue: 0.0, format: fmt1 },
+  { label: "Blur", key: "blur", min: 0.0, max: 8.0, step: 0.5, defaultValue: 0.0, format: fmt1 },
   { label: "Glow", key: "glow", min: 0.0, max: 1.0, step: 0.01, defaultValue: 0.1, format: fmt2 },
   { label: "Edge Highlight", key: "edgeHighlight", min: 0.0, max: 1.0, step: 0.01, defaultValue: 0.25, format: fmt2 },
   { label: "Specular Angle", key: "specularAngle", min: 0, max: 180, step: 1, defaultValue: 45, format: fmt1 },

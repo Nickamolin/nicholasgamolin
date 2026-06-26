@@ -84,7 +84,7 @@ export function generateDisplacementMap(
   edgeHighlight = 0,
   specularAngle = 45,
   pixelRatio = 1
-): string {
+): { dispUrl: string; specUrl: string } {
   const pw = Math.ceil(lensW * pixelRatio);
   const ph = Math.ceil(lensH * pixelRatio);
 
@@ -92,7 +92,7 @@ export function generateDisplacementMap(
   canvas.width = pw;
   canvas.height = ph;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return "";
+  if (!ctx) return { dispUrl: "", specUrl: "" };
 
   const imageData = ctx.createImageData(pw, ph);
   const data = imageData.data;
@@ -205,7 +205,11 @@ export function generateDisplacementMap(
       const edgeProfile = distEdge < borderPx
         ? Math.sqrt(1 - distEdge / borderPx)
         : 0;
-      const glowProfile = m;
+      // Square m so the glow falls off faster toward the centre (concave/quadratic
+      // rather than linear). At high depth m spans the whole lens, and m^2 keeps
+      // it concentrated near the rim — giving the rounded "glass bubble" look
+      // instead of a flat linear ramp across the face.
+      const glowProfile = m * m;
       const dot = Math.abs(dirX * Lx + dirY * Ly);
       // Edge: a sharp two-ended glint along the light axis (no shine on the
       // perpendicular ends), so it reads as a directional border segment.

@@ -92,7 +92,7 @@ export function generateDisplacementMap(
   canvas.width = pw;
   canvas.height = ph;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return { dispUrl: "", specUrl: "" };
+  if (!ctx) return { dispUrl: "", specUrl: "", previewUrl: "" };
 
   const imageData = ctx.createImageData(pw, ph);
   const data = imageData.data;

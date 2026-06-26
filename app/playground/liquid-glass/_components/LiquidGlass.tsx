@@ -17,7 +17,7 @@ export interface LiquidGlassProps {
   depth?: number;
   /** Curvature — controls the falloff exponent (0–80) */
   curvature?: number;
-  /** Splay — ratio of X to Y displacement (0–1) */
+  /** Splay — fans the refraction direction from axis-aligned/mitered (0) to radial/smooth (1) */
   splay?: number;
   /** Chromatic aberration strength (0–1) */
   chroma?: number;
@@ -84,7 +84,7 @@ export function generateDisplacementMap(
   edgeHighlight = 0,
   specularAngle = 45,
   pixelRatio = 1
-): string {
+): { dispUrl: string; specUrl: string; previewUrl: string } {
   const pw = Math.ceil(lensW * pixelRatio);
   const ph = Math.ceil(lensH * pixelRatio);
 
@@ -92,7 +92,7 @@ export function generateDisplacementMap(
   canvas.width = pw;
   canvas.height = ph;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return "";
+  if (!ctx) return { dispUrl: "", specUrl: "", previewUrl: "" };
 
   const imageData = ctx.createImageData(pw, ph);
   const data = imageData.data;
@@ -105,16 +105,18 @@ export function generateDisplacementMap(
   const hh = cy;
   const r = Math.max(0, Math.min(borderRadius, Math.min(hw, hh)));
 
-  // Cap the bezel width at the lens "inradius" (distance from centre to the nearest
-  // edge) so a large depth ramps the displacement all the way down to 0 (neutral) at
-  // the centre rather than leaving a saturated core.
-  const tc = -sdfRoundedRect(0, 0, hw, hh, r);
-  const band = Math.min(Math.max(1, depth), tc);
   const exp = 1.3 + curvature * 0.0075;   // 1.3 at curv 0, ~1.9 at curv 80 (matches Aave's measured ρ^exp)
+  // SDF distance from the centre to the nearest edge (the lens "inradius").
+  // Capping bandPx at this value ensures m → 0 at the very centre when depth
+  // is large — matching the old rho-based behaviour where rho→0 at centre
+  // forced m→0 there, preventing the visible "point" artifact at max depth.
+  const inradius = -sdfRoundedRect(0, 0, hw, hh, r);
 
   const rawX = new Float32Array(pw * ph);
   const rawY = new Float32Array(pw * ph);
   const rawB = new Float32Array(pw * ph); // specular shine field → blue channel, 0..1
+  const rawFade = new Float32Array(pw * ph); // soft 4px fade for preview / specular conditions
+  const rawClip = new Float32Array(pw * ph); // hard 1px clip for the displacement PNG alpha
   let maxMag = 1e-6;
 
   // Light direction for the specular term. The rim is brightest where its
@@ -131,6 +133,19 @@ export function generateDisplacementMap(
       const py = j / pixelRatio - cy + 0.5 / pixelRatio;
       const d = sdfRoundedRect(px, py, hw, hh, r);
       if (d >= 0) continue;
+
+      // Soft 4px smoothstep fade — used for the preview canvas and specular conditions.
+      const t = Math.min(1, -d / 4);
+      const edgeFade = t * t * (3 - 2 * t);  // smoothstep
+      rawFade[j * pw + i] = edgeFade;
+      // Hard 1px linear clip — used as the displacement PNG alpha so that the
+      // displacement reaches full strength immediately at the SDF boundary.
+      // This prevents the "dark gap" artifact: with a soft fade, edgeFade≈0 at
+      // the rim causes feMerge to produce nearly-neutral displacement, making
+      // feDisplacementMap sample from the original pixel position (which may be
+      // the dark background behind the content). With the hard clip, even boundary
+      // pixels get near-full displacement and sample from the interior instead.
+      rawClip[j * pw + i] = Math.min(1, -d);
 
       // Superellipse (p-norm) gradient field.
       // A superellipse |x|^n + |y|^n = 1 creates a perfectly smooth distance
@@ -153,46 +168,97 @@ export function generateDisplacementMap(
       const dirX = rho > 0 ? nx / rho : 0;
       const dirY = rho > 0 ? ny / rho : 0;
 
+      // depth controls the width of the displaced bezel in pixels.
+      // Using the SDF distance (-d) gives a physically uniform bezel width everywhere —
+      // straight edges AND corners. The old rho-space approach made the bezel thinner
+      // at corners (rho isolines bunch together there), leaving undisplaced pixels
+      // between the refraction and the visible lens edge (the "corner gap" artifact).
+      // The superellipse is still used for displacement DIRECTION (smooth normals).
+      const bandPx = Math.min(Math.max(1, depth) * 2, inradius);
+      const distInside = -d; // 0 at boundary, positive inside
+
+      let m = 0;
+      if (distInside < bandPx) {
+        const s = distInside / bandPx; // 0 at rim → 1 at inner boundary
+        m = Math.pow(1 - s, exp);      // 1 at rim → 0 at inner boundary
+      }
+
       // ── Specular shine field (→ blue channel) ──
-      // Two profiles of the same rim, both peaking at the boundary (rho→1) and
-      // ~0 in the flat centre (rho→0):
-      //   • edgeHighlight: a thin, sharp band hugging the boundary → reads as a border
-      //   • glow:          a broad, soft brightening across the whole bezel
-      // The directional weight uses |normal·light|, so the shine appears on BOTH
-      // sides aligned with the light axis (a real lens glints on near AND far rim),
-      // which is what Aave shows. Edge stays mostly uniform so it looks like a
-      // border; glow is strongly two-sided.
-      const edgeProfile = Math.pow(rho, 24);
-      const glowProfile = Math.pow(rho, 6);
-      const twoSided = Math.pow(Math.abs(dirX * Lx + dirY * Ly), 1.5);
-      const glowDir = 0.2 + 0.8 * twoSided;
-      const edgeDir = 0.7 + 0.3 * twoSided;
+      //   • edgeHighlight: a TRUE fixed-width rim measured by the signed-distance
+      //     field (`-d` = logical px inside the boundary). Because the SDF gives
+      //     exact Euclidean distance to the edge, the band is exactly `borderPx`
+      //     wide everywhere — straight sides AND rounded corners — independent of
+      //     lens size or aspect. The previous version measured width in
+      //     superellipse `rho`-space, whose isolines bunch up unevenly, so the rim
+      //     ballooned into thick blobs at the corners along the light axis (and got
+      //     thicker as the lens was stretched). It is still DIRECTIONAL — only the
+      //     two ends aligned with the specular angle light up — but now with a
+      //     constant, pixel-thin width.
+      //   • glow: tied to the displacement magnitude `m`, so blue is only added
+      //     where pixels are actually refracting. This matches Aave — glow
+      //     brightens displaced pixels rather than painting a flat radial gradient
+      //     that ignores the displacement map. Its width follows `depth`.
+      // borderPx controls the width of the edge highlight band.
+      // 1.5px keeps it as a crisp, pixel-thin rim glint.
+      // The gap between the highlight and the glow zone is closed below by
+      // letting glow appear wherever m>0 (no edgeFade suppression).
+      const borderPx = 1.5;
+      const distEdge = -d; // d<0 inside the shape, so -d is the distance from the rim
+      // Brightest right at the rim (distEdge→0), falling off over `borderPx`. The
+      // sqrt keeps it near-full across the thin band so it reads as a crisp border
+      // rather than a soft inward gradient.
+      const edgeProfile = distEdge < borderPx
+        ? Math.sqrt(1 - distEdge / borderPx)
+        : 0;
+      // Square m so the glow falls off faster toward the centre (concave/quadratic
+      // rather than linear). At high depth m spans the whole lens, and m^2 keeps
+      // it concentrated near the rim — giving the rounded "glass bubble" look
+      // instead of a flat linear ramp across the face.
+      const glowProfile = m * m;
+      const dot = Math.abs(dirX * Lx + dirY * Ly);
+      // Edge: a sharp two-ended glint along the light axis (no shine on the
+      // perpendicular ends), so it reads as a directional border segment.
+      const edgeDir = Math.pow(dot, 4);
+      // Glow: follows the specular angle just like the edge, but with a softer,
+      // broader falloff (dot² vs the edge's dot⁴) so it reads as a diffuse shine
+      // on the two light-facing ends rather than a tight glint. A small ambient
+      // floor keeps it from cutting off to nothing on the perpendicular ends.
+      const glowDir = 0.1 + 0.9 * Math.pow(dot, 2);
       rawB[idx] = Math.min(
-        edgeHighlight * edgeProfile * edgeDir + glow * glowProfile * glowDir,
+        // edgeHighlight: sharp rim glint (SDF-width band, directional).
+        edgeHighlight * edgeProfile * edgeDir
+        // glow: brightens the displaced bezel wherever m>0. No edgeFade
+        // multiplier — glow appears right from the rim so it naturally bridges
+        // the gap left by the 1.5px highlight band. The specular canvas already
+        // clips to inside pixels, so no boundary bleed is possible.
+        + glow * glowProfile * glowDir,
         1
       );
 
-      // depth controls the width of the displaced bezel in pixels.
-      // We multiply by 2 because Aave's depth scale maps to a wider physical band
-      // (a depth of 10 in Aave corresponds to ~20 pixels of penetration).
-      const bandRho = Math.min((Math.max(0.001, depth) * 2) / Math.min(hw, hh), 1.0);
-      const startRho = 1.0 - bandRho;
-
-      let m = 0;
-      if (rho > startRho) {
-        // We MUST cap s at 1.0. Otherwise, corners (where rho can slightly exceed 1.0)
-        // will massively inflate maxMag at low depth values, crushing the gradient
-        // intensity everywhere else and making the map look faintly grey / invisible.
-        const s = Math.min((rho - startRho) / bandRho, 1.0);
-        m = Math.pow(s, exp);
-      }
-
       if (m <= 0) continue;
 
-      // Convex lens: mapping -dirX makes dispX > 0 when reading from the left,
+      // ── Displacement direction, morphed by `splay` ──
+      // splay fans the refraction vectors between two regimes (matching Aave):
+      //   • splay = 1 → RADIAL: vectors point straight out from the centre, so the
+      //     hues rotate smoothly with no creases (Aave's map at splay 1).
+      //   • splay = 0 → BOXY: vectors align toward the nearest edge, giving a
+      //     squared-off bevel (Aave's map at splay 0) — but the CORNERS STAY SOFT.
+      // The trick is to take the gradient of a p-norm and raise its exponent as
+      // splay drops, rather than hard-picking the nearest edge. A p-norm gradient
+      // rotates *continuously* across the diagonal (both components stay comparable
+      // there), so the corner transition is smooth at every splay — no harsh miter
+      // seam like a `nearest-edge` selection produces.
+      const pDir = 2 + (1 - splay) * 3;  // splay 1 → p=2 (round), splay 0 → p=5 (boxy but smooth corners)
+      const gx = Math.sign(nx) * Math.pow(absNx, pDir - 1);
+      const gy = Math.sign(ny) * Math.pow(absNy, pDir - 1);
+      const gLen = Math.hypot(gx, gy) || 1;
+      const ddx = gx / gLen;
+      const ddy = gy / gLen;
+
+      // Convex lens: the leading minus makes dispX > 0 when reading from the left,
       // creating a white/yellow top-left corner in the map exactly like Aave.
-      const dispX = -dirX * m * splay;
-      const dispY = -dirY * m;
+      const dispX = -ddx * m;
+      const dispY = -ddy * m;
 
       rawX[idx] = dispX;
       rawY[idx] = dispY;
@@ -200,21 +266,85 @@ export function generateDisplacementMap(
     }
   }
 
-  // The specular shine (edgeHighlight + glow, directional) lives in the BLUE
-  // channel. feDisplacementMap reads R (x) and G (y) exclusively, so blue never
-  // touches the refraction — a later filter pass extracts it as a rim highlight.
-  // This is why, on Aave, these sliders visibly change the map (right panel)
-  // without moving the refracted result (left panel).
+  // ── Write displacement map pixels ──────────────────────────────────────────
+  // R/G store full displacement (NOT pre-multiplied by fade). The feMerge
+  // "over"-composites the PNG (alpha=rawClip, hard 1px clip) on top of the
+  // neutral flood (128), producing full displacement immediately at the boundary.
+  // Using a hard clip instead of a soft edgeFade prevents the "dark gap" artifact:
+  // a soft fade would leave edgeFade≈0 at the rim, causing feMerge to produce
+  // nearly-neutral displacement, making feDisplacementMap sample from the original
+  // pixel position (dark background) instead of the displaced interior content.
+  // ALPHA = rawClip (hard 1px clip at SDF boundary for crisp displacement onset).
+  // BLUE stays at the neutral 128 (not used by feDisplacementMap).
+  //
+  // ── Specular canvas ────────────────────────────────────────────────────────
+  // SVG filter primitives work in PRE-MULTIPLIED alpha. If we encoded rawB in
+  // the disp PNG's blue channel, feColorMatrix would see
+  //   B_premul = rawB × edgeFade
+  // and at the rim (edgeFade → 0) the edge highlight would be crushed to zero
+  // even when rawB = 1 — producing a dark rim between the highlight and glow.
+  // Fix: use a SECOND canvas whose alpha = rawB directly, with alpha=255
+  // everywhere inside the shape. The feImage that loads it is NOT pre-multiplied
+  // by edgeFade, so the highlight appears at full amplitude right at the rim.
+  const specCanvas = document.createElement("canvas");
+  specCanvas.width = pw;
+  specCanvas.height = ph;
+  const specCtx = specCanvas.getContext("2d");
+  if (!specCtx) return { dispUrl: "", specUrl: "", previewUrl: "" };
+  const specData = specCtx.createImageData(pw, ph);
+  const sd = specData.data;
+
+  // ── Preview canvas ─────────────────────────────────────────────────────────
+  // A fully-opaque version of the displacement map for the UI preview.
+  // The disp PNG uses alpha=rawClip (hard 1px clip), which creates a sharp
+  // transparent edge and would not render well over the grey preview background.
+  // The preview canvas writes alpha=255 everywhere: neutral grey (128,128,128)
+  // outside the lens, actual R/G/B values inside, so the map is rendered crisply
+  // with the full specular field visible.
+  const prevCanvas = document.createElement("canvas");
+  prevCanvas.width = pw;
+  prevCanvas.height = ph;
+  const prevCtx = prevCanvas.getContext("2d");
+  if (!prevCtx) return { dispUrl: "", specUrl: "", previewUrl: "" };
+  const prevData = prevCtx.createImageData(pw, ph);
+  const pd = prevData.data;
+
   for (let k = 0; k < pw * ph; k++) {
     const idx = k * 4;
-    data[idx + 0] = 128 + (rawX[k] / maxMag) * 127;
-    data[idx + 1] = 128 + (rawY[k] / maxMag) * 127;
-    data[idx + 2] = Math.round(128 + rawB[k] * 127);
-    data[idx + 3] = 255;
+    const fade = rawFade[k];
+    const clip = rawClip[k];
+    const r = Math.round(128 + (rawX[k] / maxMag) * 127);
+    const g = Math.round(128 + (rawY[k] / maxMag) * 127);
+    const b = Math.round(128 + rawB[k] * 127);
+    // Displacement canvas: alpha=rawClip (hard 1px clip so displacement is
+    // at full strength immediately at the boundary — no slow fade-in).
+    data[idx + 0] = r;
+    data[idx + 1] = g;
+    data[idx + 2] = b;
+    data[idx + 3] = Math.round(255 * clip);
+    // Specular canvas: solid white, alpha = rawB (no fade premultiplication).
+    // Pixels outside the lens are left as RGBA(0,0,0,0) (canvas default).
+    if (fade > 0) {
+      sd[idx + 0] = 255;
+      sd[idx + 1] = 255;
+      sd[idx + 2] = 255;
+      sd[idx + 3] = Math.round(rawB[k] * 255);
+    }
+    // Preview canvas: fully opaque. Neutral grey outside, actual values inside.
+    pd[idx + 0] = fade > 0 ? r : 128;
+    pd[idx + 1] = fade > 0 ? g : 128;
+    pd[idx + 2] = fade > 0 ? b : 128;
+    pd[idx + 3] = 255;
   }
 
   ctx.putImageData(imageData, 0, 0);
-  return canvas.toDataURL("image/png");
+  specCtx.putImageData(specData, 0, 0);
+  prevCtx.putImageData(prevData, 0, 0);
+  return {
+    dispUrl: canvas.toDataURL("image/png"),
+    specUrl: specCanvas.toDataURL("image/png"),
+    previewUrl: prevCanvas.toDataURL("image/png"),
+  };
 }
 
 // ─── LiquidGlass component ────────────────────────────────────────────────────
@@ -244,7 +374,11 @@ export default function LiquidGlass({
   const rh = lensHeight * renderScale;
   const baseId = useId().replace(/:/g, "");
   const [filterId, setFilterId] = useState(`lg-filter-${baseId}`);
-  const [mapUrl, setMapUrl] = useState<string>("");
+  // dispUrl drives the displacement / blur-mask feImage.
+  // specUrl drives a separate feImage for the specular highlight — kept separate
+  // so its alpha (rawB) is NOT premultiplied by edgeFade in the filter pipeline.
+  const [dispUrl, setDispUrl] = useState<string>("");
+  const [specUrl, setSpecUrl] = useState<string>("");
   const containerRef = useRef<HTMLDivElement>(null);
   // The stage spans the full inner box regardless of any padding on the
   // container, so the filtered content, the displacement map and the lens
@@ -274,11 +408,13 @@ export default function LiquidGlass({
   useEffect(() => { setInternalX(lensX); }, [lensX]);
   useEffect(() => { setInternalY(lensY); }, [lensY]);
 
-  // Regenerate displacement map when shape params change
+  // Regenerate displacement + specular maps when shape params change
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const url = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle);
-    setMapUrl(url);
+    const dpr = window.devicePixelRatio || 1;
+    const { dispUrl: du, specUrl: su } = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, dpr);
+    setDispUrl(du);
+    setSpecUrl(su);
     // Change filter ID to bust Safari's filter cache
     setFilterId(`lg-filter-${baseId}-${Date.now()}`);
   }, [rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, baseId]);
@@ -343,7 +479,7 @@ export default function LiquidGlass({
       onPointerLeave={handlePointerUp}
     >
       {/* ── Hidden SVG filter definition ── */}
-      {mapUrl && (
+      {dispUrl && (
         <svg
           viewBox="0 0 0 0"
           width="0"
@@ -365,10 +501,10 @@ export default function LiquidGlass({
               {/* Flood with neutral displacement (128 = 0.5 for no displacement) */}
               <feFlood floodColor="#808080" floodOpacity="1" result="neutral" />
 
-              {/* The displacement map image */}
+              {/* Displacement map image (R=dispX, G=dispY, B=128 neutral, A=edgeFade) */}
               <feImage
                 id={`${filterId}-img`}
-                href={mapUrl}
+                href={dispUrl}
                 x={imgX}
                 y={imgY}
                 width={rw}
@@ -433,25 +569,36 @@ export default function LiquidGlass({
               <feBlend in="chR" in2="chG" mode="screen" result="chRG" />
               <feBlend in="chRG" in2="chB" mode="screen" result="displaced" />
 
+              {/* Backdrop blur — masked to the lens interior using the map's alpha.
+                  blur=0 collapses to an identity (feGaussianBlur with stdDeviation=0
+                  passes through unchanged, feComposite in/out split and add back up). */}
+              <feGaussianBlur in="displaced" stdDeviation={blur} edgeMode="duplicate" result="blurredFull" />
+              <feComposite in="blurredFull" in2="displacementMapCentered" operator="in" result="blurredInLens" />
+              <feComposite in="displaced" in2="displacementMapCentered" operator="out" result="sharpOutsideLens" />
+              {/* Arithmetic add instead of feMerge to keep a true linear cross-fade.
+                  feMerge "over" at the anti-aliased rim (alpha≈0.5) yields
+                  a + (1−a)² = 0.75 — a translucent ring and dark halo. Adding the two
+                  pre-masked halves (blurred·a + sharp·(1−a)) keeps alpha at 1 everywhere. */}
+              <feComposite in="blurredInLens" in2="sharpOutsideLens" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="refracted" />
+
               {/* ── Specular rim highlight ──
-                  The map's blue channel holds the shine field (edgeHighlight +
-                  glow, weighted by specularAngle). We build a SOLID WHITE image
-                  whose ALPHA is the shine: RGB = white (constant), A = 0.8·B − 0.4.
-                  Neutral B=0.5 → alpha 0 (fully transparent, leaves the glass
-                  alone — no black mask), bright rim → alpha up to 0.4 (capped, so
-                  it never fully whites-out the colours below). Screened over the
-                  refracted glass, only the rim brightens. */}
-              {(glow > 0 || edgeHighlight > 0) && (
-                <>
-                  <feColorMatrix
-                    in="displacementMapCentered"
-                    type="matrix"
-                    values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0.8 0 -0.4"
-                    result="specularField"
-                  />
-                  <feBlend in="displaced" in2="specularField" mode="screen" result="glassWithSpec" />
-                </>
+                  A separate feImage loads the specular canvas (RGBA white, alpha=rawB).
+                  Because this PNG has alpha=255 everywhere inside the lens (NOT edgeFade),
+                  the filter sees the straight rawB value — no premultiplication by edgeFade.
+                  This means the edge highlight appears at full brightness right at the
+                  rim (where edgeFade≈0 would have crushed it in the disp PNG). */}
+              {specUrl && (
+                <feImage
+                  href={specUrl}
+                  x={imgX}
+                  y={imgY}
+                  width={rw}
+                  height={rh}
+                  preserveAspectRatio="none"
+                  result="specularMap"
+                />
               )}
+              <feBlend in="specularMap" in2="refracted" mode="screen" />
 
             </filter>
           </defs>
@@ -465,7 +612,7 @@ export default function LiquidGlass({
           style={{
             position: "absolute",
             inset: 0,
-            filter: (mapUrl && containerSize.w > 0) ? `url(#${filterId})` : undefined,
+            filter: (dispUrl && containerSize.w > 0) ? `url(#${filterId})` : undefined,
             willChange: "filter",
           }}
         >
@@ -491,19 +638,11 @@ export default function LiquidGlass({
           onPointerDown={handlePointerDown}
         >
 
-          {/* Backdrop blur layer */}
-          {blur > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                borderRadius,
-                backdropFilter: `blur(${blur}px)`,
-                WebkitBackdropFilter: `blur(${blur}px)`,
-              }}
-            />
-          )}
-
+          {/* Backdrop blur + specular rim highlight are both handled inside the SVG
+              filter pipeline — no DOM layers needed for either. The specular is
+              extracted from displacementMapCentered inside the filter graph, so it
+              is anti-aliased by the map's alpha rather than a CSS border-radius clip
+              (which Chromium doesn't anti-alias on CSS-filtered elements). */}
 
           {/* Grounding drop shadow */}
           <div

@@ -36,7 +36,8 @@ function MapPreview({
 
   useEffect(() => {
     const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
-    setMapUrl(generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, dpr));
+    const { previewUrl } = generateDisplacementMap(rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle, dpr);
+    setMapUrl(previewUrl);
   }, [rw, rh, borderRadius, depth, curvature, splay, glow, edgeHighlight, specularAngle]);
 
   const onDown = (e: React.PointerEvent) => {
@@ -98,7 +99,7 @@ const GLASS_SLIDERS: SliderDef[] = [
   { label: "Curvature", key: "curvature", min: 0, max: 80, step: 1, defaultValue: 40, format: fmt1 },
   { label: "Splay", key: "splay", min: 0.0, max: 1.0, step: 0.05, defaultValue: 1.0, format: fmt2 },
   { label: "Chroma", key: "chroma", min: 0.0, max: 1.0, step: 0.01, defaultValue: 0.2, format: fmt2 },
-  { label: "Blur", key: "blur", min: 0.0, max: 2.0, step: 0.1, defaultValue: 0.0, format: fmt1 },
+  { label: "Blur", key: "blur", min: 0.0, max: 8.0, step: 0.5, defaultValue: 0.0, format: fmt1 },
   { label: "Glow", key: "glow", min: 0.0, max: 1.0, step: 0.01, defaultValue: 0.1, format: fmt2 },
   { label: "Edge Highlight", key: "edgeHighlight", min: 0.0, max: 1.0, step: 0.01, defaultValue: 0.25, format: fmt2 },
   { label: "Specular Angle", key: "specularAngle", min: 0, max: 180, step: 1, defaultValue: 45, format: fmt1 },
@@ -130,6 +131,41 @@ export default function LiquidGlassExperiments() {
 
   const [htmlText, setHtmlText] = useState("GLASS");
 
+  // Animated balance counter for the UI refraction card
+  const [displayBalance, setDisplayBalance] = useState(12450);
+  const balanceRef = useRef(12450);
+  const animFrameRef = useRef(0);
+  const balanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const animateTo = (target: number) => {
+      const from = balanceRef.current;
+      const start = performance.now();
+      const duration = 1800;
+      const tick = (now: number) => {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        setDisplayBalance(Math.round(from + (target - from) * eased));
+        if (t < 1) {
+          animFrameRef.current = requestAnimationFrame(tick);
+        } else {
+          balanceRef.current = target;
+          balanceTimerRef.current = setTimeout(() => {
+            animateTo(Math.round(Math.random() * 4000 + 10000));
+          }, 3500);
+        }
+      };
+      animFrameRef.current = requestAnimationFrame(tick);
+    };
+    balanceTimerRef.current = setTimeout(() => {
+      animateTo(Math.round(Math.random() * 4000 + 10000));
+    }, 2500);
+    return () => {
+      cancelAnimationFrame(animFrameRef.current);
+      if (balanceTimerRef.current) clearTimeout(balanceTimerRef.current);
+    };
+  }, []);
+
   // Row-level reset for the three demos
   const [demosSpinning, setDemosSpinning] = useState(false);
   const handleDemosReset = useCallback(() => {
@@ -141,6 +177,10 @@ export default function LiquidGlassExperiments() {
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl gap-16 pb-16">
+      <style>{`
+        @keyframes lgBarUp   { 0%,100% { transform: scaleY(0.5) } 50% { transform: scaleY(1) } }
+        @keyframes lgBarDown { 0%,100% { transform: scaleY(1)   } 50% { transform: scaleY(0.4) } }
+      `}</style>
 
       {/* ── Side-by-Side Demo ────────────────────────────────────────────────── */}
       {/* Wrapper is full-width + position:relative so the right-margin button   */}
@@ -315,9 +355,23 @@ export default function LiquidGlassExperiments() {
                   <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md" />
                   <div className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-medium text-white">Pro</div>
                 </div>
+                {/* Animated sparkline — demonstrates live DOM refraction */}
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 36 }}>
+                  {(["U","D","U","D","U","D","U"] as const).map((dir, i) => (
+                    <div key={i} style={{
+                      flex: 1,
+                      height: "100%",
+                      background: "rgba(255,255,255,0.4)",
+                      borderRadius: "2px 2px 0 0",
+                      transformOrigin: "bottom",
+                      animation: `${dir === "U" ? "lgBarUp" : "lgBarDown"} 2.8s ease-in-out infinite`,
+                      animationDelay: `${i * 0.22}s`,
+                    }} />
+                  ))}
+                </div>
                 <div>
                   <div className="text-white/80 font-mono text-xs mb-1">BALANCE</div>
-                  <div className="text-white font-bold text-3xl font-mono tracking-tight">$12,450.00</div>
+                  <div className="text-white font-bold text-3xl font-mono tracking-tight">${displayBalance.toLocaleString("en-US")}.00</div>
                 </div>
               </div>
             </LiquidGlass>
@@ -326,7 +380,7 @@ export default function LiquidGlassExperiments() {
             UI Refraction
           </span>
           <p className="text-sm text-gray-500 text-center mb-4 max-w-xs">
-            Refracting standard CSS gradients and rounded borders, adding tactile depth to flat UI components.
+Animated elements demonstrate real-time refraction on CSS gradients.
           </p>
           <DebugPanel
             sliders={GLASS_SLIDERS}

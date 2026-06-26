@@ -106,6 +106,11 @@ export function generateDisplacementMap(
   const r = Math.max(0, Math.min(borderRadius, Math.min(hw, hh)));
 
   const exp = 1.3 + curvature * 0.0075;   // 1.3 at curv 0, ~1.9 at curv 80 (matches Aave's measured ρ^exp)
+  // SDF distance from the centre to the nearest edge (the lens "inradius").
+  // Capping bandPx at this value ensures m → 0 at the very centre when depth
+  // is large — matching the old rho-based behaviour where rho→0 at centre
+  // forced m→0 there, preventing the visible "point" artifact at max depth.
+  const inradius = -sdfRoundedRect(0, 0, hw, hh, r);
 
   const rawX = new Float32Array(pw * ph);
   const rawY = new Float32Array(pw * ph);
@@ -169,7 +174,7 @@ export function generateDisplacementMap(
       // at corners (rho isolines bunch together there), leaving undisplaced pixels
       // between the refraction and the visible lens edge (the "corner gap" artifact).
       // The superellipse is still used for displacement DIRECTION (smooth normals).
-      const bandPx = Math.max(1, depth) * 2;
+      const bandPx = Math.min(Math.max(1, depth) * 2, inradius);
       const distInside = -d; // 0 at boundary, positive inside
 
       let m = 0;

@@ -131,6 +131,41 @@ export default function LiquidGlassExperiments() {
 
   const [htmlText, setHtmlText] = useState("GLASS");
 
+  // Animated balance counter for the UI refraction card
+  const [displayBalance, setDisplayBalance] = useState(12450);
+  const balanceRef = useRef(12450);
+  const animFrameRef = useRef(0);
+  const balanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const animateTo = (target: number) => {
+      const from = balanceRef.current;
+      const start = performance.now();
+      const duration = 1800;
+      const tick = (now: number) => {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        setDisplayBalance(Math.round(from + (target - from) * eased));
+        if (t < 1) {
+          animFrameRef.current = requestAnimationFrame(tick);
+        } else {
+          balanceRef.current = target;
+          balanceTimerRef.current = setTimeout(() => {
+            animateTo(Math.round(Math.random() * 4000 + 10000));
+          }, 3500);
+        }
+      };
+      animFrameRef.current = requestAnimationFrame(tick);
+    };
+    balanceTimerRef.current = setTimeout(() => {
+      animateTo(Math.round(Math.random() * 4000 + 10000));
+    }, 2500);
+    return () => {
+      cancelAnimationFrame(animFrameRef.current);
+      if (balanceTimerRef.current) clearTimeout(balanceTimerRef.current);
+    };
+  }, []);
+
   // Row-level reset for the three demos
   const [demosSpinning, setDemosSpinning] = useState(false);
   const handleDemosReset = useCallback(() => {
@@ -336,7 +371,7 @@ export default function LiquidGlassExperiments() {
                 </div>
                 <div>
                   <div className="text-white/80 font-mono text-xs mb-1">BALANCE</div>
-                  <div className="text-white font-bold text-3xl font-mono tracking-tight">$12,450.00</div>
+                  <div className="text-white font-bold text-3xl font-mono tracking-tight">${displayBalance.toLocaleString("en-US")}.00</div>
                 </div>
               </div>
             </LiquidGlass>
@@ -345,7 +380,7 @@ export default function LiquidGlassExperiments() {
             UI Refraction
           </span>
           <p className="text-sm text-gray-500 text-center mb-4 max-w-xs">
-            Animated sparklines demonstrate real-time refraction on CSS gradients.
+Animated elements demonstrate real-time refraction on CSS gradients.
           </p>
           <DebugPanel
             sliders={GLASS_SLIDERS}

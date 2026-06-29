@@ -114,8 +114,23 @@ const MARGIN_RIGHT = "-6rem";
 
 // ─── LiquidGlassExperiments ──────────────────────────────────────────────────
 
+const SBS_RENDER_SCALE = 2;
+
 export default function LiquidGlassExperiments() {
   const sbs = useAnimatedReset({ ...GLASS_DEFAULTS, lensX: 0.5, lensY: 0.5 });
+  const [mobileMapUrl, setMobileMapUrl] = useState("");
+
+  useEffect(() => {
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
+    const rw = sbs.props.lensWidth * SBS_RENDER_SCALE;
+    const rh = sbs.props.lensHeight * SBS_RENDER_SCALE;
+    const { previewUrl } = generateDisplacementMap(
+      rw, rh, sbs.props.borderRadius, sbs.props.depth, sbs.props.curvature,
+      sbs.props.splay, sbs.props.glow, sbs.props.edgeHighlight, sbs.props.specularAngle, dpr
+    );
+    setMobileMapUrl(previewUrl);
+  }, [sbs.props.lensWidth, sbs.props.lensHeight, sbs.props.borderRadius, sbs.props.depth,
+      sbs.props.curvature, sbs.props.splay, sbs.props.glow, sbs.props.edgeHighlight, sbs.props.specularAngle]);
   const moveSbsLens = (x: number, y: number) => {
     sbs.patch("lensX", x);
     sbs.patch("lensY", y);
@@ -187,14 +202,57 @@ export default function LiquidGlassExperiments() {
       {/* can be placed via position:absolute without disturbing the layout.      */}
       <div className="relative w-full flex flex-col items-center">
 
-        {/* Two previews */}
-        <div className="flex flex-col md:flex-row w-full max-w-4xl gap-8">
+        {/* Mobile: combined split view */}
+        <div className="md:hidden w-full max-w-4xl h-[360px] rounded-[24px] overflow-hidden border border-gray-100 dark:border-gray-800 relative">
+          {/* Glass layer — full container, grid background */}
+          <LiquidGlass
+            className="w-full h-full"
+            {...sbs.props}
+            renderScale={SBS_RENDER_SCALE}
+            onLensMove={moveSbsLens}
+          >
+            <div
+              className="absolute inset-0 bg-[#f4f0ff] dark:bg-gray-950"
+              style={{
+                backgroundImage: "linear-gradient(to right, rgba(100,100,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(100,100,255,0.18) 1px, transparent 1px)",
+                backgroundSize: "40px 40px",
+              }}
+            />
+          </LiquidGlass>
+
+          {/* Gray overlay — sits above the glass, left edge tracks lens center */}
+          <div
+            className="absolute inset-y-0 right-0 bg-[#808080] pointer-events-none"
+            style={{ left: `${sbs.props.lensX * 100}%` }}
+          />
+
+          {/* Displacement map — above the gray overlay, positioned relative to outer container.
+              clipPath hides the left half so only the right half (on the gray side) shows. */}
+          {mobileMapUrl && (
+            <img
+              src={mobileMapUrl}
+              alt="Displacement map"
+              draggable={false}
+              className="pointer-events-none absolute"
+              style={{
+                width: sbs.props.lensWidth * SBS_RENDER_SCALE,
+                height: sbs.props.lensHeight * SBS_RENDER_SCALE,
+                left: `calc(${sbs.props.lensX * 100}% - ${(sbs.props.lensWidth * SBS_RENDER_SCALE) / 2}px)`,
+                top: `calc(${sbs.props.lensY * 100}% - ${(sbs.props.lensHeight * SBS_RENDER_SCALE) / 2}px)`,
+                clipPath: "inset(0 0 0 50%)",
+              }}
+            />
+          )}
+        </div>
+
+        {/* Desktop: two separate panels side by side */}
+        <div className="hidden md:flex w-full max-w-4xl gap-8">
           <div className="flex-1">
             <div className="w-full h-[360px] rounded-[24px] overflow-hidden border border-gray-100 dark:border-gray-800 bg-[#f4f0ff] dark:bg-gray-950 relative">
               <LiquidGlass
                 className="w-full h-full"
                 {...sbs.props}
-                renderScale={2}
+                renderScale={SBS_RENDER_SCALE}
                 onLensMove={moveSbsLens}
               >
                 <div
@@ -222,7 +280,7 @@ export default function LiquidGlassExperiments() {
                 specularAngle={sbs.props.specularAngle}
                 lensX={sbs.props.lensX}
                 lensY={sbs.props.lensY}
-                renderScale={2}
+                renderScale={SBS_RENDER_SCALE}
                 onLensMove={moveSbsLens}
               />
             </div>

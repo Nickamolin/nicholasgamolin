@@ -474,9 +474,11 @@ export default function LiquidGlass({
     <div
       ref={containerRef}
       className={`relative overflow-hidden ${className}`}
+      onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
+      style={{ touchAction: "none", cursor: draggable ? "grab" : "default" }}
     >
       {/* ── Hidden SVG filter definition ── */}
       {dispUrl && (
@@ -629,13 +631,11 @@ export default function LiquidGlass({
             width: rw,
             height: rh,
             borderRadius,
-            pointerEvents: draggable ? "auto" : "none",
+            pointerEvents: "none",
             cursor: draggable ? "grab" : "default",
             willChange: "transform",
             userSelect: "none",
-            touchAction: "none",
           }}
-          onPointerDown={handlePointerDown}
         >
 
           {/* Backdrop blur + specular rim highlight are both handled inside the SVG

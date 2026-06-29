@@ -11,12 +11,15 @@ export function PlaygroundSidebar() {
     <nav
       className="flex-shrink-0 w-36 rounded-xl px-2 py-2 flex flex-col gap-0.5"
       style={{
-        background: "rgba(255,255,255,0.04)",
+        background: "rgba(20,20,20,0.6)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         border: "1px solid rgba(255,255,255,0.08)",
         position: "fixed",
         top: "50vh",
-        left: "var(--spacing-page-x, 1.5rem)",
+        left: "calc(var(--spacing-page-x, 1.5rem) / 2)",
         transform: "translateY(-50%)",
+        zIndex: 50,
       }}
     >
       {EXPERIMENT_THEMES.map((theme) => {

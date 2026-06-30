@@ -2,10 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dev",
+      "name": "Next.js",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3001
+      "port": 3001,
+      "autoPort": true
     }
   ]
 }

@@ -79,7 +79,7 @@ export default function RefractionExperiments() {
     <div className="flex flex-col items-center w-full max-w-5xl">
 
       {/* Row 1: Comparison cubes */}
-      <div className="relative w-full flex flex-row items-start justify-center gap-4">
+      <div className="relative w-full flex flex-col md:flex-row items-start justify-center gap-4 md:gap-4">
 
         {/* Screen-space */}
         <div className="flex flex-col items-center w-full">
@@ -95,7 +95,7 @@ export default function RefractionExperiments() {
               size={cube.props.size}
             />
           </div>
-          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400">
+          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400 text-center">
             Screen-space refraction
           </span>
           <DebugPanel sliders={CUBE_SLIDERS} values={cube.props} onChange={cube.patch} isResetting={cube.isResetting} />
@@ -116,7 +116,7 @@ export default function RefractionExperiments() {
               size={classic.props.size}
             />
           </div>
-          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400">
+          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400 text-center">
             Virtual-plane refraction
           </span>
           <DebugPanel sliders={CLASSIC_SLIDERS} values={classic.props} onChange={classic.patch} isResetting={classic.isResetting} />
@@ -133,7 +133,7 @@ export default function RefractionExperiments() {
               size={plain.props.size}
             />
           </div>
-          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400">
+          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400 text-center">
             No refraction (reference)
           </span>
           <DebugPanel sliders={PLAIN_SLIDERS} values={plain.props} onChange={plain.patch} isResetting={plain.isResetting} />
@@ -150,7 +150,7 @@ export default function RefractionExperiments() {
       </div>
 
       {/* Row 2: html-to-image refraction — first column only */}
-      <div className="flex flex-row items-start justify-center w-full gap-4 mt-12">
+      <div className="flex flex-col md:flex-row items-start justify-center w-full gap-4 mt-12">
 
         {/* html-to-image — first column */}
         <div className="flex flex-col items-center w-full">
@@ -172,7 +172,7 @@ export default function RefractionExperiments() {
               </h1>
             </CubeHtmlToImageRefraction>
           </div>
-          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400">
+          <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400 text-center">
             html-to-image Refraction
           </span>
           <DebugPanel sliders={CUBE_SLIDERS} values={dom.props} onChange={dom.patch} isResetting={dom.isResetting}>
@@ -194,8 +194,8 @@ export default function RefractionExperiments() {
         </div>
 
         {/* Invisible placeholders match the 3-column width so row 2 aligns with row 1 */}
-        <div className="w-full opacity-0 pointer-events-none" />
-        <div className="w-full opacity-0 pointer-events-none" />
+        <div className="hidden md:block w-full opacity-0 pointer-events-none" />
+        <div className="hidden md:block w-full opacity-0 pointer-events-none" />
 
       </div>
 

@@ -318,10 +318,10 @@ export default function LiquidGlassExperiments() {
       <div className="w-full h-px bg-gray-200 dark:bg-gray-800" />
 
       {/* ── Three Demos ──────────────────────────────────────────────────────── */}
-      <div className="relative w-full flex flex-col lg:flex-row items-start justify-center gap-8">
+      <div className="relative w-full flex flex-col md:flex-row items-center md:items-start justify-center gap-8">
 
         {/* 1. Image Refraction */}
-        <div className="flex flex-col items-center w-full max-w-sm">
+        <div className="flex flex-col items-center w-full max-w-lg md:max-w-sm">
           <div className="w-full h-[320px] rounded-xl overflow-hidden border border-gray-800 bg-gray-950">
             <LiquidGlass
               className="w-full h-full"
@@ -351,7 +351,7 @@ export default function LiquidGlassExperiments() {
         </div>
 
         {/* 2. Text Refraction */}
-        <div className="flex flex-col items-center w-full max-w-sm">
+        <div className="flex flex-col items-center w-full max-w-lg md:max-w-sm">
           <div className="w-full h-[320px] rounded-xl overflow-hidden border border-gray-800 bg-gray-950 flex items-center justify-center relative">
             <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
             <LiquidGlass
@@ -400,7 +400,7 @@ export default function LiquidGlassExperiments() {
         </div>
 
         {/* 3. UI Component Refraction */}
-        <div className="flex flex-col items-center w-full max-w-sm">
+        <div className="flex flex-col items-center w-full max-w-lg md:max-w-sm">
           <div className="w-full h-[320px] rounded-xl overflow-hidden border border-gray-800 bg-gray-950 flex items-center justify-center relative">
             <LiquidGlass
               className="w-full h-full"
@@ -454,7 +454,7 @@ Animated elements demonstrate real-time refraction on CSS gradients.
 
         {/* Row-level reset in the right margin — vertically centred against the panels */}
         <div
-          className="hidden lg:flex flex-col items-center justify-center"
+          className="hidden md:flex flex-col items-center justify-center"
           style={{ position: "absolute", right: MARGIN_RIGHT, top: "160px", transform: "translateY(-50%)" }}
         >
           <ResetButton onClick={handleDemosReset} spinning={demosSpinning} />

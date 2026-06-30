@@ -75,23 +75,45 @@ export function PlaygroundSidebar() {
 
   return (
     <>
-      {/* Mobile: hamburger → expanded menu */}
-      <div ref={ref} className="md:hidden rounded-xl" style={panelStyle}>
-        {isOpen ? (
-          <nav className="w-36 px-2 py-2 flex flex-col gap-0.5 rounded-xl">
-            <NavLinks onSelect={() => setIsOpen(false)} />
-          </nav>
-        ) : (
-          <button
-            onClick={() => setIsOpen(true)}
-            className="w-11 h-11 flex items-center justify-center rounded-xl text-gray-400 hover:text-gray-200 transition-colors"
-            aria-label="Open navigation"
-          >
-            <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" aria-hidden="true">
-              <path d="M13.6006 11.0098C13.8286 11.0563 14 11.2583 14 11.5C14 11.7417 13.8286 11.9437 13.6006 11.9902L13.5 12H1.5C1.22386 12 1 11.7761 1 11.5C1 11.2239 1.22386 11 1.5 11H13.5L13.6006 11.0098ZM13.6006 7.00977C13.8286 7.05629 14 7.25829 14 7.5C14 7.74171 13.8286 7.94371 13.6006 7.99023L13.5 8H1.5C1.22386 8 1 7.77614 1 7.5C1 7.22386 1.22386 7 1.5 7H13.5L13.6006 7.00977ZM13.6006 3.00977C13.8286 3.05629 14 3.25829 14 3.5C14 3.74171 13.8286 3.94371 13.6006 3.99023L13.5 4H1.5C1.22386 4 1 3.77614 1 3.5C1 3.22386 1.22386 3 1.5 3H13.5L13.6006 3.00977Z" fill="currentColor"/>
-            </svg>
-          </button>
-        )}
+      {/* Mobile: animated hamburger → expanded menu */}
+      <div
+        ref={ref}
+        className="md:hidden rounded-xl overflow-hidden"
+        style={{
+          ...panelStyle,
+          width: isOpen ? "9rem" : "2.75rem",
+          maxHeight: isOpen ? "20rem" : "2.75rem",
+          transition: "width 220ms ease-in-out, max-height 220ms ease-in-out",
+        }}
+      >
+        {/* Hamburger button — fades out when open */}
+        <button
+          onClick={() => setIsOpen(true)}
+          aria-label="Open navigation"
+          className="absolute inset-0 flex items-center justify-center text-gray-400 hover:text-gray-200"
+          style={{
+            opacity: isOpen ? 0 : 1,
+            pointerEvents: isOpen ? "none" : "auto",
+            transition: "opacity 120ms ease-in-out",
+          }}
+        >
+          <svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" aria-hidden="true">
+            <path d="M13.6006 11.0098C13.8286 11.0563 14 11.2583 14 11.5C14 11.7417 13.8286 11.9437 13.6006 11.9902L13.5 12H1.5C1.22386 12 1 11.7761 1 11.5C1 11.2239 1.22386 11 1.5 11H13.5L13.6006 11.0098ZM13.6006 7.00977C13.8286 7.05629 14 7.25829 14 7.5C14 7.74171 13.8286 7.94371 13.6006 7.99023L13.5 8H1.5C1.22386 8 1 7.77614 1 7.5C1 7.22386 1.22386 7 1.5 7H13.5L13.6006 7.00977ZM13.6006 3.00977C13.8286 3.05629 14 3.25829 14 3.5C14 3.74171 13.8286 3.94371 13.6006 3.99023L13.5 4H1.5C1.22386 4 1 3.77614 1 3.5C1 3.22386 1.22386 3 1.5 3H13.5L13.6006 3.00977Z" fill="currentColor"/>
+          </svg>
+        </button>
+
+        {/* Nav links — fades in when open */}
+        <nav
+          className="px-2 py-2 flex flex-col gap-0.5"
+          style={{
+            width: "9rem",
+            opacity: isOpen ? 1 : 0,
+            pointerEvents: isOpen ? "auto" : "none",
+            transition: `opacity ${isOpen ? "150ms 100ms" : "80ms 0ms"} ease-in-out`,
+          }}
+        >
+          <NavLinks onSelect={() => setIsOpen(false)} />
+        </nav>
       </div>
 
       {/* Desktop: always-visible sidebar */}

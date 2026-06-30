@@ -318,7 +318,7 @@ export default function LiquidGlassExperiments() {
       <div className="w-full h-px bg-gray-200 dark:bg-gray-800" />
 
       {/* ── Three Demos ──────────────────────────────────────────────────────── */}
-      <div className="relative w-full flex flex-col md:flex-row items-start justify-center gap-8">
+      <div className="relative w-full flex flex-col lg:flex-row items-start justify-center gap-8">
 
         {/* 1. Image Refraction */}
         <div className="flex flex-col items-center w-full max-w-sm">
@@ -408,7 +408,7 @@ export default function LiquidGlassExperiments() {
               renderScale={3}
               onLensMove={(x, y) => { cardExp.patch("lensX", x); cardExp.patch("lensY", y); }}
             >
-              <div className="absolute inset-16 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-6 flex flex-col justify-between shadow-2xl">
+              <div className="absolute inset-x-8 inset-y-12 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-5 flex flex-col justify-between shadow-2xl overflow-hidden">
                 <div className="flex justify-between items-start">
                   <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md" />
                   <div className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-medium text-white">Pro</div>
@@ -427,9 +427,9 @@ export default function LiquidGlassExperiments() {
                     }} />
                   ))}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-white/80 font-mono text-xs mb-1">BALANCE</div>
-                  <div className="text-white font-bold text-3xl font-mono tracking-tight">${displayBalance.toLocaleString("en-US")}.00</div>
+                  <div className="text-white font-bold text-2xl font-mono tracking-tight whitespace-nowrap truncate">${displayBalance.toLocaleString("en-US")}.00</div>
                 </div>
               </div>
             </LiquidGlass>
@@ -454,7 +454,7 @@ Animated elements demonstrate real-time refraction on CSS gradients.
 
         {/* Row-level reset in the right margin — vertically centred against the panels */}
         <div
-          className="hidden md:flex flex-col items-center justify-center"
+          className="hidden lg:flex flex-col items-center justify-center"
           style={{ position: "absolute", right: MARGIN_RIGHT, top: "160px", transform: "translateY(-50%)" }}
         >
           <ResetButton onClick={handleDemosReset} spinning={demosSpinning} />

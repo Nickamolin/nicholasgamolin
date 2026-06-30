@@ -76,13 +76,13 @@ export default function RefractionExperiments() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-5xl">
+    <div className="flex flex-col items-center w-full max-w-5xl overflow-x-clip">
 
       {/* Row 1: Comparison cubes */}
       <div className="relative w-full flex flex-col md:flex-row items-start justify-center gap-4 md:gap-4">
 
         {/* Screen-space */}
-        <div className="flex flex-col items-center w-full">
+        <div className="flex flex-col items-center w-full min-w-0">
           <div className="w-full h-[280px]">
             <Cube
               ref={cubeRef}
@@ -102,7 +102,7 @@ export default function RefractionExperiments() {
         </div>
 
         {/* Virtual-plane */}
-        <div className="flex flex-col items-center w-full">
+        <div className="flex flex-col items-center w-full min-w-0">
           <div className="w-full h-[280px]">
             <CubeClassic
               ref={classicRef}
@@ -123,7 +123,7 @@ export default function RefractionExperiments() {
         </div>
 
         {/* No refraction */}
-        <div className="flex flex-col items-center w-full">
+        <div className="flex flex-col items-center w-full min-w-0">
           <div className="w-full h-[280px]">
             <CubePlain
               ref={plainRef}
@@ -153,7 +153,7 @@ export default function RefractionExperiments() {
       <div className="flex flex-col md:flex-row items-start justify-center w-full gap-4 mt-12">
 
         {/* html-to-image — first column */}
-        <div className="flex flex-col items-center w-full">
+        <div className="flex flex-col items-center w-full min-w-0">
           <div className="w-full h-[280px]">
             <CubeHtmlToImageRefraction
               ref={domRef}

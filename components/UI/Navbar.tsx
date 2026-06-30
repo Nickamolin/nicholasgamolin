@@ -36,11 +36,10 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Projects", href: "/projects" },
+    { name: "Experiments", href: "/playground" },
     { name: "About", href: "/about" },
   ];
 
-  // Playground pages have their own navigation — hide the global nav there.
-  if (pathname.startsWith("/playground")) return null;
 
   return (
     <div className="fixed bottom-8 left-0 z-[100] w-full flex justify-center pointer-events-none md:sticky md:top-6 md:bottom-auto">

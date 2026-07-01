@@ -49,6 +49,7 @@ export default function AnimationExperiments() {
 
   const [isGlbPaused,         setIsGlbPaused]         = useState(false);
   const [isPreRenderedPaused, setIsPreRenderedPaused] = useState(false);
+  const [isSynced,            setIsSynced]            = useState(true);
 
   // The GLB needs an async fetch + parse before it can play, while the video
   // starts almost instantly — without a shared gate the two begin playing at
@@ -73,12 +74,15 @@ export default function AnimationExperiments() {
   // media pipeline — so they can never diverge, regardless of tab switches,
   // app focus changes, or display refresh rate.
   useEffect(() => {
-    if (!bothReady) return;
+    if (!bothReady || !isSynced) {
+      glbRef.current?.setMasterTimeGetter(null);
+      return;
+    }
     glbRef.current?.setMasterTimeGetter(
       () => preRenderedRef.current?.getCurrentTime() ?? null
     );
     return () => { glbRef.current?.setMasterTimeGetter(null); };
-  }, [bothReady]);
+  }, [bothReady, isSynced]);
 
   // Keep the two animations locked together across focus/visibility changes.
   //
@@ -175,6 +179,33 @@ export default function AnimationExperiments() {
               <ResetButton onClick={handleGlbReset} spinning={glb.spinning} />
             </div>
           </DebugPanel>
+        </div>
+
+        {/* Sync Toggle — centered between the two demos */}
+        <div className="flex-shrink-0 flex flex-col items-center justify-center w-10" style={{ height: "280px" }}>
+          <button
+            onClick={() => setIsSynced((s) => !s)}
+            title={isSynced ? "Sync On" : "Sync Off"}
+            className="group flex flex-col items-center gap-2 cursor-pointer"
+            style={{ background: "none", border: "none", padding: 0 }}
+          >
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+              }}
+            >
+              <img
+                src={isSynced ? "/icons/buttons/equal.svg" : "/icons/buttons/equal_not.svg"}
+                alt={isSynced ? "Sync On" : "Sync Off"}
+                className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-all invert"
+              />
+            </div>
+            <span className="text-[9px] font-subtitle font-medium tracking-[0.14em] uppercase text-gray-600 group-hover:text-gray-400 transition-colors whitespace-nowrap">
+              {isSynced ? "Sync On" : "Sync Off"}
+            </span>
+          </button>
         </div>
 
         {/* Pre-rendered Loading Animation */}

@@ -7,6 +7,17 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 export interface LoadingAnimation3DHandle {
   resetRotation: () => void;
+  // Freeze/thaw the animation clock in place (no seek). Used to keep this in
+  // lockstep with a sibling animation when the page loses focus/visibility.
+  setFrozen: (frozen: boolean) => void;
+  // Seek the mixer to an absolute time (in seconds, wraps at clip duration).
+  // Used to re-align with the reference video after returning from a hidden tab.
+  syncMixerToTime: (seconds: number) => void;
+  // When set, the mixer is slaved to this external time source on every rAF
+  // frame instead of the GLB's own delta accumulator. This is the only way to
+  // guarantee zero drift — delta accumulation always compounds floating-point
+  // error over time. Pass null to return to self-driven mode.
+  setMasterTimeGetter: (getter: (() => number | null) | null) => void;
 }
 
 export interface LoadingAnimation3DProps {
@@ -17,6 +28,8 @@ export interface LoadingAnimation3DProps {
   orthoBlend?: number;
   materialType?: string;
   isPaused?: boolean;
+  hasStarted?: boolean; // Gate to hold on the first frame until a synced start signal arrives
+  onReady?: () => void; // Fired once the model + mixer are set up and able to play
 }
 
 const LoadingAnimation3D = forwardRef<LoadingAnimation3DHandle, LoadingAnimation3DProps>(({
@@ -27,6 +40,8 @@ const LoadingAnimation3D = forwardRef<LoadingAnimation3DHandle, LoadingAnimation
   orthoBlend = 0.0,
   materialType = 'default',
   isPaused = false,
+  hasStarted = true,
+  onReady,
 }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -37,25 +52,55 @@ const LoadingAnimation3D = forwardRef<LoadingAnimation3DHandle, LoadingAnimation
   const customMaterialsRef = useRef<Record<string, THREE.Material>>({});
   const controlsRef = useRef<OrbitControls | null>(null);
 
+  // When true, the animation clock holds its current time (frozen in place).
+  // Read live inside the rAF loop so freezing takes effect on the next frame.
+  const frozenRef = useRef(false);
+  // Flipped to true on every thaw so the first rAF tick after resuming always
+  // gets delta = 0. This prevents the mixer from lurching ahead of the video:
+  // video.play() is async (media pipeline latency) and may not have started
+  // playing by the time the first rAF fires, so we hold the mixer in place for
+  // that one tick to give the video a chance to catch up.
+  const justThawedRef = useRef(false);
+  // When set, drives the mixer from this external time source on every frame
+  // (master-clock mode) instead of the GLB's own rAF delta accumulator.
+  const masterTimeGetterRef = useRef<(() => number | null) | null>(null);
+
   // Keep a ref to props to avoid stale closures in the animation loop
-  const propsRef = useRef({ targetFps, isPaused, orthoBlend, materialType, playbackSpeed, modelScale });
-  
+  const propsRef = useRef({ targetFps, isPaused, orthoBlend, materialType, playbackSpeed, modelScale, hasStarted });
+
   const apiRef = useRef({
     resetRotation: () => {
       if (controlsRef.current) {
         controlsRef.current.reset();
       }
-    }
+    },
   });
 
   useImperativeHandle(ref, () => ({
-    resetRotation: () => apiRef.current.resetRotation()
+    resetRotation: () => apiRef.current.resetRotation(),
+    setFrozen: (frozen: boolean) => {
+      if (frozenRef.current && !frozen) justThawedRef.current = true;
+      frozenRef.current = frozen;
+    },
+    syncMixerToTime: (seconds: number) => {
+      const mixer = mixerRef.current;
+      if (!mixer) return;
+      const clipDuration = 70 / 30;
+      // mixer.setTime() calls update(t) internally, which scales by timeScale.
+      // Snapshot and force 1× so the seek lands at the exact target position;
+      // the animate loop restores the real playbackSpeed on the next tick.
+      const prev = mixer.timeScale;
+      mixer.timeScale = 1;
+      mixer.setTime(seconds % clipDuration);
+      mixer.timeScale = prev;
+    },
+    setMasterTimeGetter: (getter) => { masterTimeGetterRef.current = getter; },
   }));
 
   // Sync props to ref and handle material/scale updates
   useEffect(() => {
-    propsRef.current = { targetFps, isPaused, orthoBlend, materialType, playbackSpeed, modelScale };
-    
+    propsRef.current = { targetFps, isPaused, orthoBlend, materialType, playbackSpeed, modelScale, hasStarted };
+
     if (modelGroupRef.current) {
       modelGroupRef.current.scale.set(modelScale, modelScale, modelScale);
       
@@ -74,7 +119,7 @@ const LoadingAnimation3D = forwardRef<LoadingAnimation3DHandle, LoadingAnimation
         }
       });
     }
-  }, [targetFps, isPaused, orthoBlend, materialType, playbackSpeed, modelScale]);
+  }, [targetFps, isPaused, orthoBlend, materialType, playbackSpeed, modelScale, hasStarted]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !containerRef.current) return;
@@ -235,26 +280,57 @@ const LoadingAnimation3D = forwardRef<LoadingAnimation3DHandle, LoadingAnimation
 
         let accumulatedTime = 0;
 
+        // Model + mixer are fully set up and able to play. Let the caller know
+        // so it can hold this frozen on frame one until a sibling animation
+        // (e.g. the pre-rendered video) is also ready, then start both in sync.
+        onReady?.();
+
         // Animation Loop
         const animate = () => {
           rafId = requestAnimationFrame(animate);
-          const delta = clock.getDelta();
+          let delta = clock.getDelta();
           const p = propsRef.current;
-          
-          // Animation Mixer updating
-          if (mixerRef.current && !p.isPaused) {
-            mixerRef.current.timeScale = p.playbackSpeed;
-            if (p.targetFps < 60) {
-              accumulatedTime += delta;
-              const frameTime = 1 / p.targetFps;
-              if (accumulatedTime >= frameTime) {
-                const steps = Math.floor(accumulatedTime / frameTime);
-                mixerRef.current.update(steps * frameTime);
-                accumulatedTime -= steps * frameTime;
+
+          (window as any).__glbMixerTime = mixerRef.current?.time;
+          // Clamp deltas that accumulated while rAF was fully stopped (tab hidden).
+          if (delta > 0.25) delta = 0;
+          // On the very first tick after thaw, force delta = 0 regardless of size.
+          // video.play() is async — the media pipeline may not have started yet by
+          // the time this rAF fires. Holding the mixer for one tick keeps both
+          // clocks aligned on resume (no accumulated drift across tab switches).
+          if (justThawedRef.current) { delta = 0; justThawedRef.current = false; }
+
+          // Animation Mixer updating.
+          if (mixerRef.current && !p.isPaused && p.hasStarted && !frozenRef.current) {
+            const masterGetter = masterTimeGetterRef.current;
+            if (masterGetter) {
+              // Master-clock mode: slave the mixer to the reference video's
+              // currentTime on every frame. This is the only way to guarantee
+              // zero drift — the two animations share one clock, so floating-
+              // point delta accumulation and rAF jitter can never compound.
+              // setTime() internally calls update() which respects timeScale;
+              // force 1× for an accurate absolute seek.
+              const masterTime = masterGetter();
+              if (masterTime != null) {
+                const clipDuration = 70 / 30;
+                mixerRef.current.timeScale = 1;
+                mixerRef.current.setTime(masterTime % clipDuration);
               }
             } else {
-              mixerRef.current.update(delta);
-              accumulatedTime = 0;
+              // Self-driven mode: advance by rAF delta with optional fps throttle.
+              mixerRef.current.timeScale = p.playbackSpeed;
+              if (p.targetFps < 60) {
+                accumulatedTime += delta;
+                const frameTime = 1 / p.targetFps;
+                if (accumulatedTime >= frameTime) {
+                  const steps = Math.floor(accumulatedTime / frameTime);
+                  mixerRef.current.update(steps * frameTime);
+                  accumulatedTime -= steps * frameTime;
+                }
+              } else {
+                mixerRef.current.update(delta);
+                accumulatedTime = 0;
+              }
             }
           }
           

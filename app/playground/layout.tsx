@@ -5,16 +5,10 @@ export const metadata = {
   description: "A hidden playground of interactive experiments.",
 };
 
-// Both sides get the same padding so content is centred between the two margins.
-// The sidebar is fixed inside the left margin; row-level reset buttons can sit
-// in the right margin using position:absolute on section wrappers.
-const CONTENT_PADDING = "calc(var(--spacing-page-x) + 9rem + 1rem)";
-
 export default function PlaygroundLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="min-h-screen w-full pt-(--spacing-page-top) pb-(--spacing-page-bottom) flex flex-col items-center justify-start"
-      style={{ paddingLeft: CONTENT_PADDING, paddingRight: CONTENT_PADDING }}
+      className="min-h-screen w-full px-(--spacing-page-x) pt-(--spacing-page-top) pb-(--spacing-page-bottom) flex flex-col items-center justify-start"
     >
       <PlaygroundSidebar />
 

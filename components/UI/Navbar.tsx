@@ -34,17 +34,16 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Projects", href: "/projects" },
-    { name: "About", href: "/about" },
+    { name: "Home", href: "/", icon: "/icons/navbar/home.svg" },
+    { name: "Projects", href: "/projects", icon: "/icons/navbar/list.svg" },
+    { name: "Experiments", href: "/playground", icon: "/icons/navbar/beaker.svg" },
+    { name: "About", href: "/about", icon: "/icons/navbar/person_lines.svg" },
   ];
 
-  // Playground pages have their own navigation — hide the global nav there.
-  if (pathname.startsWith("/playground")) return null;
 
   return (
     <div className="fixed bottom-8 left-0 z-[100] w-full flex justify-center pointer-events-none md:sticky md:top-6 md:bottom-auto">
-      <nav className="flex flex-row items-center justify-center p-4 px-8 text-white bg-black/80 backdrop-blur-md border border-white/10 rounded-full pointer-events-auto">
+      <nav className="flex flex-row items-center justify-center p-4 px-6 md:px-8 text-white bg-black/80 backdrop-blur-md border border-white/10 rounded-full pointer-events-auto">
         <div className="flex flex-row gap-8 text-xs md:text-sm font-subtitle font-medium tracking-[0.2em] uppercase">
           {navLinks.map((link) => {
             // Dim the old page immediately when a new navigation starts
@@ -77,7 +76,18 @@ export default function Navbar() {
                 }}
                 className="relative py-1 group"
               >
-                <span className={`transition-colors duration-300 ${isActive ? 'text-white' : 'text-white/60 group-hover:text-white'}`}>
+                {/* Mobile: icon only */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={link.icon}
+                  alt={link.name}
+                  width={20}
+                  height={20}
+                  className={`md:hidden w-5 h-5 transition-opacity duration-300 invert ${isActive ? "opacity-100" : "opacity-60 group-hover:opacity-100"}`}
+                />
+
+                {/* Desktop: text label */}
+                <span className={`hidden md:inline transition-colors duration-300 ${isActive ? "text-white" : "text-white/60 group-hover:text-white"}`}>
                   {link.name}
                 </span>
 
@@ -86,9 +96,9 @@ export default function Navbar() {
                     <motion.div
                       initial={{ width: "0%", left: "0%", right: "auto", opacity: 0 }}
                       animate={{ width: "100%", left: "0%", right: "auto", opacity: 1 }}
-                      exit={{ 
-                        width: "0%", 
-                        left: isFullyGrown ? "auto" : "0%", 
+                      exit={{
+                        width: "0%",
+                        left: isFullyGrown ? "auto" : "0%",
                         right: isFullyGrown ? "0%" : "auto",
                         opacity: 0,
                         transition: {

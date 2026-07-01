@@ -114,8 +114,23 @@ const MARGIN_RIGHT = "-6rem";
 
 // ─── LiquidGlassExperiments ──────────────────────────────────────────────────
 
+const SBS_RENDER_SCALE = 2;
+
 export default function LiquidGlassExperiments() {
   const sbs = useAnimatedReset({ ...GLASS_DEFAULTS, lensX: 0.5, lensY: 0.5 });
+  const [mobileMapUrl, setMobileMapUrl] = useState("");
+
+  useEffect(() => {
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
+    const rw = sbs.props.lensWidth * SBS_RENDER_SCALE;
+    const rh = sbs.props.lensHeight * SBS_RENDER_SCALE;
+    const { previewUrl } = generateDisplacementMap(
+      rw, rh, sbs.props.borderRadius, sbs.props.depth, sbs.props.curvature,
+      sbs.props.splay, sbs.props.glow, sbs.props.edgeHighlight, sbs.props.specularAngle, dpr
+    );
+    setMobileMapUrl(previewUrl);
+  }, [sbs.props.lensWidth, sbs.props.lensHeight, sbs.props.borderRadius, sbs.props.depth,
+      sbs.props.curvature, sbs.props.splay, sbs.props.glow, sbs.props.edgeHighlight, sbs.props.specularAngle]);
   const moveSbsLens = (x: number, y: number) => {
     sbs.patch("lensX", x);
     sbs.patch("lensY", y);
@@ -187,14 +202,57 @@ export default function LiquidGlassExperiments() {
       {/* can be placed via position:absolute without disturbing the layout.      */}
       <div className="relative w-full flex flex-col items-center">
 
-        {/* Two previews */}
-        <div className="flex flex-col md:flex-row w-full max-w-4xl gap-8">
+        {/* Mobile: combined split view */}
+        <div className="md:hidden w-full max-w-4xl h-[360px] rounded-[24px] overflow-hidden border border-gray-100 dark:border-gray-800 relative">
+          {/* Glass layer — full container, grid background */}
+          <LiquidGlass
+            className="w-full h-full"
+            {...sbs.props}
+            renderScale={SBS_RENDER_SCALE}
+            onLensMove={moveSbsLens}
+          >
+            <div
+              className="absolute inset-0 bg-[#f4f0ff] dark:bg-gray-950"
+              style={{
+                backgroundImage: "linear-gradient(to right, rgba(100,100,255,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(100,100,255,0.18) 1px, transparent 1px)",
+                backgroundSize: "40px 40px",
+              }}
+            />
+          </LiquidGlass>
+
+          {/* Gray overlay — sits above the glass, left edge tracks lens center */}
+          <div
+            className="absolute inset-y-0 right-0 bg-[#808080] pointer-events-none"
+            style={{ left: `${sbs.props.lensX * 100}%` }}
+          />
+
+          {/* Displacement map — above the gray overlay, positioned relative to outer container.
+              clipPath hides the left half so only the right half (on the gray side) shows. */}
+          {mobileMapUrl && (
+            <img
+              src={mobileMapUrl}
+              alt="Displacement map"
+              draggable={false}
+              className="pointer-events-none absolute"
+              style={{
+                width: sbs.props.lensWidth * SBS_RENDER_SCALE,
+                height: sbs.props.lensHeight * SBS_RENDER_SCALE,
+                left: `calc(${sbs.props.lensX * 100}% - ${(sbs.props.lensWidth * SBS_RENDER_SCALE) / 2}px)`,
+                top: `calc(${sbs.props.lensY * 100}% - ${(sbs.props.lensHeight * SBS_RENDER_SCALE) / 2}px)`,
+                clipPath: "inset(0 0 0 50%)",
+              }}
+            />
+          )}
+        </div>
+
+        {/* Desktop: two separate panels side by side */}
+        <div className="hidden md:flex w-full max-w-4xl gap-8">
           <div className="flex-1">
             <div className="w-full h-[360px] rounded-[24px] overflow-hidden border border-gray-100 dark:border-gray-800 bg-[#f4f0ff] dark:bg-gray-950 relative">
               <LiquidGlass
                 className="w-full h-full"
                 {...sbs.props}
-                renderScale={2}
+                renderScale={SBS_RENDER_SCALE}
                 onLensMove={moveSbsLens}
               >
                 <div
@@ -222,7 +280,7 @@ export default function LiquidGlassExperiments() {
                 specularAngle={sbs.props.specularAngle}
                 lensX={sbs.props.lensX}
                 lensY={sbs.props.lensY}
-                renderScale={2}
+                renderScale={SBS_RENDER_SCALE}
                 onLensMove={moveSbsLens}
               />
             </div>
@@ -245,13 +303,17 @@ export default function LiquidGlassExperiments() {
             onChange={sbs.patch}
             isResetting={sbs.isResetting}
             columns={2}
-          />
+          >
+            <div className="flex lg:hidden justify-center mt-3 pt-4 border-t border-gray-800">
+              <ResetButton onClick={() => sbs.triggerReset()} spinning={sbs.spinning} />
+            </div>
+          </DebugPanel>
         </div>
 
-        {/* Reset in the right margin — vertically centred against the two panels */}
+        {/* Reset centred in right margin on lg+ */}
         <div
-          className="hidden md:flex flex-col items-center justify-center"
-          style={{ position: "absolute", right: MARGIN_RIGHT, top: "180px", transform: "translateY(-50%)" }}
+          className="hidden lg:flex flex-col items-center justify-center"
+          style={{ position: "absolute", left: "calc(50% + min(100%, 56rem) / 4 + 25vw)", top: "180px", transform: "translateX(-50%) translateY(-50%)" }}
         >
           <ResetButton onClick={() => sbs.triggerReset()} spinning={sbs.spinning} />
         </div>
@@ -260,10 +322,10 @@ export default function LiquidGlassExperiments() {
       <div className="w-full h-px bg-gray-200 dark:bg-gray-800" />
 
       {/* ── Three Demos ──────────────────────────────────────────────────────── */}
-      <div className="relative w-full flex flex-col md:flex-row items-start justify-center gap-8">
+      <div className="relative w-full flex flex-col md:flex-row items-center md:items-start justify-center gap-8">
 
         {/* 1. Image Refraction */}
-        <div className="flex flex-col items-center w-full max-w-sm">
+        <div className="flex flex-col items-center w-full max-w-lg md:max-w-sm">
           <div className="w-full h-[320px] rounded-xl overflow-hidden border border-gray-800 bg-gray-950">
             <LiquidGlass
               className="w-full h-full"
@@ -293,7 +355,7 @@ export default function LiquidGlassExperiments() {
         </div>
 
         {/* 2. Text Refraction */}
-        <div className="flex flex-col items-center w-full max-w-sm">
+        <div className="flex flex-col items-center w-full max-w-lg md:max-w-sm">
           <div className="w-full h-[320px] rounded-xl overflow-hidden border border-gray-800 bg-gray-950 flex items-center justify-center relative">
             <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
             <LiquidGlass
@@ -342,7 +404,7 @@ export default function LiquidGlassExperiments() {
         </div>
 
         {/* 3. UI Component Refraction */}
-        <div className="flex flex-col items-center w-full max-w-sm">
+        <div className="flex flex-col items-center w-full max-w-lg md:max-w-sm">
           <div className="w-full h-[320px] rounded-xl overflow-hidden border border-gray-800 bg-gray-950 flex items-center justify-center relative">
             <LiquidGlass
               className="w-full h-full"
@@ -350,7 +412,7 @@ export default function LiquidGlassExperiments() {
               renderScale={3}
               onLensMove={(x, y) => { cardExp.patch("lensX", x); cardExp.patch("lensY", y); }}
             >
-              <div className="absolute inset-16 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-6 flex flex-col justify-between shadow-2xl">
+              <div className="absolute inset-x-8 inset-y-12 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-5 flex flex-col justify-between shadow-2xl overflow-hidden">
                 <div className="flex justify-between items-start">
                   <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md" />
                   <div className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-medium text-white">Pro</div>
@@ -369,9 +431,9 @@ export default function LiquidGlassExperiments() {
                     }} />
                   ))}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-white/80 font-mono text-xs mb-1">BALANCE</div>
-                  <div className="text-white font-bold text-3xl font-mono tracking-tight">${displayBalance.toLocaleString("en-US")}.00</div>
+                  <div className="text-white font-bold text-2xl font-mono tracking-tight whitespace-nowrap truncate">${displayBalance.toLocaleString("en-US")}.00</div>
                 </div>
               </div>
             </LiquidGlass>
@@ -394,10 +456,10 @@ Animated elements demonstrate real-time refraction on CSS gradients.
           </DebugPanel>
         </div>
 
-        {/* Row-level reset in the right margin — vertically centred against the panels */}
+        {/* Shared reset — centred in right margin on lg+ */}
         <div
-          className="hidden md:flex flex-col items-center justify-center"
-          style={{ position: "absolute", right: MARGIN_RIGHT, top: "160px", transform: "translateY(-50%)" }}
+          className="hidden lg:flex flex-col items-center justify-center"
+          style={{ position: "absolute", left: "calc(100% + (100vw - 100%) / 4)", top: "160px", transform: "translateX(-50%) translateY(-50%)" }}
         >
           <ResetButton onClick={handleDemosReset} spinning={demosSpinning} />
         </div>

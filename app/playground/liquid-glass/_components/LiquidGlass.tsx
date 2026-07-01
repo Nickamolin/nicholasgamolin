@@ -470,13 +470,24 @@ export default function LiquidGlass({
   const imgX = containerSize.w > 0 ? (internalX * containerSize.w - rw / 2) : 0;
   const imgY = containerSize.h > 0 ? (internalY * containerSize.h - rh / 2) : 0;
 
+  // iOS/WebKit does NOT repaint an SVG filter when only an feImage's x/y change,
+  // so the refraction would stay frozen while the lens is dragged (only the CSS
+  // drop-shadow layer, which isn't filtered, follows the finger). Giving the
+  // <filter> a fresh id on every position change forces WebKit to rebuild and
+  // re-evaluate the graph. dispUrl/specUrl are unchanged during a drag, so the
+  // feImage hrefs stay cached and the background doesn't flash. filterId already
+  // bumps on shape changes; we fold the position into the live id used by the DOM.
+  const liveFilterId = `${filterId}-${Math.round(imgX)}_${Math.round(imgY)}`;
+
   return (
     <div
       ref={containerRef}
       className={`relative overflow-hidden ${className}`}
+      onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
+      style={{ touchAction: "none", cursor: draggable ? "grab" : "default" }}
     >
       {/* ── Hidden SVG filter definition ── */}
       {dispUrl && (
@@ -489,7 +500,7 @@ export default function LiquidGlass({
         >
           <defs>
             <filter
-              id={filterId}
+              id={liveFilterId}
               filterUnits="userSpaceOnUse"
               primitiveUnits="userSpaceOnUse"
               colorInterpolationFilters="sRGB"
@@ -503,7 +514,7 @@ export default function LiquidGlass({
 
               {/* Displacement map image (R=dispX, G=dispY, B=128 neutral, A=edgeFade) */}
               <feImage
-                id={`${filterId}-img`}
+                id={`${liveFilterId}-img`}
                 href={dispUrl}
                 x={imgX}
                 y={imgY}
@@ -612,7 +623,7 @@ export default function LiquidGlass({
           style={{
             position: "absolute",
             inset: 0,
-            filter: (dispUrl && containerSize.w > 0) ? `url(#${filterId})` : undefined,
+            filter: (dispUrl && containerSize.w > 0) ? `url(#${liveFilterId})` : undefined,
             willChange: "filter",
           }}
         >
@@ -629,13 +640,11 @@ export default function LiquidGlass({
             width: rw,
             height: rh,
             borderRadius,
-            pointerEvents: draggable ? "auto" : "none",
+            pointerEvents: "none",
             cursor: draggable ? "grab" : "default",
             willChange: "transform",
             userSelect: "none",
-            touchAction: "none",
           }}
-          onPointerDown={handlePointerDown}
         >
 
           {/* Backdrop blur + specular rim highlight are both handled inside the SVG

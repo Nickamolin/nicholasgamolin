@@ -76,7 +76,7 @@ export default function RefractionExperiments() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-5xl overflow-x-clip">
+    <div className="flex flex-col items-center w-full max-w-5xl">
 
       {/* Row 1: Comparison cubes */}
       <div className="relative w-full flex flex-col md:flex-row items-start justify-center gap-4 md:gap-4">
@@ -98,7 +98,11 @@ export default function RefractionExperiments() {
           <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400 text-center">
             Screen-space refraction
           </span>
-          <DebugPanel sliders={CUBE_SLIDERS} values={cube.props} onChange={cube.patch} isResetting={cube.isResetting} />
+          <DebugPanel sliders={CUBE_SLIDERS} values={cube.props} onChange={cube.patch} isResetting={cube.isResetting}>
+            <div className="flex justify-center mt-3 pt-4 border-t border-gray-800">
+              <ResetButton onClick={() => { cubeRef.current?.resetRotation(); cube.triggerReset(); }} spinning={cube.spinning} />
+            </div>
+          </DebugPanel>
         </div>
 
         {/* Virtual-plane */}
@@ -119,7 +123,11 @@ export default function RefractionExperiments() {
           <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400 text-center">
             Virtual-plane refraction
           </span>
-          <DebugPanel sliders={CLASSIC_SLIDERS} values={classic.props} onChange={classic.patch} isResetting={classic.isResetting} />
+          <DebugPanel sliders={CLASSIC_SLIDERS} values={classic.props} onChange={classic.patch} isResetting={classic.isResetting}>
+            <div className="flex justify-center mt-3 pt-4 border-t border-gray-800">
+              <ResetButton onClick={() => { classicRef.current?.resetRotation(); classic.triggerReset(); }} spinning={classic.spinning} />
+            </div>
+          </DebugPanel>
         </div>
 
         {/* No refraction */}
@@ -136,13 +144,17 @@ export default function RefractionExperiments() {
           <span className="mt-3 text-xs font-subtitle font-medium tracking-[0.18em] uppercase text-gray-400 text-center">
             No refraction (reference)
           </span>
-          <DebugPanel sliders={PLAIN_SLIDERS} values={plain.props} onChange={plain.patch} isResetting={plain.isResetting} />
+          <DebugPanel sliders={PLAIN_SLIDERS} values={plain.props} onChange={plain.patch} isResetting={plain.isResetting}>
+            <div className="flex justify-center mt-3 pt-4 border-t border-gray-800">
+              <ResetButton onClick={() => { plainRef.current?.resetRotation(); plain.triggerReset(); }} spinning={plain.spinning} />
+            </div>
+          </DebugPanel>
         </div>
 
-        {/* Shared reset — in the right margin, vertically centred against the 280px canvases */}
+        {/* Shared reset — right margin on lg+, hidden below */}
         <div
-          className="hidden md:flex flex-col items-center justify-center"
-          style={{ position: "absolute", right: "-6rem", top: "140px", transform: "translateY(-50%)" }}
+          className="hidden lg:flex flex-col items-center justify-center"
+          style={{ position: "absolute", left: "calc(100% + (100vw - 100%) / 4)", top: "140px", transform: "translateX(-50%) translateY(-50%)" }}
         >
           <ResetButton onClick={handleSharedReset} spinning={sharedSpinning} />
         </div>

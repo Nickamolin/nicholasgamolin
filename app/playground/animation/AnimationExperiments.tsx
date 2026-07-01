@@ -2,7 +2,7 @@
 
 import React, { useRef } from "react";
 import LoadingAnimation3D, { LoadingAnimation3DHandle } from "./_components/3D/LoadingAnimation3D";
-import LoadingAnimation from "@/components/loading/LoadingAnimation";
+import PreRenderedAnimation from "./_components/PreRenderedAnimation";
 import { useState } from "react";
 import { DebugPanel, fmt2, makeDefaults, makeSelectDefaults, SelectDef, SliderDef } from "../_components/DebugPanel";
 import { ResetButton } from "../_components/ResetButton";
@@ -86,7 +86,7 @@ export default function AnimationExperiments() {
         {/* Pre-rendered Loading Animation */}
         <div className="flex flex-col items-center w-full">
           <div className="w-full h-[280px] flex items-center justify-center">
-            <LoadingAnimation
+            <PreRenderedAnimation
               className="w-32 h-32 md:w-48 md:h-48"
               playbackSpeed={preRendered.props.playbackSpeed}
               isPaused={isPreRenderedPaused}

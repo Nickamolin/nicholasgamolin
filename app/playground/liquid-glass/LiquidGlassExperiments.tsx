@@ -303,13 +303,17 @@ export default function LiquidGlassExperiments() {
             onChange={sbs.patch}
             isResetting={sbs.isResetting}
             columns={2}
-          />
+          >
+            <div className="flex lg:hidden justify-center mt-3 pt-4 border-t border-gray-800">
+              <ResetButton onClick={() => sbs.triggerReset()} spinning={sbs.spinning} />
+            </div>
+          </DebugPanel>
         </div>
 
-        {/* Reset in the right margin — vertically centred against the two panels */}
+        {/* Reset centred in right margin on lg+ */}
         <div
-          className="hidden md:flex flex-col items-center justify-center"
-          style={{ position: "absolute", right: MARGIN_RIGHT, top: "180px", transform: "translateY(-50%)" }}
+          className="hidden lg:flex flex-col items-center justify-center"
+          style={{ position: "absolute", left: "calc(50% + min(100%, 56rem) / 4 + 25vw)", top: "180px", transform: "translateX(-50%) translateY(-50%)" }}
         >
           <ResetButton onClick={() => sbs.triggerReset()} spinning={sbs.spinning} />
         </div>
@@ -452,10 +456,10 @@ Animated elements demonstrate real-time refraction on CSS gradients.
           </DebugPanel>
         </div>
 
-        {/* Row-level reset in the right margin — vertically centred against the panels */}
+        {/* Shared reset — centred in right margin on lg+ */}
         <div
-          className="hidden md:flex flex-col items-center justify-center"
-          style={{ position: "absolute", right: MARGIN_RIGHT, top: "160px", transform: "translateY(-50%)" }}
+          className="hidden lg:flex flex-col items-center justify-center"
+          style={{ position: "absolute", left: "calc(100% + (100vw - 100%) / 4)", top: "160px", transform: "translateX(-50%) translateY(-50%)" }}
         >
           <ResetButton onClick={handleDemosReset} spinning={demosSpinning} />
         </div>
